@@ -9,7 +9,14 @@ import { fileURLToPath } from "node:url";
 import { handleChatRequest } from "./chat.js";
 import type { ApiEnv } from "./config/env.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
-import { authenticateDemoUser, workspaces } from "./workspaces.js";
+import {
+  authenticateDemoUser,
+  authenticateProductionUser,
+  demoRoles,
+  demoWorkspaceOptions,
+  launchDemoWorkspace,
+  workspaces
+} from "./workspaces.js";
 
 export async function createServer(env: ApiEnv): Promise<Express> {
   const app = express();
@@ -74,6 +81,55 @@ export async function createServer(env: ApiEnv): Promise<Express> {
 
   app.get("/api/workspaces", (_req, res) => {
     res.json({ workspaces });
+  });
+
+  app.get("/api/auth/demo-options", (_req, res) => {
+    res.json({
+      workspaces: demoWorkspaceOptions,
+      roles: demoRoles
+    });
+  });
+
+  app.post("/api/auth/demo-launch", (req, res) => {
+    const body = req.body as Partial<{
+      workspaceId: string;
+      role: string;
+    }>;
+
+    const result = launchDemoWorkspace(body.workspaceId ?? "", body.role ?? "");
+
+    if (!result) {
+      res.status(400).json({
+        error: {
+          code: "invalid_demo_launch",
+          message: "Unable to launch demo workspace."
+        }
+      });
+      return;
+    }
+
+    res.json(result);
+  });
+
+  app.post("/api/auth/sign-in", (req, res) => {
+    const body = req.body as Partial<{
+      email: string;
+      password: string;
+    }>;
+
+    const result = authenticateProductionUser(body.email ?? "", body.password ?? "");
+
+    if (!result) {
+      res.status(401).json({
+        error: {
+          code: "invalid_credentials",
+          message: "Invalid email or password."
+        }
+      });
+      return;
+    }
+
+    res.json(result);
   });
 
   app.post("/api/auth/demo-login", (req, res) => {

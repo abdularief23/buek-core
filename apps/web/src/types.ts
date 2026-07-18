@@ -28,15 +28,35 @@ export interface Workspace {
     status: "healthy" | "attention" | "critical";
     message: string;
   };
+  aiGreeting: {
+    intro: string;
+    attentionItems: string[];
+    prompt: string;
+  };
+  capabilities: string[];
+  examplePrompts: Array<{
+    icon: string;
+    label: string;
+    prompt: string;
+  }>;
+  summaryItems: Array<{
+    id: string;
+    category: "maintenance" | "quality" | "production";
+    title: string;
+    subtitle: string;
+    actionLabel: string;
+    prompt: string;
+  }>;
+  recentInvestigations: Array<{
+    id: string;
+    label: string;
+    actionLabel: string;
+    prompt: string;
+  }>;
   summaryCounts: {
     maintenanceAlerts: number;
     qualityIssues: number;
   };
-  continueWorking: Array<{
-    id: string;
-    label: string;
-    prompt?: string;
-  }>;
   factoryAreas: Array<{
     id: string;
     label: string;
@@ -68,9 +88,15 @@ export interface DemoUser {
   id: string;
   companyId: string;
   username: string;
+  email: string;
   name: string;
   role: string;
   workspaceId: string;
+}
+
+export interface DemoWorkspaceOption {
+  id: string;
+  label: string;
 }
 
 export interface ChatReference {
@@ -104,5 +130,3 @@ export interface ChatMessage {
   content: string;
   metadata?: ChatMetadata;
 }
-
-export type ActiveView = "home" | "chat" | "workspace" | "settings";

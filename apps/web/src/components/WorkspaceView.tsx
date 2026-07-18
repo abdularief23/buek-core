@@ -1,11 +1,12 @@
-import type { DemoUser, Workspace } from "../types.js";
+import type { DemoUser, ModuleSummary, Workspace } from "../types.js";
 
 interface WorkspaceViewProps {
   workspace: Workspace;
   user: DemoUser;
+  installedModule?: ModuleSummary | undefined;
 }
 
-export function WorkspaceView({ workspace, user }: WorkspaceViewProps) {
+export function WorkspaceView({ workspace, user, installedModule }: WorkspaceViewProps) {
   const totalDocuments = workspace.documentStats.reduce((sum, item) => sum + item.count, 0);
 
   return (
@@ -28,6 +29,12 @@ export function WorkspaceView({ workspace, user }: WorkspaceViewProps) {
         <div>
           <dt className="text-slate-500">Knowledge</dt>
           <dd className="mt-1 text-slate-100">{totalDocuments} Documents</dd>
+        </div>
+        <div>
+          <dt className="text-slate-500">Installed Modules</dt>
+          <dd className="mt-1 text-slate-100">
+            {installedModule?.name ?? workspace.moduleId}
+          </dd>
         </div>
         <div>
           <dt className="text-slate-500">Last Sync</dt>

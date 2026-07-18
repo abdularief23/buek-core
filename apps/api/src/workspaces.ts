@@ -20,15 +20,35 @@ export interface Workspace {
     status: "healthy" | "attention" | "critical";
     message: string;
   };
+  aiGreeting: {
+    intro: string;
+    attentionItems: string[];
+    prompt: string;
+  };
+  capabilities: string[];
+  examplePrompts: Array<{
+    icon: string;
+    label: string;
+    prompt: string;
+  }>;
+  summaryItems: Array<{
+    id: string;
+    category: "maintenance" | "quality" | "production";
+    title: string;
+    subtitle: string;
+    actionLabel: string;
+    prompt: string;
+  }>;
+  recentInvestigations: Array<{
+    id: string;
+    label: string;
+    actionLabel: string;
+    prompt: string;
+  }>;
   summaryCounts: {
     maintenanceAlerts: number;
     qualityIssues: number;
   };
-  continueWorking: Array<{
-    id: string;
-    label: string;
-    prompt?: string;
-  }>;
   factoryAreas: Array<{
     id: string;
     label: string;
@@ -71,17 +91,30 @@ export interface DemoUser {
   companyId: string;
   username: string;
   password: string;
+  email: string;
   name: string;
   role: string;
   workspaceId: string;
 }
+
+export const demoRoles = ["Operator", "Engineer", "Supervisor", "Plant Manager"] as const;
+
+export type DemoRole = (typeof demoRoles)[number];
+
+export const demoWorkspaceOptions = [
+  { id: "epson-factory", label: "Epson Indonesia" },
+  { id: "toyota-plant", label: "Toyota Indonesia" },
+  { id: "nestle-factory", label: "Nestlé Indonesia" },
+  { id: "custom-company", label: "Custom Workspace" }
+] as const;
 
 export const demoUsers: DemoUser[] = [
   {
     id: "user-epson-demo",
     companyId: "Epson Demo",
     username: "demo",
-    password: "demo123",
+    password: "BuekDemo2026!",
+    email: "abdul@epson.demo",
     name: "Abdul",
     role: "Manufacturing Engineer",
     workspaceId: "epson-factory"
@@ -90,7 +123,8 @@ export const demoUsers: DemoUser[] = [
     id: "user-toyota-demo",
     companyId: "Toyota Demo",
     username: "demo",
-    password: "demo123",
+    password: "BuekDemo2026!",
+    email: "sari@toyota.demo",
     name: "Sari",
     role: "Assembly Quality Engineer",
     workspaceId: "toyota-plant"
@@ -99,7 +133,8 @@ export const demoUsers: DemoUser[] = [
     id: "user-nestle-demo",
     companyId: "Nestle Demo",
     username: "demo",
-    password: "demo123",
+    password: "BuekDemo2026!",
+    email: "raka@nestle.demo",
     name: "Raka",
     role: "Food Safety Assistant",
     workspaceId: "nestle-factory"
@@ -108,7 +143,8 @@ export const demoUsers: DemoUser[] = [
     id: "user-custom-demo",
     companyId: "Custom Company",
     username: "demo",
-    password: "demo123",
+    password: "BuekDemo2026!",
+    email: "admin@custom.demo",
     name: "New User",
     role: "Knowledge Admin",
     workspaceId: "custom-company"
@@ -141,18 +177,87 @@ export const workspaces: Workspace[] = [
     status: "knowledge-ready",
     lastSync: "Today",
     factoryHealth: {
-      status: "healthy",
-      message: "Factory running normally"
+      status: "attention",
+      message: "Attention needed"
     },
+    aiGreeting: {
+      intro: "Hi Abdul. I found 3 things that may need your attention today.",
+      attentionItems: [
+        "Machine 12 vibration increased.",
+        "White streak defects increased.",
+        "Production is currently on target."
+      ],
+      prompt: "What would you like to investigate?"
+    },
+    capabilities: [
+      "Production",
+      "Maintenance",
+      "Quality",
+      "Documents",
+      "KPI",
+      "Machines",
+      "Work Orders"
+    ],
+    examplePrompts: [
+      { icon: "🛠", label: "Machine 12 alarm", prompt: "Machine 12 alarm terus" },
+      { icon: "📈", label: "Why did OEE drop?", prompt: "Why did OEE drop?" },
+      { icon: "📄", label: "Show SOP-014", prompt: "Show SOP-014 printer white streak troubleshooting" },
+      {
+        icon: "⚠",
+        label: "White streak investigation",
+        prompt: "Continue white streak investigation"
+      }
+    ],
+    summaryItems: [
+      {
+        id: "sum-m1",
+        category: "maintenance",
+        title: "Machine 12",
+        subtitle: "Bearing vibration high",
+        actionLabel: "Open",
+        prompt: "Machine 12 alarm terus — show bearing vibration details"
+      },
+      {
+        id: "sum-q1",
+        category: "quality",
+        title: "Quality",
+        subtitle: "White streak increased",
+        actionLabel: "Investigate",
+        prompt: "Continue white streak investigation"
+      },
+      {
+        id: "sum-p1",
+        category: "production",
+        title: "Production",
+        subtitle: "On target",
+        actionLabel: "View",
+        prompt: "Show today's production status"
+      }
+    ],
+    recentInvestigations: [
+      {
+        id: "ri-1",
+        label: "Machine 12",
+        actionLabel: "Continue",
+        prompt: "Machine 12 alarm terus"
+      },
+      {
+        id: "ri-2",
+        label: "White Streak",
+        actionLabel: "Continue",
+        prompt: "Continue white streak investigation"
+      },
+      {
+        id: "ri-3",
+        label: "SOP-014",
+        actionLabel: "Open",
+        prompt: "Show SOP-014 printer white streak troubleshooting"
+      }
+    ],
     summaryCounts: {
       maintenanceAlerts: 2,
       qualityIssues: 1
     },
-    continueWorking: [
-      { id: "cw-1", label: "White Streak Investigation", prompt: "Continue white streak investigation" },
-      { id: "cw-2", label: "Machine 12", prompt: "Machine 12 alarm terus" },
-      { id: "cw-3", label: "SOP-014", prompt: "Show SOP-014 printer white streak troubleshooting" }
-    ],
     factoryAreas: [
       {
         id: "production",
@@ -293,12 +398,71 @@ export const workspaces: Workspace[] = [
     aiWorker: "Assembly Quality Engineer",
     status: "knowledge-ready",
     lastSync: "Today",
-    factoryHealth: { status: "healthy", message: "Assembly running normally" },
-    summaryCounts: { maintenanceAlerts: 1, qualityIssues: 1 },
-    continueWorking: [
-      { id: "cw-t1", label: "Torque drift EA-04", prompt: "Bolt torque out of specification at EA-04" },
-      { id: "cw-t2", label: "ASM-022", prompt: "Show ASM-022 engine bolt torque standard" }
+    factoryHealth: { status: "attention", message: "Attention needed" },
+    aiGreeting: {
+      intro: "Hi Sari. I found 2 things that may need your attention today.",
+      attentionItems: [
+        "Bolt torque drift at station EA-04.",
+        "Torque tool calibration due in 2 days."
+      ],
+      prompt: "What would you like to investigate?"
+    },
+    capabilities: [
+      "Production",
+      "Maintenance",
+      "Quality",
+      "Documents",
+      "KPI",
+      "Machines",
+      "Work Orders"
     ],
+    examplePrompts: [
+      { icon: "🛠", label: "Torque drift EA-04", prompt: "Bolt torque out of specification at EA-04" },
+      { icon: "📄", label: "Show ASM-022", prompt: "Show ASM-022 engine bolt torque standard" },
+      { icon: "📈", label: "Why did OEE drop?", prompt: "Why did OEE drop on assembly line?" },
+      { icon: "⚠", label: "Tool calibration", prompt: "Which torque tools need calibration this week?" }
+    ],
+    summaryItems: [
+      {
+        id: "sum-t1",
+        category: "quality",
+        title: "Station EA-04",
+        subtitle: "Bolt torque drift",
+        actionLabel: "Investigate",
+        prompt: "Bolt torque out of specification at EA-04"
+      },
+      {
+        id: "sum-t2",
+        category: "maintenance",
+        title: "Torque tool",
+        subtitle: "Calibration due in 2 days",
+        actionLabel: "Open",
+        prompt: "Show torque tool calibration schedule"
+      },
+      {
+        id: "sum-t3",
+        category: "production",
+        title: "Production",
+        subtitle: "On target",
+        actionLabel: "View",
+        prompt: "Show today's assembly production status"
+      }
+    ],
+    recentInvestigations: [
+      {
+        id: "ri-t1",
+        label: "Torque drift EA-04",
+        actionLabel: "Continue",
+        prompt: "Bolt torque out of specification at EA-04"
+      },
+      {
+        id: "ri-t2",
+        label: "ASM-022",
+        actionLabel: "Open",
+        prompt: "Show ASM-022 engine bolt torque standard"
+      }
+    ],
+    summaryCounts: { maintenanceAlerts: 1, qualityIssues: 1 },
     factoryAreas: [
       {
         id: "production",
@@ -401,12 +565,75 @@ export const workspaces: Workspace[] = [
     aiWorker: "Food Safety Assistant",
     status: "knowledge-ready",
     lastSync: "Today",
-    factoryHealth: { status: "attention", message: "Packaging line needs attention" },
-    summaryCounts: { maintenanceAlerts: 1, qualityIssues: 1 },
-    continueWorking: [
-      { id: "cw-n1", label: "Packaging contamination", prompt: "Packaging contamination near seal area" },
-      { id: "cw-n2", label: "HACCP-011", prompt: "Show HACCP-011 packaging contamination response" }
+    factoryHealth: { status: "attention", message: "Attention needed" },
+    aiGreeting: {
+      intro: "Hi Raka. I found 2 things that may need your attention today.",
+      attentionItems: [
+        "Packaging contamination near seal area on Line P-03.",
+        "Cleaning verification pending for Line P-03."
+      ],
+      prompt: "What would you like to investigate?"
+    },
+    capabilities: [
+      "Production",
+      "Maintenance",
+      "Quality",
+      "Documents",
+      "KPI",
+      "Machines",
+      "Work Orders"
     ],
+    examplePrompts: [
+      {
+        icon: "⚠",
+        label: "Packaging contamination",
+        prompt: "Packaging contamination near seal area"
+      },
+      { icon: "📄", label: "Show HACCP-011", prompt: "Show HACCP-011 packaging contamination response" },
+      { icon: "🛠", label: "Line P-03 status", prompt: "What is the current status of Line P-03?" },
+      { icon: "📈", label: "Why is OEE down?", prompt: "Why is OEE down on packaging line?" }
+    ],
+    summaryItems: [
+      {
+        id: "sum-n1",
+        category: "quality",
+        title: "Line P-03",
+        subtitle: "Packaging contamination detected",
+        actionLabel: "Investigate",
+        prompt: "Packaging contamination near seal area"
+      },
+      {
+        id: "sum-n2",
+        category: "maintenance",
+        title: "Line P-03",
+        subtitle: "Cleaning verification pending",
+        actionLabel: "Open",
+        prompt: "Show cleaning verification status for Line P-03"
+      },
+      {
+        id: "sum-n3",
+        category: "production",
+        title: "Production",
+        subtitle: "Line held — review required",
+        actionLabel: "View",
+        prompt: "Show packaging line production status"
+      }
+    ],
+    recentInvestigations: [
+      {
+        id: "ri-n1",
+        label: "Packaging contamination",
+        actionLabel: "Continue",
+        prompt: "Packaging contamination near seal area"
+      },
+      {
+        id: "ri-n2",
+        label: "HACCP-011",
+        actionLabel: "Open",
+        prompt: "Show HACCP-011 packaging contamination response"
+      }
+    ],
+    summaryCounts: { maintenanceAlerts: 1, qualityIssues: 1 },
     factoryAreas: [
       { id: "production", label: "Production", status: "yellow", summary: "Line P-03 held" },
       {
@@ -495,8 +722,19 @@ export const workspaces: Workspace[] = [
     status: "no-knowledge",
     lastSync: "Never",
     factoryHealth: { status: "attention", message: "No knowledge uploaded" },
+    aiGreeting: {
+      intro: "Hi. This workspace is not ready yet.",
+      attentionItems: ["Upload SOP to activate the AI worker for this workspace."],
+      prompt: "What would you like to set up first?"
+    },
+    capabilities: ["Documents", "SOP", "Work Instructions", "QC Standards"],
+    examplePrompts: [
+      { icon: "📄", label: "Upload SOP", prompt: "How do I upload SOP documents?" },
+      { icon: "📄", label: "Activate AI worker", prompt: "What do I need to activate the AI worker?" }
+    ],
+    summaryItems: [],
+    recentInvestigations: [],
     summaryCounts: { maintenanceAlerts: 0, qualityIssues: 0 },
-    continueWorking: [],
     factoryAreas: [],
     documentStats: [
       { label: "SOP", count: 0 },
@@ -549,6 +787,43 @@ export function authenticateDemoUser(
     return undefined;
   }
 
+  return buildAuthResult(user);
+}
+
+export function authenticateProductionUser(
+  email: string,
+  password: string
+): { user: Omit<DemoUser, "password">; workspace: Workspace } | undefined {
+  const user = demoUsers.find(
+    (candidate) =>
+      candidate.email.toLowerCase() === email.trim().toLowerCase() && candidate.password === password
+  );
+
+  if (!user) {
+    return undefined;
+  }
+
+  return buildAuthResult(user);
+}
+
+export function launchDemoWorkspace(
+  workspaceId: string,
+  role: string
+): { user: Omit<DemoUser, "password">; workspace: Workspace } | undefined {
+  const workspace = workspaces.find((candidate) => candidate.id === workspaceId);
+  if (!workspace) {
+    return undefined;
+  }
+
+  const user = demoUsers.find((candidate) => candidate.workspaceId === workspaceId) ?? demoUsers[0];
+  if (!user) {
+    return undefined;
+  }
+
+  return buildAuthResult({ ...user, role: role.trim() || user.role });
+}
+
+function buildAuthResult(user: DemoUser): { user: Omit<DemoUser, "password">; workspace: Workspace } {
   const { password: _password, ...safeUser } = user;
 
   return {

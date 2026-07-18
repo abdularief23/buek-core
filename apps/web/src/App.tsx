@@ -1,7 +1,9 @@
 import type { AppNavItem } from "@buek/ui";
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { AiWorkspaceView } from "./components/AiWorkspaceView.js";
+import { useEffect, useMemo, useState } from "react";
+import { AskBuekView } from "./components/AskBuekView.js";
 import { AppShell } from "./components/AppShell.js";
+import { HomeView } from "./components/HomeView.js";
+import { KnowledgeView } from "./components/KnowledgeView.js";
 import { LoginScreen } from "./components/LoginScreen.js";
 import { SettingsView } from "./components/SettingsView.js";
 import { WorkspaceView } from "./components/WorkspaceView.js";
@@ -16,7 +18,8 @@ import type { ChatMessage, DemoUser, ModuleSummary, Workspace } from "./types.js
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
 const modulesEndpoint = `${configuredApiUrl}/api/modules`;
-const loginEndpoint = `${configuredApiUrl}/api/auth/demo-login`;
+const signInEndpoint = `${configuredApiUrl}/api/auth/sign-in`;
+const demoLaunchEndpoint = `${configuredApiUrl}/api/auth/demo-launch`;
 const chatEndpoint = `${configuredApiUrl}/api/chat`;
 
 interface ModulesResponse {
@@ -33,9 +36,6 @@ export function App() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
-  const [companyId, setCompanyId] = useState("Epson Demo");
-  const [username, setUsername] = useState("demo");
-  const [password, setPassword] = useState("demo123");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [modules, setModules] = useState<ModuleSummary[]>([]);
   const [activeView, setActiveView] = useState<AppNavItem>("home");
@@ -75,8 +75,52 @@ export function App() {
       });
   }, [isSignedIn]);
 
-  async function streamChat(trimmedInput: string) {
+  function completeSignIn(data: LoginResponse) {
+    setCurrentUser(data.user);
+    setCurrentWorkspace(data.workspace);
+    setIsSignedIn(true);
     setActiveView("home");
+    setMessages([]);
+    setInput("");
+    setLoginError(null);
+  }
+
+  async function handleProductionSignIn(email: string, password: string) {
+    try {
+      setLoginError(null);
+      const response = await fetch(signInEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) throw new Error("Invalid email or password.");
+
+      completeSignIn((await response.json()) as LoginResponse);
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "Unable to sign in.");
+    }
+  }
+
+  async function handleDemoLaunch(workspaceId: string, role: string) {
+    try {
+      setLoginError(null);
+      const response = await fetch(demoLaunchEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId, role })
+      });
+
+      if (!response.ok) throw new Error("Unable to launch demo workspace.");
+
+      completeSignIn((await response.json()) as LoginResponse);
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "Unable to launch demo.");
+    }
+  }
+
+  async function streamChat(trimmedInput: string) {
+    setActiveView("ask");
 
     const userMessage: ChatMessage = { id: createMessageId(), role: "user", content: trimmedInput };
     const assistantMessage: ChatMessage = { id: createMessageId(), role: "assistant", content: "" };
@@ -162,29 +206,8 @@ export function App() {
     }
   }
 
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    try {
-      setLoginError(null);
-      const response = await fetch(loginEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyId, username, password })
-      });
-
-      if (!response.ok) throw new Error("Invalid demo credentials.");
-
-      const data = (await response.json()) as LoginResponse;
-
-      setCurrentUser(data.user);
-      setCurrentWorkspace(data.workspace);
-      setIsSignedIn(true);
-      setActiveView("home");
-      setMessages([]);
-    } catch (error) {
-      setLoginError(error instanceof Error ? error.message : "Unable to sign in.");
-    }
+  function handleAsk(prompt: string) {
+    void streamChat(prompt);
   }
 
   function handleLogout() {
@@ -200,14 +223,9 @@ export function App() {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
         <LoginScreen
-          companyId={companyId}
-          username={username}
-          password={password}
           loginError={loginError}
-          onCompanyIdChange={setCompanyId}
-          onUsernameChange={setUsername}
-          onPasswordChange={setPassword}
-          onSubmit={handleLogin}
+          onProductionSignIn={handleProductionSignIn}
+          onDemoLaunch={handleDemoLaunch}
         />
       </main>
     );
@@ -219,27 +237,39 @@ export function App() {
     <main className="min-h-screen bg-slate-950 text-white">
       <AppShell activeView={activeView} onNavigate={setActiveView} onLogout={handleLogout}>
         {activeView === "home" ? (
-          <AiWorkspaceView
+          <HomeView
             user={currentUser}
+            workspace={currentWorkspace}
+            input={input}
+            isStreaming={isStreaming}
+            onInputChange={setInput}
+            onAsk={handleAsk}
+          />
+        ) : null}
+
+        {activeView === "ask" ? (
+          <AskBuekView
             workspace={currentWorkspace}
             messages={messages}
             input={input}
             isStreaming={isStreaming}
             onInputChange={setInput}
             onSubmit={streamChat}
-            onContinueItem={(prompt) => {
-              setInput(prompt);
-              void streamChat(prompt);
-            }}
           />
         ) : null}
 
+        {activeView === "knowledge" ? <KnowledgeView workspace={currentWorkspace} /> : null}
+
         {activeView === "workspace" ? (
-          <WorkspaceView workspace={currentWorkspace} user={currentUser} />
+          <WorkspaceView
+            workspace={currentWorkspace}
+            user={currentUser}
+            installedModule={installedModule}
+          />
         ) : null}
 
         {activeView === "settings" ? (
-          <SettingsView status={status} installedModule={installedModule ?? undefined} />
+          <SettingsView status={status} installedModule={installedModule} />
         ) : null}
       </AppShell>
     </main>
