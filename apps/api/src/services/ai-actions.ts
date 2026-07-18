@@ -222,10 +222,10 @@ export async function executeAiAction(
         const result: AiActionResult = {
           success: true,
           toolName: action,
-          message: `Drafted engineering report "${report.title}" — pending supervisor approval.`,
+          message: `AI created draft report ${report.reportNumber ?? report.id} — engineer must review before submission.`,
           entityType: "engineering_report",
           entityId: report.id,
-          data: { id: report.id, title: report.title, status: report.status }
+          data: report
         };
         await logAgentAction(slug, action, params, result);
         return result;

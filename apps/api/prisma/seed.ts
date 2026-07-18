@@ -716,6 +716,7 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
             ? "Metal detector alarm triggered during packaging run. HACCP-011 containment applied, supplier lot held."
             : "Preliminary analysis indicates nozzle pressure drift. Recommend recalibration per SOP-014.",
       status: "pending_approval",
+      submittedAt: new Date(),
       authorId: engineer.id
     }
   });

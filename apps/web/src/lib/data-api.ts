@@ -69,11 +69,11 @@ export function fetchWorkOrder(slug: string, workOrderId: string) {
   return fetchJson<{ workOrder: WorkOrder }>(`/api/data/${slug}/work-orders/${workOrderId}`);
 }
 
-export function approveWorkOrder(slug: string, workOrderId: string, supervisorName: string) {
+export function approveWorkOrder(slug: string, workOrderId: string, supervisorName: string, role: string) {
   return fetchJson<{ workOrder: WorkOrder }>(`/api/data/${slug}/work-orders/${workOrderId}/approve`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ supervisorName })
+    body: JSON.stringify({ supervisorName, role })
   });
 }
 
@@ -117,8 +117,36 @@ export interface EngineeringReport {
   title: string;
   content: string;
   status: string;
+  reportNumber?: string;
+  version?: number;
+  sections?: ReportSections;
+  machineCode?: string;
+  issueId?: string;
+  submittedAt?: string;
   author?: { name: string };
   issueTitle?: string;
+}
+
+export interface ReportSections {
+  background: string;
+  evidence: string;
+  rootCause: string;
+  countermeasure: string;
+  verification: string;
+  attachments: string[];
+}
+
+export interface AiSuggestion {
+  candidate: string;
+  confidence: string;
+  basis: string;
+}
+
+export interface LessonLearned {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
 }
 
 export interface WorkflowItem {
@@ -161,11 +189,11 @@ export function fetchSopRevision(slug: string, revisionId: string) {
   return fetchJson<{ revision: SopRevision }>(`/api/data/${slug}/sop-revisions/${revisionId}`);
 }
 
-export function approveSopRevision(slug: string, revisionId: string, supervisorName: string) {
+export function approveSopRevision(slug: string, revisionId: string, supervisorName: string, role: string) {
   return fetchJson<{ revision: SopRevision }>(`/api/data/${slug}/sop-revisions/${revisionId}/approve`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ supervisorName })
+    body: JSON.stringify({ supervisorName, role })
   });
 }
 
@@ -177,12 +205,99 @@ export function fetchReport(slug: string, reportId: string) {
   return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}`);
 }
 
-export function approveReport(slug: string, reportId: string, supervisorName: string) {
+export function approveReport(slug: string, reportId: string, supervisorName: string, role: string) {
   return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}/approve`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ supervisorName })
+    body: JSON.stringify({ supervisorName, role })
   });
+}
+
+export function rejectReport(slug: string, reportId: string, supervisorName: string, role: string) {
+  return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ supervisorName, role })
+  });
+}
+
+export function requestReportRevision(
+  slug: string,
+  reportId: string,
+  supervisorName: string,
+  role: string,
+  notes?: string
+) {
+  return fetchJson<{ report: EngineeringReport }>(
+    `/api/data/${slug}/reports/${reportId}/request-revision`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ supervisorName, role, notes })
+    }
+  );
+}
+
+export function submitOperatorReport(
+  slug: string,
+  input: {
+    problem: string;
+    shift: string;
+    machineCode: string;
+    occurredAt: string;
+    rejectCount: number;
+    notes?: string;
+    reporterName: string;
+  }
+) {
+  return fetchJson<{ issueId: string; issueKey: string; title: string; message: string }>(
+    `/api/data/${slug}/operator/report`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    }
+  );
+}
+
+export function createDraftReport(slug: string, issueKey: string, engineerName: string) {
+  return fetchJson<{ report: EngineeringReport; aiSuggestion: AiSuggestion }>(
+    `/api/data/${slug}/reports/draft`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ issueKey, engineerName })
+    }
+  );
+}
+
+export function updateReportSections(
+  slug: string,
+  reportId: string,
+  sections: ReportSections,
+  engineerName: string
+) {
+  return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}/sections`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sections, engineerName })
+  });
+}
+
+export function submitReportForApproval(slug: string, reportId: string, engineerName: string) {
+  return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ engineerName })
+  });
+}
+
+export function fetchAiSuggestion(slug: string, issueKey: string) {
+  return fetchJson<{ suggestion: AiSuggestion }>(`/api/data/${slug}/issues/${issueKey}/ai-suggestion`);
+}
+
+export function fetchLessonsLearned(slug: string) {
+  return fetchJson<{ lessons: LessonLearned[] }>(`/api/data/${slug}/lessons-learned`);
 }
 
 export function fetchOperatorChecklist(slug: string) {

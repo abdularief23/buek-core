@@ -1,4 +1,11 @@
 import { prisma } from "../db.js";
+import { canApprove } from "../lib/roles.js";
+import {
+  buildDraftSectionsFromIssue,
+  generateReportNumber,
+  renderReportDocument,
+  type ReportSections
+} from "./report-template.js";
 
 export interface SopRevisionDto {
   id: string;
@@ -19,8 +26,14 @@ export interface EngineeringReportDto {
   title: string;
   content: string;
   status: string;
+  reportNumber?: string;
+  version: number;
+  sections?: ReportSections;
+  machineCode?: string;
   author?: { name: string };
   issueTitle?: string;
+  issueId?: string;
+  submittedAt?: string;
 }
 
 export interface OperatorChecklistDto {
@@ -32,9 +45,55 @@ export interface OperatorChecklistDto {
   items: Array<{ id: string; label: string; done: boolean }>;
 }
 
+export interface AiSuggestionDto {
+  candidate: string;
+  confidence: string;
+  basis: string;
+}
+
 async function getWorkspaceId(slug: string) {
   const ws = await prisma.workspace.findUnique({ where: { slug } });
   return ws?.id;
+}
+
+async function getEmployeeByName(workspaceId: string, name: string) {
+  return prisma.employee.findFirst({
+    where: { workspaceId, name: { contains: name, mode: "insensitive" } }
+  });
+}
+
+function mapReportRow(row: {
+  id: string;
+  title: string;
+  content: string;
+  status: string;
+  reportNumber: string | null;
+  version: number;
+  sections: unknown;
+  machineCode: string | null;
+  submittedAt: Date | null;
+  author: { name: string } | null;
+  issue: { title: string; id: string } | null;
+}): EngineeringReportDto {
+  return {
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    status: row.status,
+    version: row.version,
+    ...(row.reportNumber ? { reportNumber: row.reportNumber } : {}),
+    ...(row.sections ? { sections: row.sections as ReportSections } : {}),
+    ...(row.machineCode ? { machineCode: row.machineCode } : {}),
+    ...(row.author ? { author: { name: row.author.name } } : {}),
+    ...(row.issue ? { issueTitle: row.issue.title, issueId: row.issue.id } : {}),
+    ...(row.submittedAt ? { submittedAt: row.submittedAt.toISOString() } : {})
+  };
+}
+
+function assertCanApprove(role: string) {
+  if (!canApprove(role)) {
+    throw new Error("Only Supervisor or Plant Manager can approve. Engineers cannot approve their own work.");
+  }
 }
 
 export async function countPendingSopRevisions(slug: string): Promise<number> {
@@ -47,7 +106,7 @@ export async function countPendingReports(slug: string): Promise<number> {
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) return 0;
   return prisma.engineeringReport.count({
-    where: { workspaceId, status: { in: ["draft", "pending_approval"] } }
+    where: { workspaceId, status: "pending_approval" }
   });
 }
 
@@ -103,7 +162,13 @@ export async function getSopRevisionById(slug: string, id: string): Promise<SopR
   return dto;
 }
 
-export async function approveSopRevision(slug: string, id: string, supervisorName: string) {
+export async function approveSopRevision(
+  slug: string,
+  id: string,
+  supervisorName: string,
+  role: string
+) {
+  assertCanApprove(role);
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) return null;
 
@@ -128,7 +193,13 @@ export async function approveSopRevision(slug: string, id: string, supervisorNam
   return getSopRevisionById(slug, id);
 }
 
-export async function rejectSopRevision(slug: string, id: string, supervisorName: string) {
+export async function rejectSopRevision(
+  slug: string,
+  id: string,
+  supervisorName: string,
+  role: string
+) {
+  assertCanApprove(role);
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) return null;
 
@@ -154,19 +225,31 @@ export async function getPendingReports(slug: string): Promise<EngineeringReport
   if (!workspaceId) return [];
 
   const rows = await prisma.engineeringReport.findMany({
-    where: { workspaceId, status: { in: ["draft", "pending_approval"] } },
+    where: { workspaceId, status: "pending_approval" },
     include: { author: true, issue: true },
-    orderBy: { createdAt: "desc" }
+    orderBy: { submittedAt: "desc" }
   });
 
-  return rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    content: row.content,
-    status: row.status,
-    ...(row.author ? { author: { name: row.author.name } } : {}),
-    ...(row.issue ? { issueTitle: row.issue.title } : {})
-  }));
+  return rows.map(mapReportRow);
+}
+
+export async function getDraftReports(slug: string, engineerName?: string): Promise<EngineeringReportDto[]> {
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return [];
+
+  const rows = await prisma.engineeringReport.findMany({
+    where: {
+      workspaceId,
+      status: { in: ["draft", "revision_requested"] },
+      ...(engineerName
+        ? { author: { name: { contains: engineerName, mode: "insensitive" } } }
+        : {})
+    },
+    include: { author: true, issue: true },
+    orderBy: { updatedAt: "desc" }
+  });
+
+  return rows.map(mapReportRow);
 }
 
 export async function getReportById(slug: string, id: string): Promise<EngineeringReportDto | null> {
@@ -179,28 +262,302 @@ export async function getReportById(slug: string, id: string): Promise<Engineeri
   });
   if (!row) return null;
 
-  return {
-    id: row.id,
-    title: row.title,
-    content: row.content,
-    status: row.status,
-    ...(row.author ? { author: { name: row.author.name } } : {}),
-    ...(row.issue ? { issueTitle: row.issue.title } : {})
-  };
+  return mapReportRow(row);
 }
 
-export async function approveReport(slug: string, id: string, supervisorName: string) {
+export async function getAiSuggestionForIssue(slug: string, issueKey: string): Promise<AiSuggestionDto> {
+  const issue = await prisma.issue.findFirst({
+    where: { id: { contains: issueKey } },
+    include: { machine: true }
+  });
+
+  if (issue?.title.toLowerCase().includes("white")) {
+    return { candidate: "Print Head Nozzle Clog", confidence: "81%", basis: "4 similar cases in Company Brain" };
+  }
+  if (issue?.title.toLowerCase().includes("torque")) {
+    return { candidate: "Torque Tool Drift", confidence: "84%", basis: "ASM-022 + 3 historical cases" };
+  }
+  if (issue?.title.toLowerCase().includes("metal")) {
+    return { candidate: "Supplier Packaging Lot", confidence: "76%", basis: "HACCP-011 pattern match" };
+  }
+  return { candidate: "Bearing Wear", confidence: "81%", basis: "Machine history + telemetry trend" };
+}
+
+export async function createDraftReport(
+  slug: string,
+  issueKey: string,
+  engineerName: string,
+  aiSuggestion?: AiSuggestionDto
+) {
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) return null;
 
-  await prisma.engineeringReport.update({ where: { id }, data: { status: "approved" } });
+  const issue = await prisma.issue.findFirst({
+    where: { workspaceId, id: { endsWith: issueKey } },
+    include: { machine: true }
+  });
+  if (!issue) throw new Error("Issue not found.");
+
+  const engineer = await getEmployeeByName(workspaceId, engineerName);
+  const sections = buildDraftSectionsFromIssue({
+    title: issue.title,
+    description: issue.description,
+    ...(issue.machine?.code ? { machineCode: issue.machine.code } : {})
+  });
+
+  if (aiSuggestion) {
+    sections.rootCause = `[AI Suggestion — ${aiSuggestion.confidence}] ${aiSuggestion.candidate}\n${aiSuggestion.basis}\n\nEngineer review required.`;
+  }
+
+  const reportNumber = generateReportNumber(slug);
+  const content = renderReportDocument(
+    {
+      reportNumber,
+      problem: issue.title,
+      date: new Date().toISOString().slice(0, 10),
+      engineer: engineerName,
+      status: "draft",
+      ...(issue.machine?.code ? { machine: issue.machine.code } : {})
+    },
+    sections
+  );
+
+  const report = await prisma.engineeringReport.create({
+    data: {
+      workspaceId,
+      issueId: issue.id,
+      title: `Investigation Report — ${issue.title}`,
+      content,
+      reportNumber,
+      version: 1,
+      sections: sections as object,
+      machineCode: issue.machine?.code ?? null,
+      status: "draft",
+      authorId: engineer?.id ?? null
+    },
+    include: { author: true, issue: true }
+  });
 
   await prisma.activityEvent.create({
     data: {
       workspaceId,
       occurredAt: new Date(),
-      title: "Engineering Report Approved",
-      detail: `Report approved by ${supervisorName}`,
+      title: "AI Draft Report Created",
+      detail: `${reportNumber} — Draft v1 (engineer must review)`,
+      category: "quality",
+      entityType: "engineering_report",
+      entityId: report.id
+    }
+  });
+
+  return mapReportRow(report);
+}
+
+export async function updateReportSections(
+  slug: string,
+  reportId: string,
+  sections: ReportSections,
+  engineerName: string
+) {
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return null;
+
+  const existing = await prisma.engineeringReport.findFirst({
+    where: { id: reportId, workspaceId },
+    include: { author: true, issue: true }
+  });
+  if (!existing) return null;
+  if (!["draft", "revision_requested"].includes(existing.status)) {
+    throw new Error("Only draft reports can be edited.");
+  }
+
+  const content = renderReportDocument(
+    {
+      reportNumber: existing.reportNumber ?? reportId,
+      problem: existing.issue?.title ?? existing.title,
+      date: new Date().toISOString().slice(0, 10),
+      engineer: engineerName,
+      status: existing.status,
+      ...(existing.machineCode ? { machine: existing.machineCode } : {})
+    },
+    sections
+  );
+
+  const updated = await prisma.engineeringReport.update({
+    where: { id: reportId },
+    data: { sections: sections as object, content, version: existing.version + 1 },
+    include: { author: true, issue: true }
+  });
+
+  return mapReportRow(updated);
+}
+
+export async function submitReportForApproval(slug: string, reportId: string, engineerName: string) {
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return null;
+
+  const existing = await prisma.engineeringReport.findFirst({
+    where: { id: reportId, workspaceId },
+    include: { author: true, issue: true }
+  });
+  if (!existing) return null;
+
+  const sections = (existing.sections as ReportSections | null) ?? buildDraftSectionsFromIssue({
+    title: existing.issue?.title ?? existing.title
+  });
+
+  const content = renderReportDocument(
+    {
+      reportNumber: existing.reportNumber ?? reportId,
+      problem: existing.issue?.title ?? existing.title,
+      date: new Date().toISOString().slice(0, 10),
+      engineer: engineerName,
+      status: "pending_approval",
+      ...(existing.machineCode ? { machine: existing.machineCode } : {})
+    },
+    sections
+  );
+
+  const updated = await prisma.engineeringReport.update({
+    where: { id: reportId },
+    data: { status: "pending_approval", submittedAt: new Date(), content },
+    include: { author: true, issue: true }
+  });
+
+  await prisma.activityEvent.create({
+    data: {
+      workspaceId,
+      occurredAt: new Date(),
+      title: "Report Submitted for Approval",
+      detail: `${existing.reportNumber} submitted by ${engineerName}`,
+      category: "approval",
+      entityType: "engineering_report",
+      entityId: reportId
+    }
+  });
+
+  return mapReportRow(updated);
+}
+
+async function createLessonLearned(
+  workspaceId: string,
+  issueId: string | null,
+  title: string,
+  content: string,
+  authorId: string | null
+) {
+  return prisma.lessonLearned.create({
+    data: { workspaceId, issueId, title, content, authorId }
+  });
+}
+
+export async function approveReport(
+  slug: string,
+  id: string,
+  supervisorName: string,
+  role: string
+) {
+  assertCanApprove(role);
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return null;
+
+  const supervisor = await getEmployeeByName(workspaceId, supervisorName);
+  const report = await prisma.engineeringReport.update({
+    where: { id },
+    data: {
+      status: "approved",
+      approvedAt: new Date(),
+      approvedById: supervisor?.id ?? null
+    },
+    include: { author: true, issue: true }
+  });
+
+  if (report.issueId) {
+    await prisma.issue.update({
+      where: { id: report.issueId },
+      data: { status: "closed", progress: 100 }
+    });
+
+    const sections = (report.sections as ReportSections | null) ?? null;
+    await createLessonLearned(
+      workspaceId,
+      report.issueId,
+      `Lesson: ${report.issue?.title ?? report.title}`,
+      sections?.rootCause
+        ? `Root cause: ${sections.rootCause}\nCountermeasure: ${sections.countermeasure}`
+        : `Investigation approved. Report ${report.reportNumber}.`,
+      report.authorId
+    );
+
+    await prisma.memoryRecord.create({
+      data: {
+        workspaceId,
+        scope: "lessons_learned",
+        content: `Case closed: ${report.issue?.title}. ${sections?.rootCause ?? ""}`,
+        tags: ["lessons_learned", "company_brain"]
+      }
+    });
+  }
+
+  await prisma.activityEvent.create({
+    data: {
+      workspaceId,
+      occurredAt: new Date(),
+      title: "Investigation Report Approved",
+      detail: `${report.reportNumber} approved by ${supervisorName}`,
+      category: "approval",
+      entityType: "engineering_report",
+      entityId: id
+    }
+  });
+
+  return getReportById(slug, id);
+}
+
+export async function rejectReport(slug: string, id: string, supervisorName: string, role: string) {
+  assertCanApprove(role);
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return null;
+
+  await prisma.engineeringReport.update({ where: { id }, data: { status: "rejected" } });
+
+  await prisma.activityEvent.create({
+    data: {
+      workspaceId,
+      occurredAt: new Date(),
+      title: "Investigation Report Rejected",
+      detail: `Rejected by ${supervisorName}`,
+      category: "approval",
+      entityType: "engineering_report",
+      entityId: id
+    }
+  });
+
+  return getReportById(slug, id);
+}
+
+export async function requestReportRevision(
+  slug: string,
+  id: string,
+  supervisorName: string,
+  role: string,
+  notes?: string
+) {
+  assertCanApprove(role);
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return null;
+
+  await prisma.engineeringReport.update({
+    where: { id },
+    data: { status: "revision_requested" }
+  });
+
+  await prisma.activityEvent.create({
+    data: {
+      workspaceId,
+      occurredAt: new Date(),
+      title: "Revision Requested",
+      detail: notes ?? `Revision requested by ${supervisorName}`,
       category: "approval",
       entityType: "engineering_report",
       entityId: id
@@ -279,6 +636,17 @@ export async function getMemories(slug: string, scope?: string) {
   });
 
   return rows.map((r) => ({ id: r.id, scope: r.scope, content: r.content, tags: r.tags }));
+}
+
+export async function getLessonsLearned(slug: string) {
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return [];
+
+  return prisma.lessonLearned.findMany({
+    where: { workspaceId },
+    orderBy: { createdAt: "desc" },
+    take: 20
+  });
 }
 
 export async function saveMemory(slug: string, scope: string, content: string, tags: string[] = []) {

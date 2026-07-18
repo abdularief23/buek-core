@@ -4,6 +4,8 @@ import {
   approveReport,
   approveSopRevision,
   approveWorkOrder,
+  createDraftReport,
+  fetchAiSuggestion,
   fetchIssueByKey,
   fetchKpiDetail,
   fetchPendingReports,
@@ -13,13 +15,20 @@ import {
   fetchReport,
   fetchSopRevision,
   fetchWorkOrder,
+  rejectReport,
   rejectWorkOrder,
+  requestReportRevision,
+  submitReportForApproval,
+  updateReportSections,
+  type AiSuggestion,
   type EngineeringReport,
+  type ReportSections,
   type KpiDetail,
   type ProductionDashboard,
   type SopRevision,
   type WorkOrder
 } from "../lib/data-api.js";
+import { canApprove, isEngineer } from "../lib/roles.js";
 
 export type DynamicWorkspaceState =
   | { kind: "approval-queue"; slug: string }
@@ -35,6 +44,7 @@ export type DynamicWorkspaceState =
 interface DynamicWorkspaceProps {
   workspace: DynamicWorkspaceState;
   userName: string;
+  userRole: string;
   onClose: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
   onWorkspaceChange: (next: DynamicWorkspaceState) => void;
@@ -44,6 +54,7 @@ interface DynamicWorkspaceProps {
 export function DynamicWorkspace({
   workspace,
   userName,
+  userRole,
   onClose,
   onAskAi,
   onWorkspaceChange,
@@ -90,6 +101,7 @@ export function DynamicWorkspace({
         slug={workspace.slug}
         workOrderId={workspace.workOrderId}
         userName={userName}
+        userRole={userRole}
         onClose={onClose}
         onBack={() => onWorkspaceChange({ kind: "approval-queue", slug: workspace.slug })}
         onAskAi={onAskAi}
@@ -103,9 +115,12 @@ export function DynamicWorkspace({
       <InvestigationWorkspace
         slug={workspace.slug}
         issueKey={workspace.issueKey}
+        userName={userName}
+        userRole={userRole}
         onClose={onClose}
         onAskAi={onAskAi}
         onDataChange={notifyChange}
+        onWorkspaceChange={onWorkspaceChange}
       />
     );
   }
@@ -128,6 +143,7 @@ export function DynamicWorkspace({
         slug={workspace.slug}
         revisionId={workspace.revisionId}
         userName={userName}
+        userRole={userRole}
         onClose={onClose}
         onBack={() => onWorkspaceChange({ kind: "sop-revisions", slug: workspace.slug })}
         onAskAi={onAskAi}
@@ -153,6 +169,7 @@ export function DynamicWorkspace({
       slug={workspace.slug}
       reportId={workspace.reportId}
       userName={userName}
+      userRole={userRole}
       onClose={onClose}
       onBack={() => onWorkspaceChange({ kind: "engineering-reports", slug: workspace.slug })}
       onAskAi={onAskAi}
@@ -227,6 +244,7 @@ function WorkOrderDetailWorkspace({
   slug,
   workOrderId,
   userName,
+  userRole,
   onClose,
   onBack,
   onAskAi,
@@ -235,6 +253,7 @@ function WorkOrderDetailWorkspace({
   slug: string;
   workOrderId: string;
   userName: string;
+  userRole: string;
   onClose: () => void;
   onBack: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
@@ -251,7 +270,7 @@ function WorkOrderDetailWorkspace({
     if (!order || acting) return;
     setActing(true);
     try {
-      const result = await approveWorkOrder(slug, order.id, userName);
+      const result = await approveWorkOrder(slug, order.id, userName, userRole);
       setOrder(result.workOrder);
       onDataChange?.();
     } finally {
@@ -276,6 +295,7 @@ function WorkOrderDetailWorkspace({
   }
 
   const isDecided = order.status === "approved" || order.status === "rejected";
+  const mayApprove = canApprove(userRole);
 
   return (
     <div className="space-y-8 pb-16">
@@ -334,7 +354,7 @@ function WorkOrderDetailWorkspace({
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        {!isDecided ? (
+        {!isDecided && mayApprove ? (
           <>
             <button
               type="button"
@@ -354,6 +374,11 @@ function WorkOrderDetailWorkspace({
             </button>
           </>
         ) : null}
+        {!mayApprove && !isDecided ? (
+          <p className="buek-small text-slate-500">
+            Hanya Supervisor yang dapat menyetujui work order.
+          </p>
+        ) : null}
         <button
           type="button"
           onClick={() =>
@@ -371,21 +396,36 @@ function WorkOrderDetailWorkspace({
 function InvestigationWorkspace({
   slug,
   issueKey,
+  userName,
+  userRole,
   onClose,
   onAskAi,
-  onDataChange
+  onDataChange,
+  onWorkspaceChange
 }: {
   slug: string;
   issueKey: string;
+  userName: string;
+  userRole: string;
   onClose: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
   onDataChange?: () => void;
+  onWorkspaceChange: (next: DynamicWorkspaceState) => void;
 }) {
   const [issue, setIssue] = useState<import("../lib/data-api.js").IssueRecord | null>(null);
   const [advancing, setAdvancing] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null);
+  const [rootCause, setRootCause] = useState("");
+  const [countermeasure, setCountermeasure] = useState("");
+  const [verification, setVerification] = useState("");
+  const [creatingDraft, setCreatingDraft] = useState(false);
+  const [suggestionStatus, setSuggestionStatus] = useState<"pending" | "accepted" | "rejected">("pending");
 
   useEffect(() => {
     fetchIssueByKey(slug, issueKey).then((data) => setIssue(data.issue));
+    fetchAiSuggestion(slug, issueKey)
+      .then((data) => setAiSuggestion(data.suggestion))
+      .catch(() => setAiSuggestion(null));
   }, [slug, issueKey]);
 
   async function completeStep(stepKey: string) {
@@ -400,57 +440,176 @@ function InvestigationWorkspace({
     }
   }
 
+  async function handleCreateDraft() {
+    if (!issue || creatingDraft) return;
+    setCreatingDraft(true);
+    try {
+      const result = await createDraftReport(slug, issueKey, userName);
+      onWorkspaceChange({ kind: "engineering-report", slug, reportId: result.report.id });
+      onDataChange?.();
+    } finally {
+      setCreatingDraft(false);
+    }
+  }
+
+  function acceptSuggestion() {
+    if (!aiSuggestion) return;
+    setRootCause(`${aiSuggestion.candidate} (${aiSuggestion.confidence})\n${aiSuggestion.basis}`);
+    setSuggestionStatus("accepted");
+  }
+
   if (!issue) {
     return <p className="buek-body text-slate-500">Loading investigation...</p>;
   }
+
+  const engineerView = isEngineer(userRole);
 
   return (
     <div className="space-y-8 pb-16">
       <header className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
         <div>
-          <p className="buek-small text-slate-500">AI Workspace · Investigation</p>
+          <p className="buek-small text-slate-500">Investigation Workspace</p>
           <h1 className="buek-heading text-white">{issue.title}</h1>
-          <p className="mt-2 buek-body text-slate-400">{issue.machine?.code}</p>
+          <p className="mt-2 buek-body text-slate-400">
+            {issue.machine?.code} · Issue #{issue.id.slice(-3)}
+          </p>
         </div>
         <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
           ← Back
         </button>
       </header>
 
-      <div className="buek-card grid gap-4 rounded-2xl border border-white/10 sm:grid-cols-4">
-        <div>
-          <p className="buek-small text-slate-500">Status</p>
-          <p className="buek-body capitalize text-white">{issue.status}</p>
-        </div>
-        <div>
-          <p className="buek-small text-slate-500">Owner</p>
-          <p className="buek-body text-white">{issue.owner?.name}</p>
-        </div>
-        <div>
-          <p className="buek-small text-slate-500">Due</p>
-          <p className="buek-body text-white">Today</p>
-        </div>
-        <div>
-          <p className="buek-small text-slate-500">Progress</p>
-          <p className="buek-body text-cyan-300">{issue.progress}%</p>
-        </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
+          <h2 className="buek-card-title text-slate-400">Issue & Evidence</h2>
+          <p className="buek-body text-slate-300">{issue.description ?? issue.title}</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <p className="buek-small text-slate-500">Machine</p>
+              <p className="buek-body text-white">{issue.machine?.code ?? "—"}</p>
+            </div>
+            <div>
+              <p className="buek-small text-slate-500">Severity</p>
+              <p className="buek-body capitalize text-amber-300">{issue.severity}</p>
+            </div>
+            <div>
+              <p className="buek-small text-slate-500">Owner</p>
+              <p className="buek-body text-white">{issue.owner?.name ?? "Unassigned"}</p>
+            </div>
+            <div>
+              <p className="buek-small text-slate-500">Progress</p>
+              <p className="buek-body text-cyan-300">{issue.progress}%</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="buek-card space-y-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
+          <h2 className="buek-card-title text-cyan-300">AI Suggestion — Root Cause</h2>
+          {aiSuggestion ? (
+            <>
+              <p className="text-lg font-semibold text-white">{aiSuggestion.candidate}</p>
+              <p className="buek-body text-slate-400">
+                Confidence: <span className="text-cyan-300">{aiSuggestion.confidence}</span>
+              </p>
+              <p className="buek-small text-slate-500">{aiSuggestion.basis}</p>
+              {engineerView && suggestionStatus === "pending" ? (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={acceptSuggestion}
+                    className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-300"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSuggestionStatus("rejected")}
+                    className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300"
+                  >
+                    Reject
+                  </button>
+                </div>
+              ) : null}
+              {suggestionStatus === "accepted" ? (
+                <p className="buek-small text-emerald-400">✓ Accepted — engineer decides final root cause</p>
+              ) : null}
+            </>
+          ) : (
+            <p className="buek-body text-slate-500">AI sedang menganalisis histori...</p>
+          )}
+        </section>
       </div>
+
+      {issue.graph?.length ? (
+        <section className="space-y-3">
+          <h2 className="buek-card-title text-slate-400">Company Brain — Related Knowledge</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {issue.graph.map((edge) => (
+              <div key={`${edge.relation}-${edge.toId}`} className="buek-card rounded-xl border border-white/10 px-4 py-3">
+                <p className="buek-small text-slate-500">{edge.relation.replace("_", " ")}</p>
+                <p className="buek-body text-white">{edge.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {engineerView ? (
+        <section className="space-y-4">
+          <h2 className="buek-card-title text-slate-400">Engineer Investigation</h2>
+          <label className="block space-y-2">
+            <span className="buek-small text-slate-500">Root Cause</span>
+            <textarea
+              value={rootCause}
+              onChange={(e) => setRootCause(e.target.value)}
+              rows={3}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              placeholder="Engineer menentukan root cause..."
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="buek-small text-slate-500">Countermeasure</span>
+            <textarea
+              value={countermeasure}
+              onChange={(e) => setCountermeasure(e.target.value)}
+              rows={3}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              placeholder="Tindakan perbaikan..."
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="buek-small text-slate-500">Verification Plan</span>
+            <textarea
+              value={verification}
+              onChange={(e) => setVerification(e.target.value)}
+              rows={2}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              placeholder="Cara verifikasi setelah perbaikan..."
+            />
+          </label>
+          <button
+            type="button"
+            disabled={creatingDraft}
+            onClick={() => void handleCreateDraft()}
+            className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+          >
+            {creatingDraft ? "Creating Draft..." : "Create Draft Report (AI)"}
+          </button>
+          <p className="buek-small text-slate-500">
+            AI membuat draft — engineer mengedit dan submit untuk approval supervisor.
+          </p>
+        </section>
+      ) : null}
 
       {issue.investigation ? (
         <section className="space-y-4">
-          <h2 className="buek-card-title text-slate-400">Workflow</h2>
-          <div className="h-2 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full bg-cyan-500 transition-all"
-              style={{ width: `${issue.investigation.progress}%` }}
-            />
-          </div>
+          <h2 className="buek-card-title text-slate-400">Workflow Steps</h2>
           <ul className="space-y-2">
             {issue.investigation.steps.map((step) => (
               <li key={step.key}>
                 <button
                   type="button"
-                  disabled={step.done || advancing}
+                  disabled={step.done || advancing || !engineerView}
                   onClick={() => void completeStep(step.key)}
                   className={`flex w-full items-center justify-between rounded-xl border px-5 py-4 text-left ${
                     step.done
@@ -467,19 +626,8 @@ function InvestigationWorkspace({
         </section>
       ) : null}
 
-      {issue.graph?.length ? (
-        <section className="space-y-3">
-          <h2 className="buek-card-title text-slate-400">Knowledge Graph</h2>
-          {issue.graph.map((edge) => (
-            <p key={`${edge.relation}-${edge.toId}`} className="buek-small text-slate-500">
-              {edge.relation.replace("_", " ")} → {edge.label}
-            </p>
-          ))}
-        </section>
-      ) : null}
-
       <div className="flex flex-wrap gap-3">
-        {["Generate 5 Why", "Fishbone", "Find Similar Case", "Create Report"].map((action) => (
+        {["Find Similar Case", "Search SOP", "Machine History"].map((action) => (
           <button
             key={action}
             type="button"
@@ -558,6 +706,7 @@ function SopRevisionDetailWorkspace({
   slug,
   revisionId,
   userName,
+  userRole,
   onClose,
   onBack,
   onAskAi,
@@ -566,6 +715,7 @@ function SopRevisionDetailWorkspace({
   slug: string;
   revisionId: string;
   userName: string;
+  userRole: string;
   onClose: () => void;
   onBack: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
@@ -582,7 +732,7 @@ function SopRevisionDetailWorkspace({
     if (!revision || acting) return;
     setActing(true);
     try {
-      const result = await approveSopRevision(slug, revision.id, userName);
+      const result = await approveSopRevision(slug, revision.id, userName, userRole);
       setRevision(result.revision);
       onDataChange?.();
     } finally {
@@ -595,6 +745,7 @@ function SopRevisionDetailWorkspace({
   }
 
   const isDecided = revision.status === "approved" || revision.status === "rejected";
+  const mayApprove = canApprove(userRole);
 
   return (
     <div className="space-y-8 pb-16">
@@ -652,7 +803,7 @@ function SopRevisionDetailWorkspace({
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        {!isDecided ? (
+        {!isDecided && mayApprove ? (
           <button
             type="button"
             disabled={acting}
@@ -661,6 +812,9 @@ function SopRevisionDetailWorkspace({
           >
             Approve
           </button>
+        ) : null}
+        {!mayApprove && !isDecided ? (
+          <p className="buek-small text-slate-500">Hanya Supervisor yang dapat menyetujui SOP revision.</p>
         ) : null}
         <button
           type="button"
@@ -740,6 +894,7 @@ function ReportDetailWorkspace({
   slug,
   reportId,
   userName,
+  userRole,
   onClose,
   onBack,
   onAskAi,
@@ -748,23 +903,76 @@ function ReportDetailWorkspace({
   slug: string;
   reportId: string;
   userName: string;
+  userRole: string;
   onClose: () => void;
   onBack: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
   onDataChange?: () => void;
 }) {
   const [report, setReport] = useState<EngineeringReport | null>(null);
+  const [sections, setSections] = useState<ReportSections | null>(null);
   const [acting, setActing] = useState(false);
 
   useEffect(() => {
-    fetchReport(slug, reportId).then((data) => setReport(data.report));
+    fetchReport(slug, reportId).then((data) => {
+      setReport(data.report);
+      if (data.report.sections) setSections(data.report.sections);
+    });
   }, [slug, reportId]);
 
   async function handleApprove() {
     if (!report || acting) return;
     setActing(true);
     try {
-      const result = await approveReport(slug, report.id, userName);
+      const result = await approveReport(slug, report.id, userName, userRole);
+      setReport(result.report);
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleReject() {
+    if (!report || acting) return;
+    setActing(true);
+    try {
+      const result = await rejectReport(slug, report.id, userName, userRole);
+      setReport(result.report);
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleRequestRevision() {
+    if (!report || acting) return;
+    setActing(true);
+    try {
+      const result = await requestReportRevision(slug, report.id, userName, userRole);
+      setReport(result.report);
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!report || !sections || acting) return;
+    setActing(true);
+    try {
+      const result = await updateReportSections(slug, report.id, sections, userName);
+      setReport(result.report);
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleSubmit() {
+    if (!report || acting) return;
+    setActing(true);
+    try {
+      const result = await submitReportForApproval(slug, report.id, userName);
       setReport(result.report);
       onDataChange?.();
     } finally {
@@ -777,6 +985,10 @@ function ReportDetailWorkspace({
   }
 
   const isDecided = report.status === "approved" || report.status === "rejected";
+  const mayApprove = canApprove(userRole);
+  const engineerView = isEngineer(userRole);
+  const editable = engineerView && (report.status === "draft" || report.status === "revision_requested");
+  const displaySections = sections ?? report.sections;
 
   return (
     <div className="space-y-8 pb-16">
@@ -785,41 +997,131 @@ function ReportDetailWorkspace({
           <button type="button" onClick={onBack} className="buek-small text-cyan-400 hover:text-cyan-300">
             ← Engineering Reports
           </button>
-          <h1 className="mt-3 buek-heading text-white">{report.title}</h1>
-          <p className="mt-2 buek-body text-slate-400">{report.author?.name}</p>
+          <h1 className="mt-3 buek-heading text-white">Investigation Report</h1>
+          <p className="mt-2 buek-body text-slate-400">
+            {report.reportNumber ?? report.id} · v{report.version ?? 1} · {report.author?.name}
+          </p>
         </div>
         <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
           Close
         </button>
       </header>
 
-      <div className="buek-card rounded-2xl border border-white/10">
-        <p className="buek-small text-slate-500">Status</p>
-        <p className="mt-1 buek-body capitalize text-white">{report.status.replace("_", " ")}</p>
+      <div className="buek-card rounded-2xl border border-white/10 bg-slate-900/50 p-8 font-mono text-sm leading-relaxed text-slate-200">
+        <p className="text-center text-base font-bold tracking-widest text-white">INVESTIGATION REPORT</p>
+        <p className="my-4 text-center text-slate-500">--------------------------------</p>
+        <div className="grid gap-1 sm:grid-cols-2">
+          <p>Problem     : {report.issueTitle ?? report.title}</p>
+          <p>Machine     : {report.machineCode ?? "—"}</p>
+          <p>Engineer    : {report.author?.name ?? "—"}</p>
+          <p>Document No : {report.reportNumber ?? "—"}</p>
+        </div>
+        <p className="my-4 text-center text-slate-500">--------------------------------</p>
+
+        {displaySections ? (
+          <>
+            {(
+              [
+                ["1. Background", "background"],
+                ["2. Evidence", "evidence"],
+                ["3. Root Cause", "rootCause"],
+                ["4. Countermeasure", "countermeasure"],
+                ["5. Verification", "verification"]
+              ] as const
+            ).map(([label, key]) => (
+              <div key={key} className="mb-6">
+                <p className="font-semibold text-white">{label}</p>
+                <p className="my-2 text-slate-500">--------------------------------</p>
+                {editable && sections ? (
+                  <textarea
+                    value={sections[key]}
+                    onChange={(e) => setSections({ ...sections, [key]: e.target.value })}
+                    rows={4}
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-sans text-slate-200"
+                  />
+                ) : (
+                  <p className="whitespace-pre-wrap">{displaySections[key] || "____________________"}</p>
+                )}
+              </div>
+            ))}
+            <div>
+              <p className="font-semibold text-white">Attachments</p>
+              <p className="my-2 text-slate-500">--------------------------------</p>
+              {(displaySections.attachments ?? ["Photo", "SOP", "Trend"]).map((a) => (
+                <p key={a}>□ {a}</p>
+              ))}
+            </div>
+          </>
+        ) : (
+          <pre className="whitespace-pre-wrap">{report.content}</pre>
+        )}
+
+        <p className="my-4 text-center text-slate-500">--------------------------------</p>
+        <p>
+          Status: <span className="font-semibold uppercase text-cyan-300">{report.status.replace("_", " ")}</span>
+        </p>
       </div>
 
-      <section className="space-y-3">
-        <h2 className="buek-card-title text-slate-400">Report Content</h2>
-        <pre className="whitespace-pre-wrap buek-body text-slate-300">{report.content}</pre>
-      </section>
-
       <div className="flex flex-wrap gap-3">
-        {!isDecided ? (
-          <button
-            type="button"
-            disabled={acting}
-            onClick={() => void handleApprove()}
-            className="rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
-          >
-            Approve
-          </button>
+        {editable ? (
+          <>
+            <button
+              type="button"
+              disabled={acting || !sections}
+              onClick={() => void handleSave()}
+              className="rounded-xl border border-white/10 px-6 py-3 font-semibold text-white hover:bg-white/5 disabled:opacity-50"
+            >
+              Save Draft
+            </button>
+            <button
+              type="button"
+              disabled={acting}
+              onClick={() => void handleSubmit()}
+              className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+            >
+              Submit for Approval
+            </button>
+          </>
+        ) : null}
+        {!isDecided && mayApprove && report.status === "pending_approval" ? (
+          <>
+            <button
+              type="button"
+              disabled={acting}
+              onClick={() => void handleApprove()}
+              className="rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+            >
+              Approve
+            </button>
+            <button
+              type="button"
+              disabled={acting}
+              onClick={() => void handleRequestRevision()}
+              className="rounded-xl border border-amber-500/40 px-6 py-3 font-semibold text-amber-300 hover:bg-amber-500/10 disabled:opacity-50"
+            >
+              Request Revision
+            </button>
+            <button
+              type="button"
+              disabled={acting}
+              onClick={() => void handleReject()}
+              className="rounded-xl border border-red-500/40 px-6 py-3 font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+            >
+              Reject
+            </button>
+          </>
+        ) : null}
+        {!mayApprove && report.status === "pending_approval" && !isDecided ? (
+          <p className="buek-small text-slate-500">
+            Laporan menunggu persetujuan Supervisor. Engineer tidak dapat approve.
+          </p>
         ) : null}
         <button
           type="button"
           onClick={() => onAskAi(`Review engineering report: ${report.title}`, report.title)}
           className="rounded-xl border border-white/10 px-6 py-3 font-semibold text-white hover:bg-white/5"
         >
-          ✨ Jelaskan
+          ✨ AI Summary
         </button>
       </div>
     </div>
