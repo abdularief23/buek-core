@@ -84,7 +84,7 @@ export function SupervisorHome({ user, workspace, roleHome, onOpenWorkspace }: R
               onOpenWorkspace({
                 kind: "investigation",
                 slug: workspace.id,
-                issueKey: issue.title.toLowerCase().includes("white") ? "white-streak" : "vibration"
+                issueKey: issue.issueKey ?? "white-streak"
               })
             }
             className="buek-card w-full rounded-2xl border border-white/10 text-left hover:border-cyan-400/30"

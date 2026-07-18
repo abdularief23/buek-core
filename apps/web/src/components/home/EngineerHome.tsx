@@ -87,7 +87,13 @@ export function EngineerHome({ user, workspace, roleHome, onOpenWorkspace }: Rol
                 onOpenWorkspace({
                   kind: "investigation",
                   slug: workspace.id,
-                  issueKey: "white-streak"
+                  issueKey:
+                    eng.problems[0]?.issueKey ??
+                    (workspace.id === "toyota-plant"
+                      ? "torque-drift"
+                      : workspace.id === "nestle-factory"
+                        ? "metal-detector"
+                        : "white-streak")
                 })
               }
               className="mt-4 text-base font-medium text-cyan-400 hover:text-cyan-300"

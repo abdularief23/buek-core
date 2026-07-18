@@ -15,6 +15,7 @@ import {
   findWorkspaceModule,
   type Workspace
 } from "./workspaces.js";
+import { getTenantThemeOrDefault } from "./tenants/index.js";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -24,6 +25,8 @@ interface ChatMessage {
 interface ChatRequestBody {
   messages?: ChatMessage[];
   workspaceId?: string;
+  role?: string;
+  chatPersona?: string;
 }
 
 interface ChatMetadata {
@@ -149,7 +152,8 @@ function buildInstructions(
   module: DomainModule,
   selectedKnowledge: KnowledgeSearchResult[],
   memories: Array<{ scope: string; content: string }> = [],
-  actionContext = ""
+  actionContext = "",
+  rolePersona = ""
 ): string {
   const knowledgeText = selectedKnowledge
     .map(({ chunk, score }) =>
@@ -169,9 +173,20 @@ function buildInstructions(
     .map((tool) => `${tool.name} (${tool.id}): ${tool.description}`)
     .join("\n");
 
+  const tenant = getTenantThemeOrDefault(workspace.id);
+  const forbidden =
+    tenant.forbiddenTerms.length > 0
+      ? `Jangan pernah membahas istilah dari industri lain: ${tenant.forbiddenTerms.join(", ")}.`
+      : "";
+
   return [
     "You are Buek Core, a modular AI worker platform demo for the OpenAI Hackathon.",
     "You are an AI worker. AI Core provides orchestration; domain modules provide capabilities; workspace knowledge provides company-specific facts.",
+    tenant.aiPersonaIntro,
+    forbidden,
+    `Domain vocabulary for this tenant: ${tenant.domainTerms.join(", ")}.`,
+    `Jika user bertanya tentang mesin bermasalah tanpa detail, tanyakan klarifikasi: ${tenant.aiClarifyingQuestions.join(" ")}`,
+    rolePersona ? `Role-specific guidance: ${rolePersona}` : "",
     `Current workspace: ${workspace.name}.`,
     `Current organization: ${workspace.organization}.`,
     `Current industry: ${workspace.industry}.`,
@@ -258,6 +273,13 @@ export async function handleChatRequest(
     const workspace = findWorkspace(requestBody.workspaceId);
     const workspaceModule = findWorkspaceModule(workspace, modules);
     const workspaceSlug = workspace.id;
+    const tenant = getTenantThemeOrDefault(workspaceSlug);
+    const rolePersona =
+      typeof requestBody.chatPersona === "string" && requestBody.chatPersona.trim()
+        ? requestBody.chatPersona
+        : typeof requestBody.role === "string" && requestBody.role.trim()
+          ? `User role: ${requestBody.role}.`
+          : "";
 
     const actionResult = await tryExecuteActionFromMessage(workspaceSlug, latestUserMessage);
     const memories = await getMemories(workspaceSlug);
@@ -326,7 +348,14 @@ export async function handleChatRequest(
     const client = createResponsesClient({ apiKey: env.openAiApiKey });
     const stream = await client.responses.create({
       model: env.openAiModel,
-      instructions: buildInstructions(workspace, detectedModule, selectedKnowledge, memories, actionContext),
+      instructions: buildInstructions(
+        workspace,
+        detectedModule,
+        selectedKnowledge,
+        memories,
+        actionContext,
+        rolePersona
+      ),
       input: buildInput(messages),
       stream: true,
       max_output_tokens: 900

@@ -20,7 +20,7 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
     setSearching(true);
     setLastQuery(trimmed);
     try {
-      const data = await searchKnowledge(trimmed);
+      const data = await searchKnowledge(trimmed, workspace.moduleId, workspace.id);
       setResults(data.results);
     } catch {
       setResults([]);
