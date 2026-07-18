@@ -143,6 +143,16 @@ function sendEvent(res: Response, event: string, data: unknown): void {
   res.write(`data: ${JSON.stringify(data)}\n\n`);
 }
 
+function sanitizeErrorMessage(message: string): string {
+  const guarded = guardOutput({ text: message, toolsExecuted: [] });
+
+  if (/api[\s_-]?key|credential|unauthorized/i.test(message)) {
+    return "OpenAI request failed. Check server credentials.";
+  }
+
+  return guarded.text;
+}
+
 export async function handleChatRequest(
   req: Request,
   res: Response,
@@ -228,7 +238,9 @@ export async function handleChatRequest(
 
       if (event.type === "response.failed") {
         sendEvent(res, "error", {
-          message: event.response.error?.message ?? "The OpenAI response failed."
+          message: sanitizeErrorMessage(
+            event.response.error?.message ?? "The OpenAI response failed."
+          )
         });
       }
     }
@@ -245,7 +257,10 @@ export async function handleChatRequest(
     res.end();
   } catch (error) {
     sendEvent(res, "error", {
-      message: error instanceof Error ? error.message : "Unable to complete chat request."
+      message:
+        error instanceof Error
+          ? sanitizeErrorMessage(error.message)
+          : "Unable to complete chat request."
     });
     res.end();
   }

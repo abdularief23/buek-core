@@ -70,9 +70,12 @@ const SECRET_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /\bOPENAI_API_KEY\b/i, label: "OPENAI_API_KEY" },
   { pattern: /\bDATABASE_URL\b/i, label: "DATABASE_URL" },
   { pattern: /\bJWT_SECRET\b/i, label: "JWT_SECRET" },
-  { pattern: /\b(API[_-]?KEY|ACCESS[_-]?TOKEN|AUTH[_-]?TOKEN)\b/i, label: "token or API key" },
+  {
+    pattern: /\b(API[\s_-]?KEY|ACCESS[\s_-]?TOKEN|AUTH[\s_-]?TOKEN)\b/i,
+    label: "token or API key"
+  },
   { pattern: /\bPASSWORD\b/i, label: "password" },
-  { pattern: /\bsk-[A-Za-z0-9_-]{16,}\b/, label: "OpenAI-style secret" },
+  { pattern: /\bsk-[A-Za-z0-9_*.-]{8,}\b/, label: "OpenAI-style secret" },
   { pattern: /\bpostgres(?:ql)?:\/\/[^\s]+/i, label: "database URL" }
 ];
 
