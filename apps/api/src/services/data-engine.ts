@@ -140,6 +140,57 @@ export async function getLiveKpis(slug: string): Promise<LiveKpiDto[]> {
   return results;
 }
 
+function trendFromSeries(series: Array<{ value: number }>): "up" | "down" | "flat" {
+  if (series.length < 2) return "flat";
+  const first = series[0]!.value;
+  const last = series[series.length - 1]!.value;
+  if (last > first + 0.3) return "up";
+  if (last < first - 0.3) return "down";
+  return "flat";
+}
+
+export async function getWeeklyTrend(
+  slug: string
+): Promise<Array<{ label: string; trend: "up" | "down" | "flat" }>> {
+  const kpis = await getLiveKpis(slug);
+  const trends = kpis
+    .filter((kpi) => ["Production", "Quality", "Delivery"].includes(kpi.label))
+    .map((kpi) => ({ label: kpi.label, trend: trendFromSeries(kpi.series) }));
+
+  return trends.length
+    ? [...trends, { label: "Cost", trend: "down" as const }]
+    : [
+        { label: "Production", trend: "up" as const },
+        { label: "Quality", trend: "up" as const },
+        { label: "Cost", trend: "down" as const }
+      ];
+}
+
+export async function getTeamPerformance(
+  slug: string
+): Promise<Array<{ name: string; closed: number; pending: number }>> {
+  const workspace = await getWorkspaceBySlug(slug);
+  if (!workspace) return [];
+
+  const employees = await prisma.employee.findMany({
+    where: { workspaceId: workspace.id },
+    include: {
+      ownedIssues: { where: { status: { in: ["open", "investigating"] } } },
+      workOrders: true
+    }
+  });
+
+  return employees
+    .filter((emp) => /engineer|operator/i.test(emp.role))
+    .map((emp) => ({
+      name: emp.name,
+      closed: emp.workOrders.filter((wo) => wo.status === "approved" || wo.status === "completed")
+        .length,
+      pending: emp.ownedIssues.length
+    }))
+    .slice(0, 4);
+}
+
 export async function getSupervisorStats(slug: string): Promise<SupervisorStatsDto> {
   const workspace = await getWorkspaceBySlug(slug);
   if (!workspace) {

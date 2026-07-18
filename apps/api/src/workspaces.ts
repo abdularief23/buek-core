@@ -857,6 +857,14 @@ export async function launchDemoWorkspace(
   });
 }
 
+export async function refreshRoleHome(workspaceId: string, role: string): Promise<RoleHomeData> {
+  const workspace = findWorkspace(workspaceId);
+  return enrichRoleHomeFromDb(
+    workspace.id,
+    buildRoleHome(workspace.id, role, workspace.dailyWorkspace)
+  );
+}
+
 async function buildAuthResult(user: DemoUser): Promise<{
   user: Omit<DemoUser, "password">;
   workspace: Workspace;

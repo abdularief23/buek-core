@@ -1,5 +1,5 @@
 import type { AppNavItem } from "@buek/ui";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { DynamicWorkspace, type DynamicWorkspaceState } from "./components/DynamicWorkspace.js";
 import { AiCopilot } from "./components/AiCopilot.js";
 import { AiWorkspaceView } from "./components/AiWorkspaceView.js";
@@ -18,7 +18,7 @@ import {
   parseServerSentEvents
 } from "./lib/chat.js";
 import { contextForView, withContextPrompt, type AiContext } from "./lib/context.js";
-import { isAiActionResult } from "./lib/data-api.js";
+import { isAiActionResult, fetchNotifications, refreshRoleHome } from "./lib/data-api.js";
 import type { ChatMessage, DemoUser, ModuleSummary, RoleHomeData, Workspace } from "./types.js";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
@@ -54,8 +54,23 @@ export function App() {
   const [inboxOpen, setInboxOpen] = useState(false);
   const [dynamicWorkspace, setDynamicWorkspace] = useState<DynamicWorkspaceState | null>(null);
   const [aiContext, setAiContext] = useState<AiContext>({ label: "Home" });
+  const [inboxCount, setInboxCount] = useState(0);
 
   const installedModule = modules[0];
+
+  const refreshLiveData = useCallback(async () => {
+    if (!currentWorkspace || !currentUser) return;
+    try {
+      const [roleHomeRes, notifRes] = await Promise.all([
+        refreshRoleHome(currentWorkspace.id, currentUser.role),
+        fetchNotifications(currentWorkspace.id)
+      ]);
+      setRoleHome(roleHomeRes.roleHome);
+      setInboxCount(notifRes.notifications.length);
+    } catch {
+      // Keep existing data on refresh failure.
+    }
+  }, [currentWorkspace, currentUser]);
 
   const chatPayload = useMemo(
     () =>
@@ -85,6 +100,13 @@ export function App() {
         setStatus(error instanceof Error ? error.message : "Unable to load modules.");
       });
   }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn || !currentWorkspace) return;
+    fetchNotifications(currentWorkspace.id)
+      .then((data) => setInboxCount(data.notifications.length))
+      .catch(() => setInboxCount(0));
+  }, [isSignedIn, currentWorkspace?.id]);
 
   useEffect(() => {
     if (isSignedIn && currentUser && roleHome) {
@@ -230,6 +252,7 @@ export function App() {
 
             if (action.success && currentWorkspace) {
               const slug = currentWorkspace.id;
+              void refreshLiveData();
               if (action.toolName === "create_work_order") {
                 setDynamicWorkspace({ kind: "approval-queue", slug });
                 setActiveView("home");
@@ -328,8 +351,6 @@ export function App() {
 
   if (!currentUser || !currentWorkspace || !roleHome) return null;
 
-  const inboxCount = currentWorkspace.dailyWorkspace.notifications.length;
-
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <AppShell
@@ -368,6 +389,7 @@ export function App() {
                 handleContextualAsk(prompt, contextLabel, [currentUser.role, contextLabel])
               }
               onWorkspaceChange={setDynamicWorkspace}
+              onDataChange={() => void refreshLiveData()}
             />
           ) : (
             <HomeView
@@ -427,10 +449,11 @@ export function App() {
       </AppShell>
 
       <NotificationsPanel
-        workspace={currentWorkspace}
+        workspaceSlug={currentWorkspace.id}
         open={inboxOpen}
         onClose={() => setInboxOpen(false)}
         onSelect={(prompt, label) => handleContextualAsk(prompt, label)}
+        onCountChange={setInboxCount}
       />
     </main>
   );
