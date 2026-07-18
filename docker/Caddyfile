@@ -1,0 +1,8 @@
+{
+  email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN:core.buekwebsite.com} {
+  encode zstd gzip
+  reverse_proxy web:80
+}

@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-buek}
       POSTGRES_DB: ${POSTGRES_DB:-buek_core}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -32,7 +32,7 @@ services:
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
       BUEK_DOMAIN_MODULES: ${BUEK_DOMAIN_MODULES:-@buek/domain-manufacturing}
     ports:
-      - "4000:4000"
+      - "${API_HOST_PORT:-4000}:4000"
 
   web:
     build:

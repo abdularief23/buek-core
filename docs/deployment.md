@@ -19,28 +19,19 @@ default.
 
 ## DNS
 
-Point `core.buekwebsite.com` to the server that runs Docker Compose.
+Point `core.buekwebsite.com` to the VPS that runs Docker Compose.
 
-Recommended records:
+For the current VPS:
 
 ```text
 Type: A
 Name: core
-Value: <server-ip-address>
+Value: 43.157.226.203
 TTL: 300
 ```
 
-If the hosting provider gives a CNAME target instead of an IP address:
-
-```text
-Type: CNAME
-Name: core
-Value: <provider-target-hostname>
-TTL: 300
-```
-
-Do not point `core` at a static website/CDN target unless that target can also proxy `/api` to the
-Buek Core API. The demo needs both the web app and API on the same domain.
+Remove any existing `core` ALIAS or CNAME record that points to a static website/CDN target. The
+demo needs both the web app and API on the same VPS.
 
 ## Environment
 
@@ -54,7 +45,11 @@ For production on `core.buekwebsite.com`, set:
 
 ```bash
 NODE_ENV=production
-WEB_PORT=80
+APP_DOMAIN=core.buekwebsite.com
+ACME_EMAIL=<email-for-lets-encrypt>
+WEB_PORT=127.0.0.1:8080
+API_HOST_PORT=127.0.0.1:4000
+POSTGRES_HOST_PORT=127.0.0.1:5432
 CORS_ORIGIN=https://core.buekwebsite.com
 OPENAI_API_KEY=<your-openai-api-key>
 OPENAI_MODEL=gpt-4.1-mini
@@ -66,14 +61,14 @@ BUEK_DOMAIN_MODULES=@buek/domain-manufacturing
 ## Run with Docker Compose
 
 ```bash
-docker compose up --build -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 ```
 
 Verify from the server:
 
 ```bash
-curl http://localhost/health
-curl http://localhost/api/modules
+curl http://localhost:8080/health
+curl http://localhost:8080/api/modules
 ```
 
 Verify from the public domain:
@@ -87,8 +82,14 @@ The `/api/modules` response should include the Manufacturing module with no disc
 
 ## SSL
 
-Terminate HTTPS with the hosting provider, a load balancer, Cloudflare, Caddy, or another reverse
-proxy in front of Docker Compose. The current `web` container listens on HTTP port 80 internally.
+`docker-compose.prod.yml` runs Caddy on ports 80 and 443. Caddy automatically requests and renews
+Let's Encrypt certificates for `core.buekwebsite.com`.
+
+Before starting Caddy, make sure:
+
+- DNS `core.buekwebsite.com` points to `43.157.226.203`.
+- VPS firewall allows inbound TCP `80` and `443`.
+- No other service is already using ports `80` or `443`.
 
 ## Current Demo Behavior
 
