@@ -6,8 +6,11 @@ import {
   toyotaDailyWorkspace,
   type DailyWorkspace
 } from "./daily-workspace.js";
+import { buildRoleHome, normalizeRoleKey, type RoleHomeData } from "./role-workspaces.js";
 
-export type { DailyWorkspace };
+export type { DailyWorkspace } from "./daily-workspace.js";
+export type { RoleHomeData, RoleKey } from "./role-workspaces.js";
+export { buildRoleHome, normalizeRoleKey } from "./role-workspaces.js";
 
 export interface Workspace {
   id: string;
@@ -789,7 +792,7 @@ export function authenticateDemoUser(
   companyId: string,
   username: string,
   password: string
-): { user: Omit<DemoUser, "password">; workspace: Workspace } | undefined {
+): { user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined {
   const user = demoUsers.find(
     (candidate) =>
       candidate.companyId.toLowerCase() === companyId.trim().toLowerCase() &&
@@ -807,7 +810,7 @@ export function authenticateDemoUser(
 export function authenticateProductionUser(
   email: string,
   password: string
-): { user: Omit<DemoUser, "password">; workspace: Workspace } | undefined {
+): { user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined {
   const user = demoUsers.find(
     (candidate) =>
       candidate.email.toLowerCase() === email.trim().toLowerCase() && candidate.password === password
@@ -820,10 +823,21 @@ export function authenticateProductionUser(
   return buildAuthResult(user);
 }
 
+const roleDisplayNames: Record<string, string> = {
+  operator: "Budi",
+  engineer: "Abdul",
+  supervisor: "Sari",
+  manager: "Raka"
+};
+
+function displayNameForRole(role: string, fallback: string): string {
+  return roleDisplayNames[normalizeRoleKey(role)] ?? fallback;
+}
+
 export function launchDemoWorkspace(
   workspaceId: string,
   role: string
-): { user: Omit<DemoUser, "password">; workspace: Workspace } | undefined {
+): { user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined {
   const workspace = workspaces.find((candidate) => candidate.id === workspaceId);
   if (!workspace) {
     return undefined;
@@ -834,15 +848,27 @@ export function launchDemoWorkspace(
     return undefined;
   }
 
-  return buildAuthResult({ ...user, role: role.trim() || user.role });
+  const selectedRole = role.trim() || user.role;
+  return buildAuthResult({
+    ...user,
+    role: selectedRole,
+    name: displayNameForRole(selectedRole, user.name)
+  });
 }
 
-function buildAuthResult(user: DemoUser): { user: Omit<DemoUser, "password">; workspace: Workspace } {
+function buildAuthResult(user: DemoUser): {
+  user: Omit<DemoUser, "password">;
+  workspace: Workspace;
+  roleHome: RoleHomeData;
+} {
   const { password: _password, ...safeUser } = user;
+  const workspace = findWorkspace(user.workspaceId);
+  const roleHome = buildRoleHome(workspace.id, user.role, workspace.dailyWorkspace);
 
   return {
     user: safeUser,
-    workspace: findWorkspace(user.workspaceId)
+    workspace,
+    roleHome
   };
 }
 

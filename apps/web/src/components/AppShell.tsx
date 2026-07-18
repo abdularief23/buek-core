@@ -6,10 +6,10 @@ interface AppShellProps {
   user: DemoUser;
   organization: string;
   onNavigate: (view: AppNavItem) => void;
-  onOpenNotifications: () => void;
+  onOpenInbox: () => void;
   onLogout: () => void;
   onSearch: (query: string) => void;
-  notificationCount?: number;
+  inboxCount?: number;
   children: React.ReactNode;
   copilot?: React.ReactNode;
 }
@@ -19,10 +19,10 @@ export function AppShell({
   user,
   organization,
   onNavigate,
-  onOpenNotifications,
+  onOpenInbox,
   onLogout,
   onSearch,
-  notificationCount,
+  inboxCount,
   children,
   copilot
 }: AppShellProps) {
@@ -50,8 +50,8 @@ export function AppShell({
         <AppNav
           active={activeView}
           onChange={onNavigate}
-          onOpenNotifications={onOpenNotifications}
-          notificationCount={notificationCount}
+          onOpenInbox={onOpenInbox}
+          inboxCount={inboxCount}
         />
       </aside>
 
@@ -64,21 +64,21 @@ export function AppShell({
               name="global-search"
               type="search"
               placeholder="Search factory, machines, SOP, KPI..."
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-400/40"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-400/40"
             />
           </form>
 
           <div className="ml-auto flex items-center gap-3">
             <button
               type="button"
-              onClick={onOpenNotifications}
+              onClick={onOpenInbox}
               className="relative rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white lg:hidden"
-              aria-label="Notifications"
+              aria-label="Inbox"
             >
               🔔
-              {notificationCount && notificationCount > 0 ? (
+              {inboxCount && inboxCount > 0 ? (
                 <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-500 px-1 text-[9px] font-bold text-slate-950">
-                  {notificationCount}
+                  {inboxCount}
                 </span>
               ) : null}
             </button>
@@ -86,7 +86,7 @@ export function AppShell({
             <button
               type="button"
               onClick={() => onNavigate("profile")}
-              className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 sm:flex"
+              className="hidden items-center gap-2 rounded-lg px-3 py-2 text-base text-slate-300 hover:bg-white/5 sm:flex"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-medium">
                 {user.name.charAt(0)}
@@ -97,7 +97,7 @@ export function AppShell({
             <button
               type="button"
               onClick={onLogout}
-              className="text-xs text-slate-500 hover:text-slate-300"
+              className="text-sm text-slate-500 hover:text-slate-300"
             >
               Sign out
             </button>
@@ -105,15 +105,15 @@ export function AppShell({
         </header>
 
         <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full max-w-[1400px]">{children}</div>
+          <div className="mx-auto w-full max-w-[1600px]">{children}</div>
         </main>
 
         <aside className="fixed inset-x-0 bottom-0 z-30 border-t border-white/5 bg-slate-950 lg:hidden">
           <AppNav
             active={activeView}
             onChange={onNavigate}
-            onOpenNotifications={onOpenNotifications}
-            notificationCount={notificationCount}
+            onOpenInbox={onOpenInbox}
+            inboxCount={inboxCount}
           />
         </aside>
       </div>

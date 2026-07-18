@@ -1,12 +1,13 @@
 import { AiPromptInput } from "@buek/ui";
 import { useEffect, useRef } from "react";
 import type { AiContext } from "../lib/context.js";
-import type { ChatMessage, DemoUser, Workspace } from "../types.js";
+import type { ChatMessage, DemoUser, RoleHomeData, Workspace } from "../types.js";
 import { ChatMessageBlock } from "./ChatMessageBlock.js";
 
 interface AiCopilotProps {
   user: DemoUser;
   workspace: Workspace;
+  roleHome: RoleHomeData;
   context: AiContext;
   open: boolean;
   messages: ChatMessage[];
@@ -21,6 +22,7 @@ interface AiCopilotProps {
 export function AiCopilot({
   user,
   workspace,
+  roleHome,
   context,
   open,
   messages,
@@ -32,7 +34,12 @@ export function AiCopilot({
   onSuggestion
 }: AiCopilotProps) {
   const endRef = useRef<HTMLDivElement | null>(null);
-  const suggestions = workspace.dailyWorkspace.copilotSuggestions;
+  const suggestions = roleHome.copilotSuggestions;
+
+  const contextDetails = [
+    user.role,
+    ...((context.details ?? []).filter((detail) => detail !== user.role))
+  ].filter(Boolean);
 
   useEffect(() => {
     if (open) {
@@ -51,7 +58,7 @@ export function AiCopilot({
     <>
       {open ? (
         <div
-          className="fixed inset-0 z-40 bg-black/30"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]"
           onClick={onToggle}
           aria-hidden="true"
         />
@@ -59,40 +66,39 @@ export function AiCopilot({
 
       <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-3 lg:bottom-8 lg:right-8">
         {open ? (
-          <div className="flex max-h-[min(80vh,640px)] w-[min(100vw-2rem,28rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
-            <header className="border-b border-white/10 px-5 py-4">
-              <p className="text-base font-medium text-white">Hi {user.name} 👋</p>
-              <p className="mt-0.5 text-sm text-slate-500">How can I help today?</p>
+          <div className="flex max-h-[min(88vh,780px)] w-[min(100vw-1.5rem,42rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50">
+            <header className="border-b border-white/10 px-6 py-5">
+              <p className="text-lg font-semibold text-white">Hi {user.name} 👋</p>
+              <p className="mt-1 buek-subtitle text-slate-500">{roleHome.personaLabel}</p>
 
-              <div className="mt-3 rounded-xl bg-white/5 px-4 py-3">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+              <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Current Context
                 </p>
-                <p className="mt-1 text-sm font-medium text-cyan-200">{context.label}</p>
-                {context.details?.map((detail) => (
-                  <p key={detail} className="text-xs text-slate-500">
+                <p className="mt-2 text-base font-semibold text-cyan-200">{context.label}</p>
+                {contextDetails.map((detail) => (
+                  <p key={detail} className="buek-small text-slate-400">
                     {detail}
                   </p>
                 ))}
-                {user.role ? <p className="text-xs text-slate-500">{user.role}</p> : null}
                 {workspace.shift ? (
-                  <p className="text-xs text-slate-500">{workspace.shift}</p>
+                  <p className="buek-small text-slate-500">{workspace.shift}</p>
                 ) : null}
               </div>
             </header>
 
             {suggestions.length > 0 && messages.length === 0 ? (
-              <div className="border-b border-white/10 px-5 py-3">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+              <div className="border-b border-white/10 px-6 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Suggested
                 </p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {suggestions.map((suggestion) => (
                     <button
                       key={suggestion.label}
                       type="button"
                       onClick={() => onSuggestion(suggestion.prompt)}
-                      className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition hover:border-cyan-400/30 hover:text-white"
+                      className="rounded-xl border border-white/10 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-cyan-400/30 hover:bg-white/[0.03] hover:text-white"
                     >
                       {suggestion.label}
                     </button>
@@ -101,9 +107,11 @@ export function AiCopilot({
               </div>
             ) : null}
 
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+            <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
               {messages.length === 0 ? (
-                <p className="text-sm text-slate-500">Ask anything about your factory...</p>
+                <p className="buek-body text-slate-500">
+                  Ask Buek — answers adapt to your role as {user.role}.
+                </p>
               ) : (
                 messages.map((message, index) => {
                   const previousUserMessage = [...messages]
@@ -129,13 +137,13 @@ export function AiCopilot({
               <div ref={endRef} />
             </div>
 
-            <div className="border-t border-white/10 p-4">
+            <div className="border-t border-white/10 p-5">
               <AiPromptInput
                 value={input}
                 onChange={onInputChange}
                 onSubmit={handleSubmit}
                 disabled={isStreaming}
-                placeholder="Ask anything..."
+                placeholder="Ask Buek..."
                 id="copilot-prompt"
               />
             </div>
@@ -144,7 +152,7 @@ export function AiCopilot({
 
         <div className="flex flex-col items-center gap-1">
           {!open ? (
-            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-400 shadow">
+            <span className="rounded-full bg-slate-800 px-3 py-1.5 text-sm text-slate-400 shadow">
               Ask Buek
             </span>
           ) : null}

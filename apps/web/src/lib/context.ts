@@ -1,36 +1,67 @@
-import type { Workspace } from "../types.js";
+import type { RoleHomeData, Workspace } from "../types.js";
 
 export interface AiContext {
   label: string;
-  details?: string[] | undefined;
+  details?: string[];
   promptPrefix?: string;
+  chatPersona?: string;
 }
 
-export function contextForView(view: string, userRole?: string): AiContext {
+function withPersona(persona?: string): Pick<AiContext, "chatPersona"> {
+  return persona ? { chatPersona: persona } : {};
+}
+
+export function contextForView(
+  view: string,
+  userRole?: string,
+  roleHome?: RoleHomeData
+): AiContext {
+  const persona = roleHome?.chatPersona;
+
   switch (view) {
     case "workspace":
-      return { label: "AI Workspace", details: userRole ? [userRole] : undefined };
+      return {
+        label: "AI Workspace",
+        ...(userRole ? { details: [userRole] } : {}),
+        ...withPersona(persona)
+      };
     case "knowledge":
-      return { label: "Knowledge" };
+      return { label: "Knowledge", ...withPersona(persona) };
     case "workflow":
-      return { label: "Workflow" };
+      return { label: "Workflow", ...withPersona(persona) };
     case "profile":
-      return { label: "Profile" };
-    case "settings":
-      return { label: "Settings" };
+      return { label: "Profile", ...withPersona(persona) };
     default:
-      return { label: "Home" };
+      return {
+        label: "Home",
+        ...(roleHome ? { details: [roleHome.personaLabel] } : {}),
+        ...withPersona(persona)
+      };
   }
 }
 
 export function withContextPrompt(context: AiContext, prompt: string): string {
+  const parts: string[] = [];
+
+  if (context.chatPersona) {
+    parts.push(`[AI Persona: ${context.chatPersona}]`);
+  }
+
   if (context.promptPrefix) {
-    return `${context.promptPrefix}${prompt}`;
+    parts.push(context.promptPrefix.trim());
+  } else if (context.label !== "Home" && context.label !== "Knowledge" && context.label !== "AI Workspace") {
+    parts.push(`[Context: ${context.label}]`);
   }
-  if (context.label !== "Home" && context.label !== "Knowledge" && context.label !== "AI Workspace") {
-    return `[Context: ${context.label}] ${prompt}`;
+
+  if (context.details?.length) {
+    parts.push(`[Details: ${context.details.join(" · ")}]`);
   }
-  return prompt;
+
+  if (parts.length === 0) {
+    return prompt;
+  }
+
+  return `${parts.join(" ")} ${prompt}`;
 }
 
 export function formatTodayDate(): string {

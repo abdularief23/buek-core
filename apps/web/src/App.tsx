@@ -8,7 +8,6 @@ import { KnowledgeView } from "./components/KnowledgeView.js";
 import { LoginScreen } from "./components/LoginScreen.js";
 import { NotificationsPanel } from "./components/NotificationsPanel.js";
 import { ProfileView } from "./components/ProfileView.js";
-import { SettingsView } from "./components/SettingsView.js";
 import { WorkflowView } from "./components/WorkflowView.js";
 import {
   createMessageId,
@@ -18,7 +17,7 @@ import {
   parseServerSentEvents
 } from "./lib/chat.js";
 import { contextForView, withContextPrompt, type AiContext } from "./lib/context.js";
-import type { ChatMessage, DemoUser, ModuleSummary, Workspace } from "./types.js";
+import type { ChatMessage, DemoUser, ModuleSummary, RoleHomeData, Workspace } from "./types.js";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
 const modulesEndpoint = `${configuredApiUrl}/api/modules`;
@@ -34,12 +33,14 @@ interface ModulesResponse {
 interface LoginResponse {
   user: DemoUser;
   workspace: Workspace;
+  roleHome: RoleHomeData;
 }
 
 export function App() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  const [roleHome, setRoleHome] = useState<RoleHomeData | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [modules, setModules] = useState<ModuleSummary[]>([]);
   const [activeView, setActiveView] = useState<AppNavItem>("home");
@@ -48,7 +49,7 @@ export function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [copilotOpen, setCopilotOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [inboxOpen, setInboxOpen] = useState(false);
   const [aiContext, setAiContext] = useState<AiContext>({ label: "Home" });
 
   const installedModule = modules[0];
@@ -83,22 +84,23 @@ export function App() {
   }, [isSignedIn]);
 
   useEffect(() => {
-    if (isSignedIn && currentUser) {
-      setAiContext(contextForView(activeView, currentUser.role));
+    if (isSignedIn && currentUser && roleHome) {
+      setAiContext(contextForView(activeView, currentUser.role, roleHome));
     }
-  }, [activeView, isSignedIn, currentUser]);
+  }, [activeView, isSignedIn, currentUser, roleHome]);
 
   function completeSignIn(data: LoginResponse) {
     setCurrentUser(data.user);
     setCurrentWorkspace(data.workspace);
+    setRoleHome(data.roleHome);
     setIsSignedIn(true);
     setActiveView("home");
     setMessages([]);
     setInput("");
     setLoginError(null);
-    setAiContext({ label: "Home" });
+    setAiContext(contextForView("home", data.user.role, data.roleHome));
     setCopilotOpen(false);
-    setNotificationsOpen(false);
+    setInboxOpen(false);
   }
 
   async function handleProductionSignIn(email: string, password: string) {
@@ -234,7 +236,8 @@ export function App() {
   ) {
     const context: AiContext = {
       label: contextLabel,
-      details,
+      ...(details ? { details } : {}),
+      ...(roleHome?.chatPersona ? { chatPersona: roleHome.chatPersona } : {}),
       promptPrefix: `[Context: ${contextLabel}] `
     };
     setAiContext(context);
@@ -242,7 +245,13 @@ export function App() {
   }
 
   function handleHomeAsk(prompt: string) {
-    void streamChat(prompt, { label: "Home" });
+    const context: AiContext = {
+      label: "Home",
+      ...(roleHome ? { details: [roleHome.personaLabel] } : {}),
+      ...(roleHome?.chatPersona ? { chatPersona: roleHome.chatPersona } : {})
+    };
+    setAiContext(context);
+    void streamChat(prompt, context);
   }
 
   function handleCopilotSubmit(trimmedInput: string) {
@@ -261,11 +270,12 @@ export function App() {
     setIsSignedIn(false);
     setCurrentUser(null);
     setCurrentWorkspace(null);
+    setRoleHome(null);
     setActiveView("home");
     setMessages([]);
     setInput("");
     setCopilotOpen(false);
-    setNotificationsOpen(false);
+    setInboxOpen(false);
   }
 
   if (!isSignedIn) {
@@ -280,9 +290,9 @@ export function App() {
     );
   }
 
-  if (!currentUser || !currentWorkspace) return null;
+  if (!currentUser || !currentWorkspace || !roleHome) return null;
 
-  const notificationCount = currentWorkspace.dailyWorkspace.notifications.length;
+  const inboxCount = currentWorkspace.dailyWorkspace.notifications.length;
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -291,14 +301,15 @@ export function App() {
         user={currentUser}
         organization={currentWorkspace.organization}
         onNavigate={setActiveView}
-        onOpenNotifications={() => setNotificationsOpen(true)}
+        onOpenInbox={() => setInboxOpen(true)}
         onLogout={handleLogout}
         onSearch={handleGlobalSearch}
-        notificationCount={notificationCount}
+        inboxCount={inboxCount}
         copilot={
           <AiCopilot
             user={currentUser}
             workspace={currentWorkspace}
+            roleHome={roleHome}
             context={aiContext}
             open={copilotOpen}
             messages={messages}
@@ -315,18 +326,18 @@ export function App() {
           <HomeView
             user={currentUser}
             workspace={currentWorkspace}
+            roleHome={roleHome}
             input={input}
             isStreaming={isStreaming}
             onInputChange={setInput}
             onAsk={handleHomeAsk}
-            onBriefAction={(prompt, label) =>
-              handleContextualAsk(prompt, label, [
-                currentWorkspace.organization,
+            onAction={(prompt, contextLabel) =>
+              handleContextualAsk(prompt, contextLabel, [
                 currentUser.role,
+                currentWorkspace.organization,
                 currentWorkspace.shift
               ])
             }
-            onContinue={(prompt, label) => handleContextualAsk(prompt, label)}
           />
         ) : null}
 
@@ -354,23 +365,15 @@ export function App() {
             workspace={currentWorkspace}
             user={currentUser}
             installedModule={installedModule}
-          />
-        ) : null}
-
-        {activeView === "settings" ? (
-          <SettingsView
-            workspace={currentWorkspace}
-            user={currentUser}
             status={status}
-            installedModule={installedModule}
           />
         ) : null}
       </AppShell>
 
       <NotificationsPanel
         workspace={currentWorkspace}
-        open={notificationsOpen}
-        onClose={() => setNotificationsOpen(false)}
+        open={inboxOpen}
+        onClose={() => setInboxOpen(false)}
         onSelect={(prompt, label) => handleContextualAsk(prompt, label)}
       />
     </main>
