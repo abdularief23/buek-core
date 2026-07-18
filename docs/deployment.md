@@ -136,11 +136,33 @@ cd /path/to/buek-core
 ./scripts/deploy.sh
 ```
 
+**Important:** This VPS uses **host Nginx** (not Docker Caddy). Do **not** run
+`docker-compose.prod.yml` — it conflicts with host Nginx and causes **502 Bad Gateway**.
+
+Required `.env` for this server:
+
+```bash
+WEB_PORT=127.0.0.1:8080
+API_HOST_PORT=127.0.0.1:4000
+```
+
+### If you see 502 Bad Gateway
+
+```bash
+./scripts/diagnose.sh
+./scripts/deploy.sh
+```
+
+502 means host Nginx cannot reach `http://127.0.0.1:8080` — the Docker `web` container is down
+or bound to the wrong port.
+
 Or manually:
 
 ```bash
 git pull origin main
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose down
+docker compose up -d --build
+curl http://127.0.0.1:8080/health
 ```
 
 Verify the new UI loaded:
