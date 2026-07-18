@@ -205,8 +205,12 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     });
   }
 
-  const flagshipMachineCode = config.slug === "toyota-plant" ? "EA-04" : "M-312";
-  const flagshipMachineId = `machine-${config.slug}-${flagshipMachineCode}`;
+  const flagshipMachineCode =
+    config.slug === "toyota-plant" ? "EA-04" : config.slug === "epson-factory" ? "M-312" : "M-310";
+  const flagshipMachine = await prisma.machine.findFirst({
+    where: { id: `machine-${config.slug}-${flagshipMachineCode}` }
+  });
+  const flagshipMachineId = flagshipMachine?.id ?? `machine-${config.slug}-${machineCodes[0] ?? "M-101"}`;
 
   const whiteStreakIssue = await prisma.issue.upsert({
     where: { id: `issue-${config.slug}-white-streak` },
