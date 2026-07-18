@@ -1,5 +1,6 @@
 import type { RoleHomeData } from "../role-workspaces.js";
 import { getIssues, getLiveKpis, getSupervisorStats } from "./data-engine.js";
+import { getOperatorChecklist } from "./workflow-data.js";
 
 export async function enrichRoleHomeFromDb(
   workspaceSlug: string,
@@ -75,6 +76,23 @@ export async function enrichRoleHomeFromDb(
             : roleHome.engineer.investigations
         }
       };
+    }
+
+    if (roleHome.roleKey === "operator" && roleHome.operator) {
+      const checklist = await getOperatorChecklist(workspaceSlug);
+      if (checklist) {
+        return {
+          ...roleHome,
+          operator: {
+            ...roleHome.operator,
+            line: checklist.line,
+            shift: checklist.shift,
+            targetOutput: checklist.targetOutput,
+            progress: checklist.progress,
+            checklist: checklist.items
+          }
+        };
+      }
     }
 
     return roleHome;

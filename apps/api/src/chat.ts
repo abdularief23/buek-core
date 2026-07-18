@@ -7,6 +7,8 @@ import type { Request, Response } from "express";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ApiEnv } from "./config/env.js";
+import { tryExecuteActionFromMessage } from "./services/ai-actions.js";
+import { getMemories } from "./services/workflow-data.js";
 import {
   buildWorkspaceKnowledgeContext,
   findWorkspace,
@@ -145,7 +147,9 @@ function selectKnowledge(module: DomainModule, latestUserMessage: string): Knowl
 function buildInstructions(
   workspace: Workspace,
   module: DomainModule,
-  selectedKnowledge: KnowledgeSearchResult[]
+  selectedKnowledge: KnowledgeSearchResult[],
+  memories: Array<{ scope: string; content: string }> = [],
+  actionContext = ""
 ): string {
   const knowledgeText = selectedKnowledge
     .map(({ chunk, score }) =>
@@ -194,7 +198,12 @@ function buildInstructions(
     toolText,
     "",
     "Relevant knowledge:",
-    knowledgeText
+    knowledgeText,
+    "",
+    memories.length
+      ? ["AI Memory (past decisions and context):", ...memories.map((m) => `- [${m.scope}] ${m.content}`)].join("\n")
+      : "",
+    actionContext ? `\nRecent AI Actions:\n${actionContext}` : ""
   ].join("\n");
 }
 
@@ -243,6 +252,17 @@ export async function handleChatRequest(
 
     const workspace = findWorkspace(requestBody.workspaceId);
     const workspaceModule = findWorkspaceModule(workspace, modules);
+    const workspaceSlug = workspace.id;
+
+    const actionResult = await tryExecuteActionFromMessage(workspaceSlug, latestUserMessage);
+    const memories = await getMemories(workspaceSlug);
+    const actionContext = actionResult
+      ? `Action executed: ${actionResult.toolName} — ${actionResult.message}`
+      : "";
+
+    if (actionResult?.success) {
+      sendEvent(res, "action", actionResult);
+    }
 
     const inputGuard = guardInput({
       text: latestUserMessage,
@@ -301,7 +321,7 @@ export async function handleChatRequest(
     const client = createResponsesClient({ apiKey: env.openAiApiKey });
     const stream = await client.responses.create({
       model: env.openAiModel,
-      instructions: buildInstructions(workspace, detectedModule, selectedKnowledge),
+      instructions: buildInstructions(workspace, detectedModule, selectedKnowledge, memories, actionContext),
       input: buildInput(messages),
       stream: true,
       max_output_tokens: 900
@@ -311,7 +331,7 @@ export async function handleChatRequest(
 
     for await (const event of stream) {
       if (event.type === "response.output_text.delta") {
-        const guardedDelta = guardOutput({ text: event.delta, toolsExecuted: [] });
+        const guardedDelta = guardOutput({ text: event.delta, toolsExecuted: actionResult ? [actionResult.toolName] : [] });
         streamedText += guardedDelta.text;
         sendEvent(res, "delta", { text: guardedDelta.text });
       }
@@ -325,7 +345,7 @@ export async function handleChatRequest(
       }
     }
 
-    const finalOutputGuard = guardOutput({ text: streamedText, toolsExecuted: [] });
+    const finalOutputGuard = guardOutput({ text: streamedText, toolsExecuted: actionResult ? [actionResult.toolName] : [] });
 
     if (finalOutputGuard.warnings.length) {
       sendEvent(res, "guardrail", {

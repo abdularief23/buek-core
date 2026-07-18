@@ -10,17 +10,29 @@ import { handleChatRequest } from "./chat.js";
 import type { ApiEnv } from "./config/env.js";
 import {
   handleAdvanceInvestigation,
+  handleAiAction,
+  handleApproveReport,
+  handleApproveSopRevision,
   handleApproveWorkOrder,
   handleIssueByKey,
   handleIssueDetail,
   handleIssues,
   handleLiveKpis,
   handleMachineTelemetry,
+  handleMemory,
+  handleOperatorChecklist,
+  handlePendingReports,
+  handlePendingSopRevisions,
   handlePendingWorkOrders,
+  handleRejectSopRevision,
   handleRejectWorkOrder,
+  handleReportDetail,
+  handleSopRevisionDetail,
   handleSupervisorStats,
   handleTimeline,
-  handleWorkOrderDetail
+  handleToggleChecklistItem,
+  handleWorkOrderDetail,
+  handleWorkflows
 } from "./routes/data.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
 import {
@@ -180,6 +192,18 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/data/:slug/issues/:issueId", (req, res) => void handleIssueDetail(req, res));
   app.post("/api/data/:slug/issues/:issueId/advance", (req, res) => void handleAdvanceInvestigation(req, res));
   app.get("/api/data/:slug/machines/:machineCode/telemetry", (req, res) => void handleMachineTelemetry(req, res));
+  app.get("/api/data/:slug/workflows", (req, res) => void handleWorkflows(req, res));
+  app.get("/api/data/:slug/sop-revisions/pending", (req, res) => void handlePendingSopRevisions(req, res));
+  app.get("/api/data/:slug/sop-revisions/:revisionId", (req, res) => void handleSopRevisionDetail(req, res));
+  app.post("/api/data/:slug/sop-revisions/:revisionId/approve", (req, res) => void handleApproveSopRevision(req, res));
+  app.post("/api/data/:slug/sop-revisions/:revisionId/reject", (req, res) => void handleRejectSopRevision(req, res));
+  app.get("/api/data/:slug/reports/pending", (req, res) => void handlePendingReports(req, res));
+  app.get("/api/data/:slug/reports/:reportId", (req, res) => void handleReportDetail(req, res));
+  app.post("/api/data/:slug/reports/:reportId/approve", (req, res) => void handleApproveReport(req, res));
+  app.get("/api/data/:slug/operator/checklist", (req, res) => void handleOperatorChecklist(req, res));
+  app.post("/api/data/:slug/operator/checklist/toggle", (req, res) => void handleToggleChecklistItem(req, res));
+  app.get("/api/data/:slug/memory", (req, res) => void handleMemory(req, res));
+  app.post("/api/data/:slug/ai/actions", (req, res) => void handleAiAction(req, res));
 
   app.get("/api/knowledge/search", (req, res) => {
     handleKnowledgeSearchRequest(req, res, discovery.modules);

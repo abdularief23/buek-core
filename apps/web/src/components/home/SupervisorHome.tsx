@@ -42,6 +42,10 @@ export function SupervisorHome({ user, workspace, roleHome, onAction, onOpenWork
                 onClick={() => {
                   if (item.action === "approval-queue") {
                     onOpenWorkspace({ kind: "approval-queue", slug: workspace.id });
+                  } else if (item.action === "sop-revisions") {
+                    onOpenWorkspace({ kind: "sop-revisions", slug: workspace.id });
+                  } else if (item.action === "engineering-reports") {
+                    onOpenWorkspace({ kind: "engineering-reports", slug: workspace.id });
                   } else if (item.prompt) {
                     onAction(item.prompt, item.label);
                   }
