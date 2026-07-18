@@ -8,7 +8,7 @@
     "build": "pnpm -r --sort build",
     "dev": "pnpm --parallel --filter @buek/api --filter @buek/web dev",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "tsc -b",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "pnpm --filter @buek/api prisma:generate",
@@ -20,7 +20,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "prettier": "^3.9.5",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.64.0"
   }
 }

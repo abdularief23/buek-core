@@ -2,13 +2,20 @@ import { AgentPlatform, discoverInstalledDomainModules } from "@buek/agents";
 import { BuekCore } from "@buek/ai-core";
 import cors from "cors";
 import express from "express";
+import type { Express } from "express";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { ApiEnv } from "./config/env.js";
 
-export async function createServer(env: ApiEnv) {
+export async function createServer(env: ApiEnv): Promise<Express> {
   const app = express();
   const core = new BuekCore({ defaultModel: env.openAiModel });
   const platform = new AgentPlatform(core);
-  const discovery = await discoverInstalledDomainModules({ env: process.env });
+  const apiRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  const discovery = await discoverInstalledDomainModules({
+    env: process.env,
+    resolveFrom: [apiRoot, process.cwd()]
+  });
 
   platform.installDomainModules(discovery.modules);
 

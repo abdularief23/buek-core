@@ -1,8 +1,11 @@
+import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
 import type { DomainModule } from "@buek/shared-types";
 
 export interface ModuleDiscoveryOptions {
   moduleNames?: string[];
-  env?: NodeJS.ProcessEnv;
+  env?: Record<string, string | undefined>;
+  resolveFrom?: string[];
 }
 
 export interface ModuleDiscoveryResult {
@@ -14,6 +17,7 @@ export interface ModuleDiscoveryResult {
 }
 
 const DEFAULT_DOMAIN_MODULES = ["@buek/domain-manufacturing"];
+const requireFromAgentPackage = createRequire(import.meta.url);
 
 function resolveModuleNames(options: ModuleDiscoveryOptions): string[] {
   if (options.moduleNames?.length) {
@@ -52,6 +56,18 @@ function isDomainModule(value: unknown): value is DomainModule {
   );
 }
 
+function resolveImportSpecifier(moduleName: string, resolveFrom?: string[]): string {
+  if (!resolveFrom?.length) {
+    return moduleName;
+  }
+
+  try {
+    return pathToFileURL(requireFromAgentPackage.resolve(moduleName, { paths: resolveFrom })).href;
+  } catch {
+    return moduleName;
+  }
+}
+
 export async function discoverInstalledDomainModules(
   options: ModuleDiscoveryOptions = {}
 ): Promise<ModuleDiscoveryResult> {
@@ -60,7 +76,9 @@ export async function discoverInstalledDomainModules(
 
   for (const moduleName of resolveModuleNames(options)) {
     try {
-      const importedModule = (await import(moduleName)) as Record<string, unknown>;
+      const importedModule = (await import(
+        resolveImportSpecifier(moduleName, options.resolveFrom)
+      )) as Record<string, unknown>;
       const candidate = importedModule.domainModule ?? importedModule.default;
 
       if (!isDomainModule(candidate)) {

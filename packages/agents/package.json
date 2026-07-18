@@ -19,5 +19,8 @@
   "dependencies": {
     "@buek/ai-core": "workspace:*",
     "@buek/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1"
   }
 }
