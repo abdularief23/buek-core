@@ -537,10 +537,22 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
       id: `report-${config.slug}-001`,
       workspaceId: workspace.id,
       issueId: whiteStreakIssue.id,
-      title: "White Streak Root Cause Analysis",
+      title: "Investigation Report — White Streak",
       content:
-        "Preliminary analysis indicates nozzle pressure drift during shift changeover. Recommend recalibration per SOP-014.",
+        "INVESTIGATION REPORT\n--------------------------------\nProblem: White Streak\nStatus: PENDING_APPROVAL",
+      reportNumber: `${config.slug.split("-")[0]?.slice(0, 3).toUpperCase() ?? "INV"}-260718-0001`,
+      version: 1,
+      sections: {
+        background: "White streak defect increased 18% vs yesterday on production line.",
+        evidence: "Visual inspection confirms streak pattern. Torque readings within spec.",
+        rootCause: "Nozzle pressure variance during shift changeover.",
+        countermeasure: "Recalibrate nozzle per SOP-014 Rev.5. Monitor for 2 hours.",
+        verification: "Check first 50 units after recalibration.",
+        attachments: ["Photo", "SOP-014", "Trend"]
+      },
+      machineCode: whiteStreakIssue.machineId ? "M-312" : null,
       status: "pending_approval",
+      submittedAt: new Date(),
       authorId: engineer.id
     }
   });
@@ -552,9 +564,19 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
       id: `report-${config.slug}-002`,
       workspaceId: workspace.id,
       issueId: vibrationIssue.id,
-      title: "M-12 Vibration Investigation Draft",
-      content: "Bearing wear suspected. Historical data shows similar pattern 3 weeks ago — alignment may be root cause.",
-      status: "pending_approval",
+      title: "Investigation Report — Vibration",
+      content: "INVESTIGATION REPORT\n--------------------------------\nStatus: DRAFT",
+      reportNumber: `${config.slug.split("-")[0]?.slice(0, 3).toUpperCase() ?? "INV"}-260718-0002`,
+      version: 1,
+      sections: {
+        background: "Abnormal vibration detected on assembly machine.",
+        evidence: "Vibration sensor reading 4.2 mm/s — above threshold.",
+        rootCause: "",
+        countermeasure: "",
+        verification: "",
+        attachments: ["Photo", "SOP", "Trend"]
+      },
+      status: "draft",
       authorId: engineer.id
     }
   });

@@ -164,50 +164,14 @@ export async function executeAiAction(
 
       case "draft_report": {
         const issueKey = params.issueKey ?? "white-streak";
-        const issue = await getIssueByKey(slug, issueKey);
         const engineer = await getEngineer(slug);
-        const content = [
-          `# Investigation Report: ${issue?.title ?? issueKey}`,
-          "",
-          "## Summary",
-          "White streak defect increased 18% vs yesterday. Root cause candidate: nozzle calibration drift.",
-          "",
-          "## Evidence",
-          "- Visual inspection confirms streak pattern on Line 3",
-          "- Torque readings within spec",
-          "",
-          "## Root Cause",
-          "Likely nozzle pressure variance during shift changeover.",
-          "",
-          "## Countermeasure",
-          "Recalibrate nozzle per SOP-014 Rev.5. Monitor for 2 hours.",
-          "",
-          "## Recommendation",
-          "Submit for supervisor approval before production resume."
-        ].join("\n");
-
-        const report = await prisma.engineeringReport.create({
-          data: {
-            workspaceId,
-            issueId: issue?.id ?? null,
-            title: `Investigation Report — ${issue?.title ?? issueKey}`,
-            content,
-            status: "pending_approval",
-            authorId: engineer?.id ?? null
-          }
-        });
-
-        await prisma.activityEvent.create({
-          data: {
-            workspaceId,
-            occurredAt: new Date(),
-            title: "AI Drafted Report",
-            detail: report.title,
-            category: "quality",
-            entityType: "engineering_report",
-            entityId: report.id
-          }
-        });
+        const engineerName = params.engineerName ?? engineer?.name ?? "Engineer";
+        const { createDraftReport, getAiSuggestionForIssue } = await import("./workflow-data.js");
+        const suggestion = await getAiSuggestionForIssue(slug, issueKey);
+        const report = await createDraftReport(slug, issueKey, engineerName, suggestion);
+        if (!report) {
+          return { success: false, toolName: action, message: "Issue not found." };
+        }
 
         await saveMemory(
           slug,
@@ -219,10 +183,10 @@ export async function executeAiAction(
         const result: AiActionResult = {
           success: true,
           toolName: action,
-          message: `Drafted engineering report "${report.title}" — pending supervisor approval.`,
+          message: `AI created draft report ${report.reportNumber ?? report.id} — engineer must review before submission.`,
           entityType: "engineering_report",
           entityId: report.id,
-          data: { id: report.id, title: report.title, status: report.status }
+          data: report
         };
         await logAgentAction(slug, action, params, result);
         return result;

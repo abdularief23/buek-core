@@ -5,12 +5,14 @@ import {
   fetchConnectors,
   fetchCriticalAlerts,
   fetchKnowledgeDocuments,
+  fetchLessonsLearned,
   searchKnowledge,
   uploadKnowledgeDocument,
   type BusinessRule,
   type CriticalAlert,
   type KnowledgeDocumentSummary,
-  type KnowledgeSearchHit
+  type KnowledgeSearchHit,
+  type LessonLearned
 } from "../lib/data-api.js";
 
 interface KnowledgeViewProps {
@@ -33,19 +35,35 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
   const [uploadContent, setUploadContent] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [lessons, setLessons] = useState<LessonLearned[]>([]);
   const daily = workspace.dailyWorkspace;
+
+  const knowledgeCategories = [
+    "Policies",
+    "SOP",
+    "Work Instruction",
+    "Drawing",
+    "Checklist",
+    "Training",
+    "Manual",
+    "Lessons Learned"
+  ];
+
+  const importSources = ["Upload Folder", "SharePoint", "Google Drive", "OneDrive", "Git Repository", "ZIP"];
 
   useEffect(() => {
     void Promise.all([
       fetchKnowledgeDocuments(workspace.id),
       fetchBusinessRules(workspace.id),
       fetchCriticalAlerts(workspace.id),
-      fetchConnectors(workspace.id)
-    ]).then(([docsRes, rulesRes, alertsRes, connRes]) => {
+      fetchConnectors(workspace.id),
+      fetchLessonsLearned(workspace.id)
+    ]).then(([docsRes, rulesRes, alertsRes, connRes, lessonsRes]) => {
       setDocuments(docsRes.documents);
       setRules(rulesRes.rules);
       setAlerts(alertsRes.alerts);
       setConnectorLabel(connRes.connectors[0]?.label ?? "Operational Connector");
+      setLessons(lessonsRes.lessons);
     });
   }, [workspace.id]);
 
@@ -108,14 +126,39 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
   return (
     <div className="mx-auto max-w-3xl space-y-10 pb-12">
       <header>
-        <h1 className="text-2xl font-semibold text-white">Knowledge Layer</h1>
+        <h1 className="text-2xl font-semibold text-white">Company Brain</h1>
         <p className="mt-2 text-base text-slate-400">
-          Read-only company knowledge — SOP, manuals, QC. Buek indexes; your files stay in your systems.
+          SOP + Manual + Issue History + Lessons Learned + Best Practice — indexed by AI, owned by your company.
         </p>
         <p className="mt-1 text-sm text-slate-500">
           Operational data via: {connectorLabel} (read-only)
         </p>
       </header>
+
+      <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Import Knowledge</h2>
+        <p className="mt-2 text-sm text-slate-500">
+          Drop a folder — not copy-paste one by one. AI classifies and indexes automatically.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {importSources.map((source) => (
+            <button
+              key={source}
+              type="button"
+              className="rounded-xl border border-dashed border-white/20 px-4 py-6 text-center text-sm text-slate-400 hover:border-cyan-400/40 hover:text-cyan-300"
+            >
+              {source}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {knowledgeCategories.map((cat) => (
+            <span key={cat} className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400">
+              {cat}
+            </span>
+          ))}
+        </div>
+      </section>
 
       {alerts.length > 0 ? (
         <section className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5">
@@ -135,7 +178,7 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-          Upload Knowledge (Level 1 MVP)
+          Quick Upload (single document)
         </h2>
         <p className="mt-2 text-sm text-slate-500">
           Upload → OCR → Chunking → Embedding → Knowledge Base. Supports .txt, .md, .csv (PDF via OCR in production).
@@ -203,6 +246,22 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
           {uploadMessage ? <p className="text-sm text-green-400">{uploadMessage}</p> : null}
         </form>
       </section>
+
+      {lessons.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500">
+            Lessons Learned ({lessons.length})
+          </h2>
+          <ul className="divide-y divide-white/5 rounded-2xl border border-amber-500/20 bg-amber-500/5">
+            {lessons.map((lesson) => (
+              <li key={lesson.id} className="px-6 py-4">
+                <p className="font-medium text-amber-100">{lesson.title}</p>
+                <p className="mt-1 text-sm text-slate-400">{lesson.content}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {documents.length > 0 ? (
         <section className="space-y-3">

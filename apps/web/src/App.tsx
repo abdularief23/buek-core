@@ -399,6 +399,7 @@ export function App() {
             <DynamicWorkspace
               workspace={dynamicWorkspace}
               userName={currentUser.name}
+              userRole={currentUser.role}
               onClose={() => setDynamicWorkspace(null)}
               onAskAi={(prompt, contextLabel) => handleExplainAi(prompt, contextLabel)}
               onWorkspaceChange={setDynamicWorkspace}

@@ -19,17 +19,25 @@ import { getNotifications } from "../services/notifications.js";
 import { getBusinessRules, evaluateBusinessRules, getCriticalAlerts } from "../services/business-rules.js";
 import { listConnectors, fetchOperationalSnapshot } from "../connectors/index.js";
 import { getKpiDetail, getProductionDashboard } from "../services/production-dashboard.js";
+import { submitOperatorReport } from "../services/operator-report.js";
 import {
   approveReport,
   approveSopRevision,
+  createDraftReport,
+  getAiSuggestionForIssue,
+  getLessonsLearned,
   getMemories,
   getOperatorChecklist,
   getPendingReports,
   getPendingSopRevisions,
   getReportById,
   getSopRevisionById,
+  rejectReport,
   rejectSopRevision,
-  toggleChecklistItem
+  requestReportRevision,
+  submitReportForApproval,
+  toggleChecklistItem,
+  updateReportSections
 } from "../services/workflow-data.js";
 
 function getSlug(req: Request): string {
@@ -87,11 +95,12 @@ export async function handleWorkOrderDetail(req: Request, res: Response) {
 
 export async function handleApproveWorkOrder(req: Request, res: Response) {
   try {
-    const body = req.body as { supervisorName?: string };
+    const body = req.body as { supervisorName?: string; role?: string };
     const order = await approveWorkOrder(
       getSlug(req),
       String(req.params.workOrderId),
-      body.supervisorName ?? "Supervisor"
+      body.supervisorName ?? "Supervisor",
+      body.role
     );
     if (!order) {
       res.status(404).json({ error: { message: "Work order not found" } });
@@ -217,29 +226,33 @@ export async function handleSopRevisionDetail(req: Request, res: Response) {
 
 export async function handleApproveSopRevision(req: Request, res: Response) {
   try {
-    const body = req.body as { supervisorName?: string };
+    const body = req.body as { supervisorName?: string; role?: string };
     const revision = await approveSopRevision(
       getSlug(req),
       String(req.params.revisionId),
-      body.supervisorName ?? "Supervisor"
+      body.supervisorName ?? "Supervisor",
+      body.role ?? ""
     );
     res.json({ revision });
   } catch (error) {
-    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
   }
 }
 
 export async function handleRejectSopRevision(req: Request, res: Response) {
   try {
-    const body = req.body as { supervisorName?: string };
+    const body = req.body as { supervisorName?: string; role?: string };
     const revision = await rejectSopRevision(
       getSlug(req),
       String(req.params.revisionId),
-      body.supervisorName ?? "Supervisor"
+      body.supervisorName ?? "Supervisor",
+      body.role ?? ""
     );
     res.json({ revision });
   } catch (error) {
-    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
   }
 }
 
@@ -266,13 +279,144 @@ export async function handleReportDetail(req: Request, res: Response) {
 
 export async function handleApproveReport(req: Request, res: Response) {
   try {
-    const body = req.body as { supervisorName?: string };
+    const body = req.body as { supervisorName?: string; role?: string };
     const report = await approveReport(
       getSlug(req),
       String(req.params.reportId),
-      body.supervisorName ?? "Supervisor"
+      body.supervisorName ?? "Supervisor",
+      body.role ?? ""
     );
     res.json({ report });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
+  }
+}
+
+export async function handleRejectReport(req: Request, res: Response) {
+  try {
+    const body = req.body as { supervisorName?: string; role?: string };
+    const report = await rejectReport(
+      getSlug(req),
+      String(req.params.reportId),
+      body.supervisorName ?? "Supervisor",
+      body.role ?? ""
+    );
+    res.json({ report });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
+  }
+}
+
+export async function handleRequestReportRevision(req: Request, res: Response) {
+  try {
+    const body = req.body as { supervisorName?: string; role?: string; notes?: string };
+    const report = await requestReportRevision(
+      getSlug(req),
+      String(req.params.reportId),
+      body.supervisorName ?? "Supervisor",
+      body.role ?? "",
+      body.notes
+    );
+    res.json({ report });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
+  }
+}
+
+export async function handleOperatorReport(req: Request, res: Response) {
+  try {
+    const body = req.body as {
+      problem: string;
+      shift: string;
+      machineCode: string;
+      occurredAt: string;
+      rejectCount: number;
+      notes?: string;
+      reporterName: string;
+    };
+    const result = await submitOperatorReport(getSlug(req), body);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleCreateDraftReport(req: Request, res: Response) {
+  try {
+    const body = req.body as { issueKey: string; engineerName: string };
+    const suggestion = await getAiSuggestionForIssue(getSlug(req), body.issueKey);
+    const report = await createDraftReport(
+      getSlug(req),
+      body.issueKey,
+      body.engineerName,
+      suggestion
+    );
+    if (!report) {
+      res.status(404).json({ error: { message: "Issue not found" } });
+      return;
+    }
+    res.json({ report, aiSuggestion: suggestion });
+  } catch (error) {
+    res.status(400).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleUpdateReportSections(req: Request, res: Response) {
+  try {
+    const body = req.body as {
+      sections: Record<string, string | string[]>;
+      engineerName: string;
+    };
+    const report = await updateReportSections(
+      getSlug(req),
+      String(req.params.reportId),
+      body.sections as unknown as Parameters<typeof updateReportSections>[2],
+      body.engineerName
+    );
+    if (!report) {
+      res.status(404).json({ error: { message: "Report not found" } });
+      return;
+    }
+    res.json({ report });
+  } catch (error) {
+    res.status(400).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleSubmitReport(req: Request, res: Response) {
+  try {
+    const body = req.body as { engineerName: string };
+    const report = await submitReportForApproval(
+      getSlug(req),
+      String(req.params.reportId),
+      body.engineerName
+    );
+    if (!report) {
+      res.status(404).json({ error: { message: "Report not found" } });
+      return;
+    }
+    res.json({ report });
+  } catch (error) {
+    res.status(400).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleAiSuggestion(req: Request, res: Response) {
+  try {
+    const suggestion = await getAiSuggestionForIssue(getSlug(req), String(req.params.issueKey));
+    res.json({ suggestion });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleLessonsLearned(req: Request, res: Response) {
+  try {
+    const lessons = await getLessonsLearned(getSlug(req));
+    res.json({ lessons });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

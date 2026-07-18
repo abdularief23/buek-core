@@ -1,5 +1,10 @@
-import { useEffect, useState } from "react";
-import { fetchOperatorChecklist, toggleChecklistItem, type OperatorChecklist } from "../../lib/data-api.js";
+import { useEffect, useState, type FormEvent } from "react";
+import {
+  fetchOperatorChecklist,
+  submitOperatorReport,
+  toggleChecklistItem,
+  type OperatorChecklist
+} from "../../lib/data-api.js";
 import { TodayTimeline } from "../TodayTimeline.js";
 import type { RoleHomeProps } from "./shared.js";
 
@@ -11,6 +16,12 @@ export function OperatorHome({
   const op = roleHome.operator!;
   const [checklist, setChecklist] = useState<OperatorChecklist | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [problem, setProblem] = useState("");
+  const [machineCode, setMachineCode] = useState(op.line.includes("EA") ? "EA-04" : "M-312");
+  const [rejectCount, setRejectCount] = useState(1);
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [reportMessage, setReportMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOperatorChecklist(workspace.id)
@@ -36,6 +47,32 @@ export function OperatorHome({
     }
   }
 
+  async function handleReportSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!problem.trim() || submitting) return;
+    setSubmitting(true);
+    setReportMessage(null);
+    try {
+      const result = await submitOperatorReport(workspace.id, {
+        problem: problem.trim(),
+        shift,
+        machineCode,
+        occurredAt: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+        rejectCount,
+        reporterName: user.name,
+        ...(notes.trim() ? { notes: notes.trim() } : {})
+      });
+      setReportMessage(result.message);
+      setProblem("");
+      setNotes("");
+      setRejectCount(1);
+    } catch {
+      setReportMessage("Gagal mengirim laporan. Coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="space-y-12 pb-16">
       <header className="space-y-3 border-b border-white/10 pb-8">
@@ -47,6 +84,66 @@ export function OperatorHome({
           {workspace.organization} · {shift}
         </p>
       </header>
+
+      <section className="buek-section space-y-4">
+        <h2 className="buek-card-title text-slate-400">Laporkan Masalah</h2>
+        <p className="buek-small text-slate-500">
+          Isi form, submit — selesai. Engineer akan mendapat notifikasi.
+        </p>
+        <form onSubmit={(e) => void handleReportSubmit(e)} className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
+          <label className="block space-y-2">
+            <span className="buek-small text-slate-500">Problem</span>
+            <input
+              value={problem}
+              onChange={(e) => setProblem(e.target.value)}
+              placeholder="Misalnya: White Streak"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              required
+            />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <label className="block space-y-2">
+              <span className="buek-small text-slate-500">Shift</span>
+              <input value={shift} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-400" />
+            </label>
+            <label className="block space-y-2">
+              <span className="buek-small text-slate-500">Machine</span>
+              <input
+                value={machineCode}
+                onChange={(e) => setMachineCode(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="buek-small text-slate-500">Reject Count</span>
+              <input
+                type="number"
+                min={1}
+                value={rejectCount}
+                onChange={(e) => setRejectCount(Number(e.target.value))}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              />
+            </label>
+          </div>
+          <label className="block space-y-2">
+            <span className="buek-small text-slate-500">Notes (optional)</span>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-xl bg-red-500/90 px-6 py-3 font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+          >
+            {submitting ? "Mengirim..." : "Submit Laporan"}
+          </button>
+          {reportMessage ? <p className="buek-small text-emerald-400">{reportMessage}</p> : null}
+        </form>
+      </section>
 
       <section className="buek-section space-y-6">
         <h2 className="buek-card-title text-slate-400">Today&apos;s Work</h2>

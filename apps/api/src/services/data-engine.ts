@@ -251,8 +251,14 @@ export async function getWorkOrderById(slug: string, workOrderId: string): Promi
 export async function approveWorkOrder(
   slug: string,
   workOrderId: string,
-  supervisorName: string
+  supervisorName: string,
+  role?: string
 ): Promise<WorkOrderDto | null> {
+  const { canApprove } = await import("../lib/roles.js");
+  if (!canApprove(role ?? "")) {
+    throw new Error("Only supervisors and managers can approve work orders.");
+  }
+
   const workspace = await getWorkspaceBySlug(slug);
   if (!workspace) return null;
 

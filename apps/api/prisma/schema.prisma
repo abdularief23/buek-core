@@ -59,6 +59,7 @@ model Workspace {
   memoryRecords    MemoryRecord[]
   agentActions     AgentAction[]
   businessRules    BusinessRule[]
+  lessonsLearned   LessonLearned[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -139,6 +140,8 @@ model Employee {
   approvals      Approval[]  @relation("ApprovalDecider")
   sopRevisions   SopRevision[] @relation("SopSubmitter")
   reports        EngineeringReport[] @relation("ReportAuthor")
+  approvedReports EngineeringReport[] @relation("ReportApprover")
+  lessonsLearned LessonLearned[] @relation("LessonAuthor")
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -178,6 +181,7 @@ model Issue {
   investigation Investigation?
   workOrders    WorkOrder[]
   reports       EngineeringReport[]
+  lessonsLearned LessonLearned[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -371,20 +375,44 @@ model SopRevision {
 }
 
 model EngineeringReport {
+  id            String    @id @default(cuid())
+  workspaceId   String
+  issueId       String?
+  title         String
+  content       String
+  reportNumber  String?
+  version       Int       @default(1)
+  sections      Json?
+  machineCode   String?
+  status        String    @default("draft")
+  authorId      String?
+  approvedById  String?
+  submittedAt   DateTime?
+  approvedAt    DateTime?
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  issue         Issue?    @relation(fields: [issueId], references: [id], onDelete: SetNull)
+  author        Employee? @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  approvedBy    Employee? @relation("ReportApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, reportNumber])
+}
+
+model LessonLearned {
   id          String    @id @default(cuid())
   workspaceId String
   issueId     String?
   title       String
   content     String
-  status      String    @default("pending_approval")
   authorId    String?
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   issue       Issue?    @relation(fields: [issueId], references: [id], onDelete: SetNull)
-  author      Employee? @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  author      Employee? @relation("LessonAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
 
-  @@index([workspaceId, status])
+  @@index([workspaceId])
 }
 
 model OperatorChecklistRun {
