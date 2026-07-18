@@ -18,6 +18,8 @@ COPY packages/workflows/package.json packages/workflows/package.json
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+ARG DATABASE_URL="postgresql://buek:buek@postgres:5432/buek_core?schema=public"
+ENV DATABASE_URL=$DATABASE_URL
 RUN pnpm --filter @buek/api prisma:generate
 RUN pnpm --filter @buek/api... build
 
