@@ -18,14 +18,15 @@ interface ModulesResponse {
   }>;
 }
 
-const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
+const modulesEndpoint = `${configuredApiUrl}/api/modules`;
 
 export function App() {
   const [modules, setModules] = useState<ModuleSummary[]>([]);
   const [status, setStatus] = useState("Loading installed modules...");
 
   useEffect(() => {
-    fetch(`${apiUrl}/api/modules`)
+    fetch(modulesEndpoint)
       .then(async (response) => {
         if (!response.ok) {
           throw new Error(`API responded with ${response.status}`);

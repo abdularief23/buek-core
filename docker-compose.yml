@@ -26,7 +26,7 @@ services:
     environment:
       NODE_ENV: production
       API_PORT: 4000
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://core.buekwebsite.com}
       DATABASE_URL: postgresql://${POSTGRES_USER:-buek}:${POSTGRES_PASSWORD:-buek}@postgres:5432/${POSTGRES_DB:-buek_core}?schema=public
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
@@ -41,7 +41,7 @@ services:
     depends_on:
       - api
     ports:
-      - "5173:80"
+      - "${WEB_PORT:-5173}:80"
 
 volumes:
   postgres-data:

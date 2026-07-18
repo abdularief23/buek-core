@@ -39,3 +39,7 @@ pnpm dev
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for the folder structure and module boundaries.
+
+## Deployment
+
+See [docs/deployment.md](docs/deployment.md) for connecting the demo to `core.buekwebsite.com`.
