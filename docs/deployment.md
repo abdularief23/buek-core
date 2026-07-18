@@ -127,6 +127,30 @@ curl https://core.buekwebsite.com/api/modules
 
 The `/api/modules` response should include the Manufacturing module with no discovery errors.
 
+## Redeploy After Code Changes
+
+Production will **not** update automatically when GitHub is merged. On the VPS, run:
+
+```bash
+cd /path/to/buek-core
+./scripts/deploy.sh
+```
+
+Or manually:
+
+```bash
+git pull origin main
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+Verify the new UI loaded:
+
+- Login page title: **Enterprise AI Operating System** (not "Build AI Workers for Any Industry")
+- After login: **Good morning, Abdul** + prompt at top + Today's Summary + Continue Working
+- No dashboard, no Choose Company, no KPI grid
+
+Check bundle hash in page source — it should change after each deploy.
+
 ## SSL
 
 `docker-compose.prod.yml` runs Caddy on ports 80 and 443. Caddy automatically requests and renews

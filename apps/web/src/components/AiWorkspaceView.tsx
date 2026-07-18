@@ -40,56 +40,60 @@ export function AiWorkspaceView({
     await onSubmit(trimmedInput);
   }
 
+  const promptInput = (
+    <AiPromptInput
+      value={input}
+      onChange={onInputChange}
+      onSubmit={handleSubmit}
+      disabled={isStreaming}
+      placeholder="Apa yang bisa saya bantu hari ini?"
+    />
+  );
+
   return (
-    <div className="mx-auto flex h-[calc(100vh-7rem)] max-w-2xl flex-col">
-      <header className="shrink-0 pb-4">
-        <p className="text-sm text-slate-500">Good morning, {user.name}</p>
-        <h1 className="text-xl font-medium text-slate-100">{workspace.organization}</h1>
+    <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-xl flex-col">
+      <header className="shrink-0 space-y-1 pb-6">
+        <p className="text-sm text-slate-400">Good morning, {user.name}</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-white">{workspace.organization}</h1>
       </header>
 
-      <div className="flex-1 space-y-4 overflow-y-auto pb-4">
-        {!hasUserMessages ? (
-          <p className="text-sm text-slate-500">Apa yang bisa saya bantu hari ini?</p>
-        ) : null}
+      {!hasUserMessages ? (
+        <div className="shrink-0 space-y-8">
+          <div className="space-y-4 border-y border-white/10 py-6">
+            <p className="text-sm text-slate-400">Apa yang bisa saya bantu hari ini?</p>
+            {promptInput}
+          </div>
 
-        {messages.map((message, index) => {
-          const previousUserMessage = [...messages]
-            .slice(0, index)
-            .reverse()
-            .find((candidate) => candidate.role === "user")?.content;
+          <TodaySummary workspace={workspace} />
+          <ContinueWorking workspace={workspace} onSelect={onContinueItem} />
+        </div>
+      ) : (
+        <>
+          <div className="flex-1 space-y-6 overflow-y-auto pb-4">
+            {messages.map((message, index) => {
+              const previousUserMessage = [...messages]
+                .slice(0, index)
+                .reverse()
+                .find((candidate) => candidate.role === "user")?.content;
 
-          return (
-            <ChatMessageBlock
-              key={message.id}
-              message={message}
-              workspace={workspace}
-              previousUserMessage={previousUserMessage}
-              isStreaming={
-                isStreaming && index === messages.length - 1 && message.role === "assistant"
-              }
-            />
-          );
-        })}
+              return (
+                <ChatMessageBlock
+                  key={message.id}
+                  message={message}
+                  workspace={workspace}
+                  previousUserMessage={previousUserMessage}
+                  isStreaming={
+                    isStreaming && index === messages.length - 1 && message.role === "assistant"
+                  }
+                />
+              );
+            })}
+            <div ref={endRef} />
+          </div>
 
-        {!hasUserMessages ? (
-          <>
-            <TodaySummary workspace={workspace} />
-            <ContinueWorking workspace={workspace} onSelect={onContinueItem} />
-          </>
-        ) : null}
-
-        <div ref={endRef} />
-      </div>
-
-      <div className="shrink-0 border-t border-white/5 pt-4">
-        <AiPromptInput
-          value={input}
-          onChange={onInputChange}
-          onSubmit={handleSubmit}
-          disabled={isStreaming}
-          placeholder="Tanyakan apa saja — produksi, maintenance, quality, KPI..."
-        />
-      </div>
+          <div className="shrink-0 border-t border-white/10 pt-4">{promptInput}</div>
+        </>
+      )}
     </div>
   );
 }

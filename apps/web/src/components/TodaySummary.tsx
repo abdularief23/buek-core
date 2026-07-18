@@ -1,6 +1,4 @@
-import { ExpandableSection } from "@buek/ui";
 import type { Workspace } from "../types.js";
-import { FactoryAreas } from "./FactoryAreas.js";
 
 interface TodaySummaryProps {
   workspace: Workspace;
@@ -15,12 +13,15 @@ export function TodaySummary({ workspace }: TodaySummaryProps) {
         : "🔴";
 
   return (
-    <section className="border-t border-white/5 pt-6">
-      <h2 className="text-xs tracking-wide text-slate-500">Today&apos;s Summary</h2>
-      <p className="mt-3 text-sm text-slate-300">
+    <section>
+      <h2 className="text-xs font-medium tracking-wide text-slate-500">Today&apos;s Summary</h2>
+      <p className="mt-3 text-sm text-slate-200">
         {healthIcon} {workspace.factoryHealth.message}
       </p>
-      <div className="mt-2 space-y-0.5 text-sm text-slate-500">
+      {workspace.factoryHealth.status === "healthy" ? (
+        <p className="mt-1 text-sm text-slate-500">No critical issues</p>
+      ) : null}
+      <div className="mt-3 space-y-1 text-sm text-slate-400">
         {workspace.summaryCounts.maintenanceAlerts > 0 ? (
           <p>
             {workspace.summaryCounts.maintenanceAlerts} maintenance alert
@@ -34,20 +35,6 @@ export function TodaySummary({ workspace }: TodaySummaryProps) {
           </p>
         ) : null}
       </div>
-
-      {workspace.factoryAreas.length > 0 ? (
-        <div className="mt-4">
-          <ExpandableSection
-            title="Today's Factory"
-            subtitle={
-              workspace.factoryHealth.status === "healthy" ? "Healthy" : workspace.factoryHealth.message
-            }
-            leading={<span>{healthIcon}</span>}
-          >
-            <FactoryAreas workspace={workspace} />
-          </ExpandableSection>
-        </div>
-      ) : null}
     </section>
   );
 }
