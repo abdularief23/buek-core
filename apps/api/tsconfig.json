@@ -12,6 +12,7 @@
   "references": [
     { "path": "../../packages/agents" },
     { "path": "../../packages/ai-core" },
+    { "path": "../../packages/guardrails" },
     { "path": "../../packages/shared-types" },
     { "path": "../../domains/manufacturing" }
   ]

@@ -8,6 +8,7 @@ COPY apps/api/package.json apps/api/package.json
 COPY domains/manufacturing/package.json domains/manufacturing/package.json
 COPY packages/agents/package.json packages/agents/package.json
 COPY packages/ai-core/package.json packages/ai-core/package.json
+COPY packages/guardrails/package.json packages/guardrails/package.json
 COPY packages/knowledge/package.json packages/knowledge/package.json
 COPY packages/memory/package.json packages/memory/package.json
 COPY packages/prompts/package.json packages/prompts/package.json

@@ -3,6 +3,7 @@ import { BuekCore } from "@buek/ai-core";
 import cors from "cors";
 import express from "express";
 import type { Express } from "express";
+import rateLimit from "express-rate-limit";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleChatRequest } from "./chat.js";
@@ -22,6 +23,19 @@ export async function createServer(env: ApiEnv): Promise<Express> {
 
   app.use(cors({ origin: env.corsOrigin }));
   app.use(express.json());
+
+  const chatRateLimit = rateLimit({
+    windowMs: 60_000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      error: {
+        code: "rate_limit_exceeded",
+        message: "Too many AI requests. Please wait a minute and try again."
+      }
+    }
+  });
 
   app.get("/health", (_req, res) => {
     res.json({
@@ -64,7 +78,7 @@ export async function createServer(env: ApiEnv): Promise<Express> {
     });
   });
 
-  app.post("/api/chat", (req, res) => {
+  app.post("/api/chat", chatRateLimit, (req, res) => {
     void handleChatRequest(req, res, env, discovery.modules);
   });
 

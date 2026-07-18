@@ -260,6 +260,19 @@ export function App() {
               )
             );
           }
+
+          if (streamEvent.event === "guardrail") {
+            setMessages((currentMessages) =>
+              currentMessages.map((message) =>
+                message.id === assistantMessage.id
+                  ? {
+                      ...message,
+                      content: `${message.content}\n\n> Buek Core guardrails reviewed this response.`
+                    }
+                  : message
+              )
+            );
+          }
         }
       }
     } catch (error) {

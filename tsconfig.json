@@ -5,6 +5,7 @@
     { "path": "packages/ai-core" },
     { "path": "packages/agents" },
     { "path": "packages/knowledge" },
+    { "path": "packages/guardrails" },
     { "path": "packages/memory" },
     { "path": "packages/prompts" },
     { "path": "packages/tools" },

@@ -20,6 +20,7 @@
       "@buek/agents": ["packages/agents/src/index.ts"],
       "@buek/ai-core": ["packages/ai-core/src/index.ts"],
       "@buek/domain-manufacturing": ["domains/manufacturing/src/index.ts"],
+      "@buek/guardrails": ["packages/guardrails/src/index.ts"],
       "@buek/knowledge": ["packages/knowledge/src/index.ts"],
       "@buek/memory": ["packages/memory/src/index.ts"],
       "@buek/prompts": ["packages/prompts/src/index.ts"],
