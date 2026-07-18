@@ -1,3 +1,57 @@
+export interface RoleHomeData {
+  roleKey: "operator" | "engineer" | "supervisor" | "manager";
+  personaLabel: string;
+  chatPersona: string;
+  copilotSuggestions: Array<{ label: string; prompt: string }>;
+  operator?: {
+    line: string;
+    shift: string;
+    targetOutput: number;
+    progress: number;
+    checklist: Array<{ id: string; label: string; done: boolean }>;
+    qualityReminders: string[];
+  };
+  engineer?: {
+    problems: Array<{
+      id: string;
+      severity: "critical" | "warning" | "attention";
+      icon: string;
+      title: string;
+      detail: string;
+      actionLabel: string;
+      prompt: string;
+      contextLabel: string;
+    }>;
+    investigations: Array<{ id: string; label: string; prompt: string }>;
+    aiSuggestions: Array<{
+      id: string;
+      title: string;
+      candidate: string;
+      confidence: string;
+      prompt: string;
+    }>;
+    workflowSteps: string[];
+  };
+  supervisor?: {
+    overview: Array<{ label: string; status: "green" | "yellow" | "red" }>;
+    waitingApproval: Array<{ label: string; count: number; prompt: string }>;
+    openIssues: Array<{
+      id: string;
+      title: string;
+      owner: string;
+      status: string;
+      prompt: string;
+    }>;
+    teamPerformance: Array<{ name: string; closed: number; pending: number }>;
+  };
+  manager?: {
+    factoryOverview: Array<{ label: string; value: string; status: "green" | "yellow" | "red" }>;
+    criticalIssues: Array<{ id: string; title: string; prompt: string }>;
+    weeklyTrend: Array<{ label: string; trend: "up" | "down" | "flat" }>;
+    executiveSummary: string[];
+  };
+}
+
 export interface DailyWorkspace {
   dailyBrief: Array<{
     id: string;

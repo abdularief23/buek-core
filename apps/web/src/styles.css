@@ -10,10 +10,49 @@
     "Segoe UI",
     sans-serif;
   color-scheme: dark;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 body {
   margin: 0;
   background-color: #020617;
+}
+
+.buek-heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.buek-subtitle {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.buek-body {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.buek-card-title {
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.buek-small {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.buek-section {
+  margin-bottom: 3rem;
+}
+
+.buek-card {
+  padding: 2rem;
+}
+
+.buek-gap {
+  gap: 1.5rem;
 }
