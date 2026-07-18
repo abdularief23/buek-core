@@ -1,36 +1,67 @@
-import { Button } from "@buek/ui";
-import { useEffect, useState } from "react";
+import type { AppNavItem } from "@buek/ui";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { AppShell } from "./components/AppShell.js";
+import { ChatView } from "./components/ChatView.js";
+import { HomeView } from "./components/HomeView.js";
+import { LoginScreen } from "./components/LoginScreen.js";
+import { SettingsView } from "./components/SettingsView.js";
+import { WorkspaceView } from "./components/WorkspaceView.js";
+import {
+  createMessageId,
+  hasErrorMessage,
+  hasTextDelta,
+  isChatMetadata,
+  parseServerSentEvents
+} from "./lib/chat.js";
+import type { ChatMessage, DemoUser, ModuleSummary, Workspace } from "./types.js";
 
-interface ModuleSummary {
-  id: string;
-  name: string;
-  version: string;
-  capabilities: string[];
-}
+const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
+const modulesEndpoint = `${configuredApiUrl}/api/modules`;
+const loginEndpoint = `${configuredApiUrl}/api/auth/demo-login`;
+const chatEndpoint = `${configuredApiUrl}/api/chat`;
 
 interface ModulesResponse {
-  registry: {
-    modules: ModuleSummary[];
-  };
-  discoveryErrors: Array<{
-    moduleName: string;
-    reason: string;
-  }>;
+  registry: { modules: ModuleSummary[] };
+  discoveryErrors: Array<{ moduleName: string; reason: string }>;
 }
 
-const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+interface LoginResponse {
+  user: DemoUser;
+  workspace: Workspace;
+}
 
 export function App() {
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  const [companyId, setCompanyId] = useState("Epson Demo");
+  const [username, setUsername] = useState("demo");
+  const [password, setPassword] = useState("demo123");
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [modules, setModules] = useState<ModuleSummary[]>([]);
+  const [activeView, setActiveView] = useState<AppNavItem>("home");
   const [status, setStatus] = useState("Loading installed modules...");
+  const [homePrompt, setHomePrompt] = useState("");
+  const [input, setInput] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const installedModule = modules[0];
+
+  const chatPayload = useMemo(
+    () =>
+      messages
+        .filter((message) => message.content.trim().length > 0)
+        .map((message) => ({ role: message.role, content: message.content })),
+    [messages]
+  );
 
   useEffect(() => {
-    fetch(`${apiUrl}/api/modules`)
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`API responded with ${response.status}`);
-        }
+    if (!isSignedIn) return;
 
+    fetch(modulesEndpoint)
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Modules API responded with ${response.status}`);
         return (await response.json()) as ModulesResponse;
       })
       .then((data) => {
@@ -42,69 +73,205 @@ export function App() {
         );
       })
       .catch((error: unknown) => {
-        setStatus(error instanceof Error ? error.message : "Unable to load module registry.");
+        setStatus(error instanceof Error ? error.message : "Unable to load modules.");
       });
-  }, []);
+  }, [isSignedIn]);
+
+  async function streamChat(trimmedInput: string) {
+    const userMessage: ChatMessage = { id: createMessageId(), role: "user", content: trimmedInput };
+    const assistantMessage: ChatMessage = { id: createMessageId(), role: "assistant", content: "" };
+
+    setMessages((current) => [...current, userMessage, assistantMessage]);
+    setIsStreaming(true);
+
+    try {
+      const response = await fetch(chatEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: currentWorkspace?.id,
+          messages: [...chatPayload, { role: "user", content: trimmedInput }]
+        })
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Chat API responded with ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let done = false;
+
+      while (!done) {
+        const result = await reader.read();
+        done = result.done;
+        buffer += decoder.decode(result.value ?? new Uint8Array(), { stream: !done });
+        const parsed = parseServerSentEvents(buffer);
+        buffer = parsed.remaining;
+
+        for (const streamEvent of parsed.events) {
+          if (streamEvent.event === "metadata" && isChatMetadata(streamEvent.data)) {
+            const metadata = streamEvent.data;
+            setMessages((currentMessages) =>
+              currentMessages.map((message) =>
+                message.id === assistantMessage.id ? { ...message, metadata } : message
+              )
+            );
+          }
+
+          if (streamEvent.event === "delta" && hasTextDelta(streamEvent.data)) {
+            const deltaText = streamEvent.data.text;
+            setMessages((currentMessages) =>
+              currentMessages.map((message) =>
+                message.id === assistantMessage.id
+                  ? { ...message, content: `${message.content}${deltaText}` }
+                  : message
+              )
+            );
+          }
+
+          if (streamEvent.event === "error" && hasErrorMessage(streamEvent.data)) {
+            const errorMessage = streamEvent.data.message;
+            setMessages((currentMessages) =>
+              currentMessages.map((message) =>
+                message.id === assistantMessage.id
+                  ? {
+                      ...message,
+                      content: `I could not complete the AI response yet: ${errorMessage}`
+                    }
+                  : message
+              )
+            );
+          }
+        }
+      }
+    } catch (error) {
+      setMessages((currentMessages) =>
+        currentMessages.map((message) =>
+          message.id === assistantMessage.id
+            ? {
+                ...message,
+                content: error instanceof Error ? error.message : "Unable to reach the chat API."
+              }
+            : message
+        )
+      );
+    } finally {
+      setIsStreaming(false);
+    }
+  }
+
+  async function startChatFromPrompt(prompt: string) {
+    const trimmedInput = prompt.trim();
+    if (!trimmedInput || isStreaming) return;
+    setInput("");
+    setActiveView("chat");
+    await streamChat(trimmedInput);
+  }
+
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    try {
+      setLoginError(null);
+      const response = await fetch(loginEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId, username, password })
+      });
+
+      if (!response.ok) throw new Error("Invalid demo credentials.");
+
+      const data = (await response.json()) as LoginResponse;
+
+      setCurrentUser(data.user);
+      setCurrentWorkspace(data.workspace);
+      setIsSignedIn(true);
+      setActiveView("home");
+      setMessages([
+        {
+          id: createMessageId(),
+          role: "assistant",
+          content:
+            "Hi, I am Buek Core. Tell me what you want to solve today, and I will open the right knowledge when needed."
+        }
+      ]);
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "Unable to sign in.");
+    }
+  }
+
+  function handleLogout() {
+    setIsSignedIn(false);
+    setCurrentUser(null);
+    setCurrentWorkspace(null);
+    setActiveView("home");
+    setMessages([]);
+  }
+
+  if (!isSignedIn) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white">
+        <LoginScreen
+          companyId={companyId}
+          username={username}
+          password={password}
+          loginError={loginError}
+          onCompanyIdChange={setCompanyId}
+          onUsernameChange={setUsername}
+          onPasswordChange={setPassword}
+          onSubmit={handleLogin}
+        />
+      </main>
+    );
+  }
+
+  if (!currentUser || !currentWorkspace) return null;
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <section className="mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-6 py-16">
-        <div className="max-w-3xl">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-            Buek Core
-          </p>
-          <h1 className="text-5xl font-bold tracking-tight sm:text-7xl">
-            Build AI Workers for Any Industry
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-slate-300">
-            Buek Core separates reusable AI reasoning from modular industry knowledge. Manufacturing
-            is the first vertical, installed as a domain plugin instead of hard-coded platform
-            logic.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button>AI Core</Button>
-            <Button className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
-              Manufacturing Plugin
-            </Button>
-          </div>
-        </div>
+      <AppShell
+        activeView={activeView}
+        workspace={currentWorkspace}
+        user={currentUser}
+        onNavigate={setActiveView}
+        onLogout={handleLogout}
+      >
+        {activeView === "home" ? (
+          <HomeView
+            user={currentUser}
+            workspace={currentWorkspace}
+            homePrompt={homePrompt}
+            isStreaming={isStreaming}
+            onHomePromptChange={setHomePrompt}
+            onHomePromptSubmit={() => startChatFromPrompt(homePrompt)}
+            onContinueItem={startChatFromPrompt}
+          />
+        ) : null}
 
-        <section className="mt-12 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-cyan-950/20">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold">Installed domain modules</h2>
-              <p className="mt-1 text-sm text-slate-400">{status}</p>
-            </div>
-            <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-sm text-cyan-200">
-              {modules.length} active
-            </span>
-          </div>
+        {activeView === "chat" ? (
+          <ChatView
+            workspace={currentWorkspace}
+            messages={messages}
+            input={input}
+            isStreaming={isStreaming}
+            onInputChange={setInput}
+            onSubmit={async (trimmedInput) => {
+              await streamChat(trimmedInput);
+            }}
+          />
+        ) : null}
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {modules.map((module) => (
-              <article
-                key={module.id}
-                className="rounded-xl border border-white/10 bg-slate-900 p-4"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-semibold">{module.name}</h3>
-                  <span className="text-xs text-slate-400">v{module.version}</span>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {module.capabilities.map((capability) => (
-                    <span
-                      key={capability}
-                      className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200"
-                    >
-                      {capability}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      </section>
+        {activeView === "workspace" ? <WorkspaceView workspace={currentWorkspace} /> : null}
+
+        {activeView === "settings" ? (
+          <SettingsView
+            status={status}
+            installedModule={installedModule ?? undefined}
+          />
+        ) : null}
+      </AppShell>
     </main>
   );
 }

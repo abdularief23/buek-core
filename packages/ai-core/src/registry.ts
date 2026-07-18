@@ -25,7 +25,18 @@ export class DomainModuleRegistry {
         id: module.id,
         name: module.name,
         version: module.version,
-        capabilities: module.capabilities
+        description: module.description,
+        capabilities: module.capabilities,
+        prompts: module.prompts.map((prompt) => ({
+          id: prompt.id,
+          name: prompt.name,
+          description: prompt.description
+        })),
+        tools: module.tools.map((tool) => ({
+          id: tool.id,
+          name: tool.name,
+          description: tool.description
+        }))
       }))
     };
   }

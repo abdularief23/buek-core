@@ -1,0 +1,19 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(790 176) rotate(131) scale(610 520)">
+      <stop stop-color="#6D2BF4" stop-opacity="0.35"/>
+      <stop offset="0.5" stop-color="#0E8BFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#020617" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" rx="48" fill="#020617"/>
+  <rect width="1200" height="630" rx="48" fill="url(#glow)"/>
+  <image href="/logo-mark.svg" x="88" y="76" width="250" height="250"/>
+  <text x="380" y="178" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="88" font-weight="900" letter-spacing="2">BUEK CORE</text>
+  <text x="382" y="244" fill="#67E8F9" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="8">BUILD AI WORKERS FOR ANY INDUSTRY</text>
+  <rect x="382" y="296" width="640" height="1" fill="#334155"/>
+  <text x="382" y="364" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="35" font-weight="600">One AI Core.</text>
+  <text x="382" y="414" fill="#CBD5E1" font-family="Inter, Arial, sans-serif" font-size="35" font-weight="600">Unlimited Industry Knowledge.</text>
+  <rect x="382" y="470" width="292" height="58" rx="29" fill="#22D3EE" fill-opacity="0.12" stroke="#22D3EE" stroke-opacity="0.35"/>
+  <text x="416" y="509" fill="#A5F3FC" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Manufacturing MVP</text>
+</svg>

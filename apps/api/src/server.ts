@@ -3,9 +3,13 @@ import { BuekCore } from "@buek/ai-core";
 import cors from "cors";
 import express from "express";
 import type { Express } from "express";
+import rateLimit from "express-rate-limit";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { handleChatRequest } from "./chat.js";
 import type { ApiEnv } from "./config/env.js";
+import { handleKnowledgeSearchRequest } from "./knowledge.js";
+import { authenticateDemoUser, workspaces } from "./workspaces.js";
 
 export async function createServer(env: ApiEnv): Promise<Express> {
   const app = express();
@@ -21,6 +25,19 @@ export async function createServer(env: ApiEnv): Promise<Express> {
 
   app.use(cors({ origin: env.corsOrigin }));
   app.use(express.json());
+
+  const chatRateLimit = rateLimit({
+    windowMs: 60_000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      error: {
+        code: "rate_limit_exceeded",
+        message: "Too many AI requests. Please wait a minute and try again."
+      }
+    }
+  });
 
   app.get("/health", (_req, res) => {
     res.json({
@@ -55,12 +72,46 @@ export async function createServer(env: ApiEnv): Promise<Express> {
     });
   });
 
+  app.get("/api/workspaces", (_req, res) => {
+    res.json({ workspaces });
+  });
+
+  app.post("/api/auth/demo-login", (req, res) => {
+    const body = req.body as Partial<{
+      companyId: string;
+      username: string;
+      password: string;
+    }>;
+
+    const result = authenticateDemoUser(body.companyId ?? "", body.username ?? "", body.password ?? "");
+
+    if (!result) {
+      res.status(401).json({
+        error: {
+          code: "invalid_demo_login",
+          message: "Invalid demo credentials."
+        }
+      });
+      return;
+    }
+
+    res.json(result);
+  });
+
+  app.get("/api/knowledge/search", (req, res) => {
+    handleKnowledgeSearchRequest(req, res, discovery.modules);
+  });
+
   app.post("/api/ask", (_req, res) => {
     res.status(501).json({
       message:
         "AI answering is intentionally not implemented in the foundation scaffold. The API, AI Core, and Manufacturing module registration are ready for the next step.",
       registry: platform.getRegistrySnapshot()
     });
+  });
+
+  app.post("/api/chat", chatRateLimit, (req, res) => {
+    void handleChatRequest(req, res, env, discovery.modules);
   });
 
   return app;
