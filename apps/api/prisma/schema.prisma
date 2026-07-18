@@ -15,3 +15,112 @@ model InstalledDomainModule {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Company {
+  id            String              @id @default(cuid())
+  name          String
+  industry      String
+  workspaces    Workspace[]
+  users         User[]
+  knowledge     KnowledgeDocument[]
+  conversations Conversation[]
+  modules       CompanyModule[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model Workspace {
+  id            String              @id @default(cuid())
+  companyId     String
+  name          String
+  industry      String
+  domain        String
+  knowledgeVersion String           @default("2026.07")
+  company       Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  knowledge     KnowledgeDocument[]
+  conversations Conversation[]
+  modules       CompanyModule[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([companyId])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  companyId String
+  email     String
+  role      String   @default("member")
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, email])
+  @@index([companyId])
+}
+
+model KnowledgeDocument {
+  id          String            @id @default(cuid())
+  companyId   String
+  workspaceId String
+  title       String
+  type        String
+  referenceId String?
+  status      String            @default("published")
+  sourcePath  String?
+  company     Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  embeddings  EmbeddingRecord[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([companyId])
+  @@index([workspaceId])
+}
+
+model EmbeddingRecord {
+  id          String            @id @default(cuid())
+  knowledgeId String
+  companyId   String
+  chunkText   String
+  vectorJson  Json
+  knowledge   KnowledgeDocument @relation(fields: [knowledgeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now())
+
+  @@index([companyId])
+  @@index([knowledgeId])
+}
+
+model Conversation {
+  id          String   @id @default(cuid())
+  companyId   String
+  workspaceId String
+  userId      String?
+  title       String?
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model CompanyModule {
+  id          String   @id @default(cuid())
+  companyId   String
+  workspaceId String
+  moduleName  String
+  status      String   @default("installed")
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([workspaceId, moduleName])
+  @@index([companyId])
+  @@index([workspaceId])
+}
