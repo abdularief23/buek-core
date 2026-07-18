@@ -44,6 +44,9 @@ importers:
       '@buek/guardrails':
         specifier: workspace:*
         version: link:../../packages/guardrails
+      '@buek/knowledge':
+        specifier: workspace:*
+        version: link:../../packages/knowledge
       '@buek/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types

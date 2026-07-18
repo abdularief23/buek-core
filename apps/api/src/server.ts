@@ -8,6 +8,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleChatRequest } from "./chat.js";
 import type { ApiEnv } from "./config/env.js";
+import { handleKnowledgeSearchRequest } from "./knowledge.js";
 
 export async function createServer(env: ApiEnv): Promise<Express> {
   const app = express();
@@ -68,6 +69,10 @@ export async function createServer(env: ApiEnv): Promise<Express> {
       registry: platform.getRegistrySnapshot(),
       discoveryErrors: discovery.errors
     });
+  });
+
+  app.get("/api/knowledge/search", (req, res) => {
+    handleKnowledgeSearchRequest(req, res, discovery.modules);
   });
 
   app.post("/api/ask", (_req, res) => {

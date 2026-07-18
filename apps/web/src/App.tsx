@@ -37,6 +37,8 @@ interface ChatReference {
   id: string;
   title: string;
   referenceId?: string;
+  score?: number;
+  excerpt?: string;
 }
 
 interface ChatMetadata {
@@ -384,23 +386,57 @@ export function App() {
                     {message.role === "user" ? "You" : "Buek Core"}
                   </p>
                   {message.metadata ? (
-                    <div className="mb-4 grid gap-3 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4 md:grid-cols-2">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">
-                          Detected Module
-                        </p>
-                        <p className="mt-1 font-semibold">{message.metadata.detectedModule.name}</p>
+                    <div className="mb-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4">
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">
+                            Detected Module
+                          </p>
+                          <p className="mt-1 font-semibold">
+                            {message.metadata.detectedModule.name}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">
+                            References
+                          </p>
+                          <p className="mt-1 text-sm">
+                            {message.metadata.references
+                              .slice(0, 4)
+                              .map((reference) => reference.referenceId ?? reference.id)
+                              .join(", ")}
+                          </p>
+                        </div>
                       </div>
-                      <div>
+                      <div className="mt-4 border-t border-cyan-200/10 pt-4">
                         <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">
-                          References
+                          Knowledge Engine Retrieved
                         </p>
-                        <p className="mt-1 text-sm">
-                          {message.metadata.references
-                            .slice(0, 4)
-                            .map((reference) => reference.referenceId ?? reference.id)
-                            .join(", ")}
-                        </p>
+                        <div className="mt-3 grid gap-2">
+                          {message.metadata.references.slice(0, 3).map((reference) => (
+                            <div
+                              key={`${message.id}-${reference.id}`}
+                              className="rounded-xl border border-white/10 bg-slate-950/50 p-3"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <p className="text-sm font-semibold">
+                                  {reference.referenceId ?? reference.id}
+                                </p>
+                                {typeof reference.score === "number" ? (
+                                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-300">
+                                    score {reference.score}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="mt-1 text-xs text-slate-300">{reference.title}</p>
+                              {reference.excerpt ? (
+                                <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">
+                                  {reference.excerpt}
+                                </p>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ) : null}

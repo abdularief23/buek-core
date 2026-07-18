@@ -31,6 +31,7 @@ export const manufacturingKnowledge: KnowledgeSource[] = [
     summary:
       "Troubleshooting SOP for white streaks, missing lines, or pale vertical bands in printed output.",
     tags: ["printer", "white-streaks", "defect", "print-quality", "troubleshooting"],
+    contentPath: "domains/manufacturing/knowledge/sop/SOP-014.md",
     content:
       "For white streaks: 1) isolate affected printer, lot, shift, media type, and cartridge or printhead ID; 2) print a nozzle check or test pattern; 3) inspect for clogged nozzles, low ink/toner, contaminated media path, worn transfer roller, blocked printhead, or incorrect print density; 4) clean printhead/nozzle and media path; 5) replace consumable if test pattern still shows missing bands; 6) run three consecutive OK samples before releasing production."
   },
@@ -42,6 +43,7 @@ export const manufacturingKnowledge: KnowledgeSource[] = [
     summary:
       "Acceptance criteria for visible streaks, density variation, banding, smudges, and repeat defects.",
     tags: ["printer", "qc", "acceptance", "white-streaks", "visual-inspection"],
+    contentPath: "domains/manufacturing/knowledge/qc/qc-standard-12.md",
     content:
       "Reject printed output when white streaks exceed 0.5 mm width, repeat across more than 20 mm length, obscure text/barcode readability, or appear on more than two consecutive samples. Accept only after defect is absent in three consecutive samples under standard lighting."
   },
@@ -53,6 +55,7 @@ export const manufacturingKnowledge: KnowledgeSource[] = [
     summary:
       "Example Why-Why path for printer white streak defects caused by blocked nozzles or transfer issues.",
     tags: ["why-why", "root-cause", "printer", "white-streaks"],
+    contentPath: "domains/manufacturing/knowledge/troubleshooting/white-streak.md",
     content:
       "Why are white streaks visible? Ink or toner is not transferred consistently. Why is transfer inconsistent? A nozzle, printhead channel, toner path, or transfer roller is partially blocked or worn. Why was the blockage not detected? Preventive cleaning or first article test was skipped or not recorded. Why was it skipped? Setup checklist did not force evidence capture before production start. Countermeasure: require test pattern evidence at setup and after consumable change."
   },
@@ -84,6 +87,7 @@ export const manufacturingKnowledge: KnowledgeSource[] = [
     referenceId: "SOP-019",
     summary: "Containment steps when print quality defect is found during production.",
     tags: ["containment", "printer", "defect", "quality"],
+    contentPath: "domains/manufacturing/knowledge/escalation/ESC-002.md",
     content:
       "Stop shipment for affected lot, label suspect output, segregate last-known-good to current output, inspect back to the previous approved QC checkpoint, record defect images, and release only after rework or replacement output passes QC Standard 12."
   },
@@ -94,6 +98,7 @@ export const manufacturingKnowledge: KnowledgeSource[] = [
     referenceId: "KAIZEN-004",
     summary: "Small process improvement to prevent recurring print defects at production start.",
     tags: ["kaizen", "first-article", "printer", "prevention"],
+    contentPath: "domains/manufacturing/knowledge/kaizen/KAIZEN-004.md",
     content:
       "Add a mandatory first article print photo and nozzle or test-pattern upload to the setup checklist. The operator cannot start the production run until the supervisor approves the sample against QC Standard 12."
   },

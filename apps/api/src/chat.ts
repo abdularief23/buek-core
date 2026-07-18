@@ -1,7 +1,11 @@
 import { createResponsesClient } from "@buek/ai-core";
 import { guardInput, guardOutput } from "@buek/guardrails";
+import { KnowledgeEngine } from "@buek/knowledge";
+import type { KnowledgeSearchResult } from "@buek/knowledge";
 import type { DomainModule, KnowledgeSource } from "@buek/shared-types";
 import type { Request, Response } from "express";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { ApiEnv } from "./config/env.js";
 
 interface ChatMessage {
@@ -24,6 +28,8 @@ interface ChatMetadata {
     id: string;
     title: string;
     referenceId?: string;
+    score?: number;
+    excerpt?: string;
   }>;
 }
 
@@ -57,43 +63,53 @@ function parseMessages(body: ChatRequestBody): ChatMessage[] {
   return messages.filter((message) => message.content.length > 0);
 }
 
-function scoreKnowledge(source: KnowledgeSource, latestUserMessage: string): number {
-  const query = latestUserMessage.toLowerCase();
-  const haystack = [source.title, source.summary, source.tags.join(" "), source.content ?? ""]
-    .join(" ")
-    .toLowerCase();
-
-  let score = 0;
-
-  for (const token of query.split(/\W+/).filter((item) => item.length > 2)) {
-    if (haystack.includes(token)) {
-      score += 1;
-    }
+function readKnowledgeSourceContent(source: KnowledgeSource): string {
+  if (!source.contentPath) {
+    return source.content ?? source.summary;
   }
 
-  if (source.tags.some((tag) => query.includes(tag.replaceAll("-", " ")))) {
-    score += 4;
+  try {
+    return readFileSync(resolve(process.cwd(), source.contentPath), "utf8");
+  } catch {
+    return source.content ?? source.summary;
+  }
+}
+
+function buildKnowledgeEngine(module: DomainModule): KnowledgeEngine {
+  return new KnowledgeEngine(
+    module.knowledge.map((source) => ({
+      source,
+      content: readKnowledgeSourceContent(source)
+    }))
+  );
+}
+
+function selectKnowledge(module: DomainModule, latestUserMessage: string): KnowledgeSearchResult[] {
+  const engine = buildKnowledgeEngine(module);
+  const results = engine.search(latestUserMessage, 8);
+
+  if (results.length) {
+    return results;
   }
 
-  return score;
+  return engine
+    .listChunks()
+    .slice(0, 6)
+    .map((chunk) => ({ chunk, score: 0 }));
 }
 
-function selectKnowledge(module: DomainModule, latestUserMessage: string): KnowledgeSource[] {
-  return module.knowledge
-    .map((source) => ({ source, score: scoreKnowledge(source, latestUserMessage) }))
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 8)
-    .map(({ source }) => source);
-}
-
-function buildInstructions(module: DomainModule, selectedKnowledge: KnowledgeSource[]): string {
+function buildInstructions(
+  module: DomainModule,
+  selectedKnowledge: KnowledgeSearchResult[]
+): string {
   const knowledgeText = selectedKnowledge
-    .map((source) =>
+    .map(({ chunk, score }) =>
       [
-        `Reference: ${source.referenceId ?? source.id}`,
-        `Title: ${source.title}`,
-        `Summary: ${source.summary}`,
-        `Content: ${source.content ?? "No detailed content provided."}`
+        `Reference: ${chunk.source.referenceId ?? chunk.source.id}`,
+        `Title: ${chunk.source.title}`,
+        `Score: ${score}`,
+        `Chunk: ${chunk.id}`,
+        `Content: ${chunk.content}`
       ].join("\n")
     )
     .join("\n\n");
@@ -209,10 +225,12 @@ export async function handleChatRequest(
         description: detectedModule.description,
         capabilities: detectedModule.capabilities
       },
-      references: selectedKnowledge.map((source) => ({
-        id: source.id,
-        title: source.title,
-        ...(source.referenceId ? { referenceId: source.referenceId } : {})
+      references: selectedKnowledge.map(({ chunk, score }) => ({
+        id: chunk.source.id,
+        title: chunk.source.title,
+        score,
+        excerpt: chunk.content.replace(/\s+/g, " ").slice(0, 220),
+        ...(chunk.source.referenceId ? { referenceId: chunk.source.referenceId } : {})
       }))
     };
 
