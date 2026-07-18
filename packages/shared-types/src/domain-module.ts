@@ -8,6 +8,8 @@ export interface KnowledgeSource {
   type: KnowledgeSourceType;
   summary: string;
   tags: string[];
+  referenceId?: string;
+  content?: string;
   contentPath?: string;
 }
 
@@ -63,6 +65,17 @@ export interface RegistrySnapshot {
     id: string;
     name: string;
     version: string;
+    description: string;
     capabilities: string[];
+    prompts: Array<{
+      id: string;
+      name: string;
+      description: string;
+    }>;
+    tools: Array<{
+      id: string;
+      name: string;
+      description: string;
+    }>;
   }>;
 }

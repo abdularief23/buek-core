@@ -5,6 +5,7 @@ import express from "express";
 import type { Express } from "express";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { handleChatRequest } from "./chat.js";
 import type { ApiEnv } from "./config/env.js";
 
 export async function createServer(env: ApiEnv): Promise<Express> {
@@ -61,6 +62,10 @@ export async function createServer(env: ApiEnv): Promise<Express> {
         "AI answering is intentionally not implemented in the foundation scaffold. The API, AI Core, and Manufacturing module registration are ready for the next step.",
       registry: platform.getRegistrySnapshot()
     });
+  });
+
+  app.post("/api/chat", (req, res) => {
+    void handleChatRequest(req, res, env, discovery.modules);
   });
 
   return app;

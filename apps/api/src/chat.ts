@@ -1,0 +1,280 @@
+import { createResponsesClient } from "@buek/ai-core";
+import type { DomainModule, KnowledgeSource } from "@buek/shared-types";
+import type { Request, Response } from "express";
+import type { ApiEnv } from "./config/env.js";
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+interface ChatRequestBody {
+  messages?: ChatMessage[];
+}
+
+interface ChatMetadata {
+  detectedModule: {
+    id: string;
+    name: string;
+    description: string;
+    capabilities: string[];
+  };
+  references: Array<{
+    id: string;
+    title: string;
+    referenceId?: string;
+  }>;
+}
+
+const MANUFACTURING_HINTS = [
+  "defect",
+  "printer",
+  "print",
+  "streak",
+  "white streak",
+  "quality",
+  "qc",
+  "root cause",
+  "countermeasure",
+  "sop",
+  "kaizen",
+  "why-why",
+  "production",
+  "operator",
+  "machine",
+  "lot"
+];
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<ChatMessage>;
+
+  return (
+    (candidate.role === "user" || candidate.role === "assistant") &&
+    typeof candidate.content === "string"
+  );
+}
+
+function parseMessages(body: ChatRequestBody): ChatMessage[] {
+  if (!Array.isArray(body.messages)) {
+    throw new Error("Request body must include a messages array.");
+  }
+
+  const messages = body.messages.filter(isChatMessage).map((message) => ({
+    role: message.role,
+    content: message.content.trim()
+  }));
+
+  if (!messages.length || messages.every((message) => message.role !== "user")) {
+    throw new Error("At least one user message is required.");
+  }
+
+  return messages.filter((message) => message.content.length > 0);
+}
+
+function scoreModule(module: DomainModule, latestUserMessage: string): number {
+  const haystack = [
+    module.name,
+    module.description,
+    module.capabilities.join(" "),
+    module.knowledge
+      .flatMap((source) => [source.title, source.summary, source.tags.join(" ")])
+      .join(" ")
+  ]
+    .join(" ")
+    .toLowerCase();
+  const query = latestUserMessage.toLowerCase();
+
+  let score = 0;
+
+  for (const hint of MANUFACTURING_HINTS) {
+    if (query.includes(hint) && haystack.includes(hint)) {
+      score += 3;
+    }
+  }
+
+  for (const token of query.split(/\W+/).filter((token) => token.length > 3)) {
+    if (haystack.includes(token)) {
+      score += 1;
+    }
+  }
+
+  return score;
+}
+
+function detectModule(modules: DomainModule[], latestUserMessage: string): DomainModule {
+  if (!modules.length) {
+    throw new Error("No domain modules are installed.");
+  }
+
+  const detected = modules
+    .map((module) => ({ module, score: scoreModule(module, latestUserMessage) }))
+    .sort((left, right) => right.score - left.score)[0]?.module;
+
+  return detected ?? modules[0]!;
+}
+
+function scoreKnowledge(source: KnowledgeSource, latestUserMessage: string): number {
+  const query = latestUserMessage.toLowerCase();
+  const haystack = [source.title, source.summary, source.tags.join(" "), source.content ?? ""]
+    .join(" ")
+    .toLowerCase();
+
+  let score = 0;
+
+  for (const token of query.split(/\W+/).filter((item) => item.length > 2)) {
+    if (haystack.includes(token)) {
+      score += 1;
+    }
+  }
+
+  if (source.tags.some((tag) => query.includes(tag.replaceAll("-", " ")))) {
+    score += 4;
+  }
+
+  return score;
+}
+
+function selectKnowledge(module: DomainModule, latestUserMessage: string): KnowledgeSource[] {
+  return module.knowledge
+    .map((source) => ({ source, score: scoreKnowledge(source, latestUserMessage) }))
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 8)
+    .map(({ source }) => source);
+}
+
+function buildInstructions(module: DomainModule, selectedKnowledge: KnowledgeSource[]): string {
+  const knowledgeText = selectedKnowledge
+    .map((source) =>
+      [
+        `Reference: ${source.referenceId ?? source.id}`,
+        `Title: ${source.title}`,
+        `Summary: ${source.summary}`,
+        `Content: ${source.content ?? "No detailed content provided."}`
+      ].join("\n")
+    )
+    .join("\n\n");
+  const promptText = module.prompts
+    .map((prompt) => `${prompt.name}: ${prompt.template}`)
+    .join("\n");
+  const toolText = module.tools
+    .map((tool) => `${tool.name} (${tool.id}): ${tool.description}`)
+    .join("\n");
+
+  return [
+    "You are Buek Core, a modular AI worker platform demo for the OpenAI Hackathon.",
+    `Detected domain module: ${module.name}.`,
+    `Module description: ${module.description}`,
+    `Capabilities: ${module.capabilities.join(", ")}`,
+    "",
+    "Use the installed module knowledge below. Do not invent reference IDs.",
+    "Give a concise reasoning summary; do not reveal hidden chain-of-thought.",
+    "For manufacturing defects, produce practical troubleshooting steps, containment, root-cause hypotheses, countermeasures, verification, and references.",
+    "Use this exact markdown structure:",
+    "## Detected Module",
+    "## Reasoning",
+    "## Suggested Countermeasure",
+    "## References",
+    "",
+    "Module prompts:",
+    promptText,
+    "",
+    "Available module tools:",
+    toolText,
+    "",
+    "Relevant knowledge:",
+    knowledgeText
+  ].join("\n");
+}
+
+function buildInput(messages: ChatMessage[]): string {
+  return messages
+    .map((message) => `${message.role === "user" ? "User" : "Assistant"}: ${message.content}`)
+    .join("\n\n");
+}
+
+function sendEvent(res: Response, event: string, data: unknown): void {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${JSON.stringify(data)}\n\n`);
+}
+
+export async function handleChatRequest(
+  req: Request<Record<string, never>, unknown, ChatRequestBody>,
+  res: Response,
+  env: ApiEnv,
+  modules: DomainModule[]
+): Promise<void> {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  try {
+    if (!env.openAiApiKey) {
+      sendEvent(res, "error", {
+        message: "OPENAI_API_KEY is not configured on the API server."
+      });
+      res.end();
+      return;
+    }
+
+    const messages = parseMessages(req.body);
+    const latestUserMessage = [...messages]
+      .reverse()
+      .find((message) => message.role === "user")?.content;
+
+    if (!latestUserMessage) {
+      throw new Error("A user message is required.");
+    }
+
+    const detectedModule = detectModule(modules, latestUserMessage);
+    const selectedKnowledge = selectKnowledge(detectedModule, latestUserMessage);
+    const metadata: ChatMetadata = {
+      detectedModule: {
+        id: detectedModule.id,
+        name: detectedModule.name,
+        description: detectedModule.description,
+        capabilities: detectedModule.capabilities
+      },
+      references: selectedKnowledge.map((source) => ({
+        id: source.id,
+        title: source.title,
+        ...(source.referenceId ? { referenceId: source.referenceId } : {})
+      }))
+    };
+
+    sendEvent(res, "metadata", metadata);
+
+    const client = createResponsesClient({ apiKey: env.openAiApiKey });
+    const stream = await client.responses.create({
+      model: env.openAiModel,
+      instructions: buildInstructions(detectedModule, selectedKnowledge),
+      input: buildInput(messages),
+      stream: true,
+      max_output_tokens: 900
+    });
+
+    for await (const event of stream) {
+      if (event.type === "response.output_text.delta") {
+        sendEvent(res, "delta", { text: event.delta });
+      }
+
+      if (event.type === "response.failed") {
+        sendEvent(res, "error", {
+          message: event.response.error?.message ?? "The OpenAI response failed."
+        });
+      }
+    }
+
+    sendEvent(res, "done", {});
+    res.end();
+  } catch (error) {
+    sendEvent(res, "error", {
+      message: error instanceof Error ? error.message : "Unable to complete chat request."
+    });
+    res.end();
+  }
+}
