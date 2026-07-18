@@ -1,4 +1,13 @@
 import type { DomainModule, KnowledgeSource } from "@buek/shared-types";
+import {
+  customDailyWorkspace,
+  epsonDailyWorkspace,
+  nestleDailyWorkspace,
+  toyotaDailyWorkspace,
+  type DailyWorkspace
+} from "./daily-workspace.js";
+
+export type { DailyWorkspace };
 
 export interface Workspace {
   id: string;
@@ -16,6 +25,7 @@ export interface Workspace {
   aiWorker: string;
   status: "knowledge-ready" | "no-knowledge";
   lastSync: string;
+  dailyWorkspace: DailyWorkspace;
   factoryHealth: {
     status: "healthy" | "attention" | "critical";
     message: string;
@@ -176,6 +186,7 @@ export const workspaces: Workspace[] = [
     aiWorker: "Manufacturing Engineer",
     status: "knowledge-ready",
     lastSync: "Today",
+    dailyWorkspace: epsonDailyWorkspace,
     factoryHealth: {
       status: "attention",
       message: "Attention needed"
@@ -398,6 +409,7 @@ export const workspaces: Workspace[] = [
     aiWorker: "Assembly Quality Engineer",
     status: "knowledge-ready",
     lastSync: "Today",
+    dailyWorkspace: toyotaDailyWorkspace,
     factoryHealth: { status: "attention", message: "Attention needed" },
     aiGreeting: {
       intro: "Hi Sari. I found 2 things that may need your attention today.",
@@ -565,6 +577,7 @@ export const workspaces: Workspace[] = [
     aiWorker: "Food Safety Assistant",
     status: "knowledge-ready",
     lastSync: "Today",
+    dailyWorkspace: nestleDailyWorkspace,
     factoryHealth: { status: "attention", message: "Attention needed" },
     aiGreeting: {
       intro: "Hi Raka. I found 2 things that may need your attention today.",
@@ -721,6 +734,7 @@ export const workspaces: Workspace[] = [
     aiWorker: "Not ready",
     status: "no-knowledge",
     lastSync: "Never",
+    dailyWorkspace: customDailyWorkspace,
     factoryHealth: { status: "attention", message: "No knowledge uploaded" },
     aiGreeting: {
       intro: "Hi. This workspace is not ready yet.",

@@ -4,14 +4,23 @@ interface AppShellProps {
   activeView: AppNavItem;
   onNavigate: (view: AppNavItem) => void;
   onLogout: () => void;
+  notificationCount?: number;
   children: React.ReactNode;
+  copilot?: React.ReactNode;
 }
 
-export function AppShell({ activeView, onNavigate, onLogout, children }: AppShellProps) {
+export function AppShell({
+  activeView,
+  onNavigate,
+  onLogout,
+  notificationCount,
+  children,
+  copilot
+}: AppShellProps) {
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl">
+    <div className="relative mx-auto flex min-h-screen max-w-3xl">
       <aside className="hidden shrink-0 border-r border-white/5 lg:block">
-        <AppNav active={activeView} onChange={onNavigate} />
+        <AppNav active={activeView} onChange={onNavigate} notificationCount={notificationCount} />
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col">
@@ -26,12 +35,14 @@ export function AppShell({ activeView, onNavigate, onLogout, children }: AppShel
           </button>
         </header>
 
-        <main className="flex-1 px-4 pb-20 lg:px-8 lg:pb-8">{children}</main>
+        <main className="flex-1 px-4 pb-24 lg:px-8 lg:pb-8">{children}</main>
 
-        <aside className="fixed inset-x-0 bottom-0 border-t border-white/5 bg-slate-950 lg:hidden">
-          <AppNav active={activeView} onChange={onNavigate} />
+        <aside className="fixed inset-x-0 bottom-0 z-30 border-t border-white/5 bg-slate-950 lg:hidden">
+          <AppNav active={activeView} onChange={onNavigate} notificationCount={notificationCount} />
         </aside>
       </div>
+
+      {copilot}
     </div>
   );
 }

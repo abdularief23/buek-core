@@ -1,12 +1,13 @@
 import type { AppNavItem } from "@buek/ui";
 import { useEffect, useMemo, useState } from "react";
-import { AskBuekView } from "./components/AskBuekView.js";
+import { AiCopilot } from "./components/AiCopilot.js";
 import { AppShell } from "./components/AppShell.js";
 import { HomeView } from "./components/HomeView.js";
 import { KnowledgeView } from "./components/KnowledgeView.js";
 import { LoginScreen } from "./components/LoginScreen.js";
+import { NotificationsView } from "./components/NotificationsView.js";
+import { ProactiveAiModal } from "./components/ProactiveAiModal.js";
 import { SettingsView } from "./components/SettingsView.js";
-import { WorkspaceView } from "./components/WorkspaceView.js";
 import {
   createMessageId,
   hasErrorMessage,
@@ -14,6 +15,7 @@ import {
   isChatMetadata,
   parseServerSentEvents
 } from "./lib/chat.js";
+import { contextForView, withContextPrompt, type AiContext } from "./lib/context.js";
 import type { ChatMessage, DemoUser, ModuleSummary, Workspace } from "./types.js";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
@@ -43,6 +45,9 @@ export function App() {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [showProactiveModal, setShowProactiveModal] = useState(false);
+  const [aiContext, setAiContext] = useState<AiContext>({ label: "Daily Workspace" });
 
   const installedModule = modules[0];
 
@@ -75,6 +80,12 @@ export function App() {
       });
   }, [isSignedIn]);
 
+  useEffect(() => {
+    if (isSignedIn) {
+      setAiContext(contextForView(activeView));
+    }
+  }, [activeView, isSignedIn]);
+
   function completeSignIn(data: LoginResponse) {
     setCurrentUser(data.user);
     setCurrentWorkspace(data.workspace);
@@ -83,6 +94,8 @@ export function App() {
     setMessages([]);
     setInput("");
     setLoginError(null);
+    setAiContext({ label: "Daily Workspace" });
+    setShowProactiveModal(data.workspace.dailyWorkspace.proactiveCards.length > 0);
   }
 
   async function handleProductionSignIn(email: string, password: string) {
@@ -119,12 +132,17 @@ export function App() {
     }
   }
 
-  async function streamChat(trimmedInput: string) {
-    setActiveView("ask");
+  async function streamChat(trimmedInput: string, context: AiContext = aiContext) {
+    const contextualPrompt = withContextPrompt(context, trimmedInput);
 
-    const userMessage: ChatMessage = { id: createMessageId(), role: "user", content: trimmedInput };
+    const userMessage: ChatMessage = {
+      id: createMessageId(),
+      role: "user",
+      content: contextualPrompt
+    };
     const assistantMessage: ChatMessage = { id: createMessageId(), role: "assistant", content: "" };
 
+    setCopilotOpen(true);
     setMessages((current) => [...current, userMessage, assistantMessage]);
     setIsStreaming(true);
 
@@ -134,7 +152,7 @@ export function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           workspaceId: currentWorkspace?.id,
-          messages: [...chatPayload, { role: "user", content: trimmedInput }]
+          messages: [...chatPayload, { role: "user", content: contextualPrompt }]
         })
       });
 
@@ -206,8 +224,22 @@ export function App() {
     }
   }
 
-  function handleAsk(prompt: string) {
-    void streamChat(prompt);
+  function handleContextualAsk(prompt: string, contextLabel: string) {
+    const context: AiContext = {
+      label: contextLabel,
+      promptPrefix: `[Context: ${contextLabel}] `
+    };
+    setAiContext(context);
+    void streamChat(prompt, context);
+  }
+
+  function handleCopilotSubmit(trimmedInput: string) {
+    return streamChat(trimmedInput, aiContext);
+  }
+
+  function handleProactiveCard(prompt: string, contextLabel: string) {
+    setShowProactiveModal(false);
+    handleContextualAsk(prompt, contextLabel);
   }
 
   function handleLogout() {
@@ -217,6 +249,8 @@ export function App() {
     setActiveView("home");
     setMessages([]);
     setInput("");
+    setCopilotOpen(false);
+    setShowProactiveModal(false);
   }
 
   if (!isSignedIn) {
@@ -233,45 +267,63 @@ export function App() {
 
   if (!currentUser || !currentWorkspace) return null;
 
+  const notificationCount = currentWorkspace.dailyWorkspace.notifications.length;
+
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <AppShell activeView={activeView} onNavigate={setActiveView} onLogout={handleLogout}>
+      <AppShell
+        activeView={activeView}
+        onNavigate={setActiveView}
+        onLogout={handleLogout}
+        notificationCount={notificationCount}
+        copilot={
+          <AiCopilot
+            user={currentUser}
+            workspace={currentWorkspace}
+            context={aiContext}
+            open={copilotOpen}
+            messages={messages}
+            input={input}
+            isStreaming={isStreaming}
+            onToggle={() => setCopilotOpen((current) => !current)}
+            onInputChange={setInput}
+            onSubmit={handleCopilotSubmit}
+          />
+        }
+      >
         {activeView === "home" ? (
           <HomeView
             user={currentUser}
             workspace={currentWorkspace}
-            input={input}
-            isStreaming={isStreaming}
-            onInputChange={setInput}
-            onAsk={handleAsk}
+            onAction={handleContextualAsk}
           />
         ) : null}
 
-        {activeView === "ask" ? (
-          <AskBuekView
-            workspace={currentWorkspace}
-            messages={messages}
-            input={input}
-            isStreaming={isStreaming}
-            onInputChange={setInput}
-            onSubmit={streamChat}
-          />
+        {activeView === "knowledge" ? (
+          <KnowledgeView workspace={currentWorkspace} onAsk={handleContextualAsk} />
         ) : null}
 
-        {activeView === "knowledge" ? <KnowledgeView workspace={currentWorkspace} /> : null}
-
-        {activeView === "workspace" ? (
-          <WorkspaceView
-            workspace={currentWorkspace}
-            user={currentUser}
-            installedModule={installedModule}
-          />
+        {activeView === "notifications" ? (
+          <NotificationsView workspace={currentWorkspace} onAsk={handleContextualAsk} />
         ) : null}
 
         {activeView === "settings" ? (
-          <SettingsView status={status} installedModule={installedModule} />
+          <SettingsView
+            workspace={currentWorkspace}
+            user={currentUser}
+            status={status}
+            installedModule={installedModule}
+          />
         ) : null}
       </AppShell>
+
+      {showProactiveModal ? (
+        <ProactiveAiModal
+          workspace={currentWorkspace}
+          onDismiss={() => setShowProactiveModal(false)}
+          onSelectCard={handleProactiveCard}
+        />
+      ) : null}
     </main>
   );
 }

@@ -1,3 +1,34 @@
+export interface DailyWorkspace {
+  todayFocus: Array<{ icon: string; label: string }>;
+  quickActions: Array<{ icon: string; label: string; prompt: string; contextLabel: string }>;
+  continueWorking: Array<{ id: string; label: string; prompt: string }>;
+  aiSuggestions: Array<{ text: string; prompt: string }>;
+  todayKpi: Array<{
+    label: string;
+    value: string;
+    status: "green" | "yellow" | "red";
+    prompt: string;
+  }>;
+  inbox: { unread: number; aiSummary: string[] };
+  meeting: {
+    time: string;
+    title: string;
+    agenda: string[];
+    linkLabel: string;
+  } | null;
+  activityFeed: Array<{ time: string; message: string }>;
+  notifications: Array<{
+    id: string;
+    category: string;
+    message: string;
+    prompt: string;
+  }>;
+  knowledgeRecent: Array<{ id: string; label: string; prompt: string }>;
+  knowledgeRecentlyUpdated: Array<{ id: string; label: string; prompt: string }>;
+  proactiveGreeting: string;
+  proactiveCards: Array<{ icon: string; text: string; prompt: string; contextLabel: string }>;
+}
+
 export interface ModuleSummary {
   id: string;
   name: string;
@@ -24,6 +55,7 @@ export interface Workspace {
   aiWorker: string;
   status: "knowledge-ready" | "no-knowledge";
   lastSync: string;
+  dailyWorkspace: DailyWorkspace;
   factoryHealth: {
     status: "healthy" | "attention" | "critical";
     message: string;
