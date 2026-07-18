@@ -237,9 +237,10 @@ export interface KnowledgeSearchHit {
   excerpt: string;
 }
 
-export function searchKnowledge(query: string, moduleId?: string) {
+export function searchKnowledge(query: string, moduleId?: string, workspaceId?: string) {
   const params = new URLSearchParams({ q: query });
   if (moduleId) params.set("module", moduleId);
+  if (workspaceId) params.set("workspace", workspaceId);
   return fetchJson<{
     module: { id: string; name: string };
     query: string;
