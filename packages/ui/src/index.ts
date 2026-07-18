@@ -1,2 +1,10 @@
+export { AiPromptInput } from "./AiPromptInput.js";
+export type { AiPromptInputProps } from "./AiPromptInput.js";
+export { AppNav } from "./AppNav.js";
+export type { AppNavItem, AppNavProps } from "./AppNav.js";
 export { Button } from "./Button.js";
 export type { ButtonProps } from "./Button.js";
+export { ExpandableSection } from "./ExpandableSection.js";
+export type { ExpandableSectionProps } from "./ExpandableSection.js";
+export { SurfaceCard } from "./SurfaceCard.js";
+export type { SurfaceCardProps } from "./SurfaceCard.js";

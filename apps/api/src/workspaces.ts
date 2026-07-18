@@ -15,6 +15,33 @@ export interface Workspace {
   aiProvider: string;
   aiWorker: string;
   status: "knowledge-ready" | "no-knowledge";
+  lastSync: string;
+  factoryHealth: {
+    status: "healthy" | "attention" | "critical";
+    message: string;
+  };
+  summaryCounts: {
+    maintenanceAlerts: number;
+    qualityIssues: number;
+  };
+  continueWorking: Array<{
+    id: string;
+    label: string;
+    prompt?: string;
+  }>;
+  factoryAreas: Array<{
+    id: string;
+    label: string;
+    status: "green" | "yellow" | "red";
+    summary: string;
+    metrics?: Array<{ label: string; value: string }>;
+    items?: Array<{
+      id: string;
+      label: string;
+      issue?: string;
+      history?: string[];
+    }>;
+  }>;
   documentStats: Array<{
     label: string;
     count: number;
@@ -88,7 +115,7 @@ export const workspaces: Workspace[] = [
     id: "epson-factory",
     companyId: "epson-demo",
     name: "Epson Factory",
-    organization: "Epson Demo Plant",
+    organization: "Epson Indonesia",
     industry: "Manufacturing",
     domain: "Printer Manufacturing",
     moduleId: "manufacturing",
@@ -107,6 +134,76 @@ export const workspaces: Workspace[] = [
     aiProvider: "OpenAI",
     aiWorker: "Manufacturing Engineer",
     status: "knowledge-ready",
+    lastSync: "Today",
+    factoryHealth: {
+      status: "healthy",
+      message: "Factory running normally"
+    },
+    summaryCounts: {
+      maintenanceAlerts: 2,
+      qualityIssues: 1
+    },
+    continueWorking: [
+      { id: "cw-1", label: "White Streak Investigation", prompt: "Continue white streak investigation" },
+      { id: "cw-2", label: "Machine 12", prompt: "Machine 12 alarm terus" },
+      { id: "cw-3", label: "SOP-014", prompt: "Show SOP-014 printer white streak troubleshooting" }
+    ],
+    factoryAreas: [
+      {
+        id: "production",
+        label: "Production",
+        status: "green",
+        summary: "Running",
+        metrics: [
+          { label: "Output", value: "12,480" },
+          { label: "Reject", value: "2.3%" },
+          { label: "Target", value: "12,000" },
+          { label: "Shift", value: "Shift A" },
+          { label: "Operator", value: "Abdul" }
+        ]
+      },
+      {
+        id: "quality",
+        label: "Quality",
+        status: "yellow",
+        summary: "1 Issue",
+        items: [
+          {
+            id: "q-1",
+            label: "White streak on Line 3",
+            issue: "Reject increased 18% vs yesterday",
+            history: ["SOP-014 opened", "4 similar cases found", "QC Standard 12 referenced"]
+          }
+        ]
+      },
+      {
+        id: "maintenance",
+        label: "Maintenance",
+        status: "yellow",
+        summary: "2 Alerts",
+        items: [
+          {
+            id: "m-12",
+            label: "Machine 12",
+            issue: "Alarm repeating",
+            history: ["Runtime 14h", "Last PM 3 days ago", "Bearing inspection due"]
+          },
+          {
+            id: "m-04",
+            label: "Machine M-04",
+            issue: "Vibration high",
+            history: ["Trend rising 2 shifts", "Sensor threshold exceeded"]
+          }
+        ]
+      },
+      {
+        id: "delivery",
+        label: "Delivery",
+        status: "green",
+        summary: "On track",
+        metrics: [{ label: "OTD", value: "99.3%" }]
+      }
+    ],
     documentStats: [
       { label: "SOP", count: 327 },
       { label: "Work Instruction", count: 124 },
@@ -168,6 +265,54 @@ export const workspaces: Workspace[] = [
     aiProvider: "OpenAI",
     aiWorker: "Assembly Quality Engineer",
     status: "knowledge-ready",
+    lastSync: "Today",
+    factoryHealth: { status: "healthy", message: "Assembly running normally" },
+    summaryCounts: { maintenanceAlerts: 1, qualityIssues: 1 },
+    continueWorking: [
+      { id: "cw-t1", label: "Torque drift EA-04", prompt: "Bolt torque out of specification at EA-04" },
+      { id: "cw-t2", label: "ASM-022", prompt: "Show ASM-022 engine bolt torque standard" }
+    ],
+    factoryAreas: [
+      {
+        id: "production",
+        label: "Production",
+        status: "green",
+        summary: "Running",
+        metrics: [
+          { label: "Output", value: "8,930" },
+          { label: "Torque OK", value: "98.9%" }
+        ]
+      },
+      {
+        id: "quality",
+        label: "Quality",
+        status: "yellow",
+        summary: "1 Issue",
+        items: [
+          {
+            id: "q-t1",
+            label: "Station EA-04",
+            issue: "Bolt torque drift",
+            history: ["ASM-022 referenced", "5 similar cases in last week"]
+          }
+        ]
+      },
+      {
+        id: "maintenance",
+        label: "Maintenance",
+        status: "yellow",
+        summary: "1 Alert",
+        items: [
+          {
+            id: "m-t1",
+            label: "Torque tool calibration",
+            issue: "Due in 2 days",
+            history: ["Tool ID TQ-07", "Last calibration 28 days ago"]
+          }
+        ]
+      },
+      { id: "delivery", label: "Delivery", status: "green", summary: "On track" }
+    ],
     documentStats: [
       { label: "Assembly SOP", count: 412 },
       { label: "Torque Standard", count: 88 },
@@ -216,6 +361,45 @@ export const workspaces: Workspace[] = [
     aiProvider: "OpenAI",
     aiWorker: "Food Safety Assistant",
     status: "knowledge-ready",
+    lastSync: "Today",
+    factoryHealth: { status: "attention", message: "Packaging line needs attention" },
+    summaryCounts: { maintenanceAlerts: 1, qualityIssues: 1 },
+    continueWorking: [
+      { id: "cw-n1", label: "Packaging contamination", prompt: "Packaging contamination near seal area" },
+      { id: "cw-n2", label: "HACCP-011", prompt: "Show HACCP-011 packaging contamination response" }
+    ],
+    factoryAreas: [
+      { id: "production", label: "Production", status: "yellow", summary: "Line P-03 held" },
+      {
+        id: "quality",
+        label: "Quality",
+        status: "red",
+        summary: "1 Critical",
+        items: [
+          {
+            id: "q-n1",
+            label: "Line P-03 seal area",
+            issue: "Packaging contamination detected",
+            history: ["HACCP-011 triggered", "Supplier lot held", "QA review pending"]
+          }
+        ]
+      },
+      {
+        id: "maintenance",
+        label: "Maintenance",
+        status: "yellow",
+        summary: "1 Alert",
+        items: [
+          {
+            id: "m-n1",
+            label: "Line P-03",
+            issue: "Cleaning verification pending",
+            history: ["Sanitation record incomplete", "Pre-op inspection overdue"]
+          }
+        ]
+      },
+      { id: "delivery", label: "Delivery", status: "green", summary: "On track" }
+    ],
     documentStats: [
       { label: "HACCP", count: 64 },
       { label: "Cleaning SOP", count: 91 },
@@ -258,6 +442,11 @@ export const workspaces: Workspace[] = [
     aiProvider: "OpenAI",
     aiWorker: "Not ready",
     status: "no-knowledge",
+    lastSync: "Never",
+    factoryHealth: { status: "attention", message: "No knowledge uploaded" },
+    summaryCounts: { maintenanceAlerts: 0, qualityIssues: 0 },
+    continueWorking: [],
+    factoryAreas: [],
     documentStats: [
       { label: "SOP", count: 0 },
       { label: "Work Instruction", count: 0 },
