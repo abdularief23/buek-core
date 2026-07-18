@@ -9,12 +9,19 @@ export interface BriefingItem {
   explainPrompt?: string;
 }
 
+function primaryIssueKey(workspaceId: string): string {
+  if (workspaceId === "toyota-plant") return "torque-drift";
+  if (workspaceId === "nestle-factory") return "metal-detector";
+  return "white-streak";
+}
+
 export function buildProactiveBriefing(
   userName: string,
   workspace: Workspace,
   roleHome: RoleHomeData
 ): { greeting: string; items: BriefingItem[] } {
   const slug = workspace.id;
+  const issueKey = primaryIssueKey(slug);
   const items: BriefingItem[] = [];
 
   if (roleHome.roleKey === "supervisor" && roleHome.supervisor) {
@@ -27,7 +34,11 @@ export function buildProactiveBriefing(
         id: "issue-1",
         text: sup.openIssues[0].title,
         actionLabel: "Investigasi",
-        workspace: { kind: "investigation", slug, issueKey: "vibration" },
+        workspace: {
+          kind: "investigation",
+          slug,
+          issueKey: sup.openIssues[0].issueKey ?? issueKey
+        },
         explainPrompt: `Jelaskan dampak ${sup.openIssues[0].title} terhadap produksi hari ini`
       });
     }
@@ -40,9 +51,11 @@ export function buildProactiveBriefing(
       });
     }
     if (sop && sop.count > 0) {
+      const sopLabel =
+        slug === "toyota-plant" ? "ASM-022" : slug === "nestle-factory" ? "HACCP-011" : "SOP-014";
       items.push({
         id: "sop-pending",
-        text: "SOP-014 siap disetujui",
+        text: `${sopLabel} siap disetujui`,
         actionLabel: "Approve",
         workspace: { kind: "sop-revisions", slug }
       });

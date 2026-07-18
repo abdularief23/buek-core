@@ -55,32 +55,32 @@ export const epsonDailyWorkspace: DailyWorkspace = {
       id: "brief-1",
       severity: "critical",
       icon: "🔴",
-      title: "Machine M-12 vibration increased",
-      detail: "Likely bearing wear.",
-      confidence: "82%",
+      title: "White streak meningkat 12%",
+      detail: "Reject rate naik dibanding kemarin.",
+      confidence: "88%",
       actionLabel: "Investigate",
-      prompt: "Machine 12 alarm terus — show bearing vibration details and likely root cause",
-      contextLabel: "Machine M-12"
+      prompt: "Continue white streak investigation — root cause analysis",
+      contextLabel: "White Streak"
     },
     {
       id: "brief-2",
       severity: "warning",
       icon: "🟠",
-      title: "White streak defects increased",
-      detail: "Compared with yesterday: +18%",
-      actionLabel: "Root Cause",
-      prompt: "Continue white streak investigation — root cause analysis",
-      contextLabel: "White Streak Investigation"
+      title: "Ink Consumption tinggi",
+      detail: "18% di atas target di Line 2.",
+      actionLabel: "Review",
+      prompt: "Why is ink consumption high on Line 2?",
+      contextLabel: "Ink"
     },
     {
       id: "brief-3",
       severity: "success",
       icon: "🟢",
-      title: "Production is on target",
-      detail: "Current achievement: 96%",
+      title: "Line 2 berjalan normal",
+      detail: "Print head dan assembly dalam spesifikasi.",
       actionLabel: "View Summary",
-      prompt: "Show today's production status summary",
-      contextLabel: "Production"
+      prompt: "Show printer assembly line status",
+      contextLabel: "Line 2"
     }
   ],
   focusCategories: [
@@ -249,22 +249,22 @@ export const epsonDailyWorkspace: DailyWorkspace = {
     "Selamat pagi Abdul. Saya menemukan tiga hal yang mungkin perlu perhatianmu hari ini. Apakah ingin saya jelaskan?",
   proactiveCards: [
     {
-      icon: "🔧",
-      text: "Machine 12 vibration meningkat.",
-      prompt: "Machine 12 alarm terus — show bearing vibration details",
-      contextLabel: "Machine 12"
+      icon: "🔴",
+      text: "White Streak meningkat 12%.",
+      prompt: "Continue white streak investigation — root cause analysis",
+      contextLabel: "White Streak"
     },
     {
-      icon: "📈",
-      text: "Target produksi shift A diperkirakan terlambat 2%.",
-      prompt: "Why might production target miss by 2% on shift A?",
-      contextLabel: "Today's KPI"
+      icon: "🟠",
+      text: "Ink Consumption tinggi di Line 2.",
+      prompt: "Why is ink consumption high on Line 2?",
+      contextLabel: "Ink"
     },
     {
-      icon: "📩",
-      text: "Ada 4 email yang berkaitan dengan quality issue.",
-      prompt: "Summarize emails related to quality issues today",
-      contextLabel: "Inbox"
+      icon: "🟢",
+      text: "Line 2 berjalan normal.",
+      prompt: "Show printer assembly line status",
+      contextLabel: "Line 2"
     }
   ]
 };
@@ -275,32 +275,32 @@ export const toyotaDailyWorkspace: DailyWorkspace = {
       id: "brief-t1",
       severity: "critical",
       icon: "🔴",
-      title: "Machine EA-04 vibration increased",
-      detail: "Likely bearing wear.",
-      confidence: "78%",
+      title: "Torque Station EA-04 gagal",
+      detail: "Bolt torque out of specification.",
+      confidence: "91%",
       actionLabel: "Investigate",
-      prompt: "What happened with Machine EA-04 yesterday?",
-      contextLabel: "Machine EA-04"
+      prompt: "Bolt torque out of specification at EA-04 — root cause",
+      contextLabel: "Station EA-04"
     },
     {
       id: "brief-t2",
       severity: "warning",
       icon: "🟠",
-      title: "Bolt torque drift at EA-04",
-      detail: "Compared with standard: +12%",
-      actionLabel: "Root Cause",
-      prompt: "Bolt torque out of specification at EA-04 — root cause",
-      contextLabel: "Station EA-04"
+      title: "Engine Inspection terlambat",
+      detail: "3 unit menunggu di chassis line.",
+      actionLabel: "Review",
+      prompt: "Engine inspection backlog status and impact",
+      contextLabel: "Engine Inspection"
     },
     {
       id: "brief-t3",
       severity: "success",
       icon: "🟢",
-      title: "Production is on target",
-      detail: "Current achievement: 96%",
+      title: "Body Welding normal",
+      detail: "Semua station welding dalam toleransi.",
       actionLabel: "View Summary",
-      prompt: "Show today's assembly production status",
-      contextLabel: "Production"
+      prompt: "Show body welding station status",
+      contextLabel: "Body Welding"
     }
   ],
   focusCategories: [
@@ -394,9 +394,9 @@ export const toyotaDailyWorkspace: DailyWorkspace = {
     }
   ],
   continueWorking: [
-    { id: "cw-t1", label: "Machine EA-04", prompt: "Bolt torque out of specification at EA-04" },
-    { id: "cw-t2", label: "White Streak Investigation", prompt: "Continue white streak investigation" },
-    { id: "cw-t3", label: "Torque Calibration", prompt: "Show torque tool calibration schedule" }
+    { id: "cw-t1", label: "Torque EA-04", prompt: "Bolt torque out of specification at EA-04" },
+    { id: "cw-t2", label: "Engine Inspection", prompt: "Engine inspection backlog status" },
+    { id: "cw-t3", label: "ASM-022", prompt: "Show ASM-022 engine bolt torque standard" }
   ],
   aiSuggestions: [
     { text: "Machine EA-04 vibration increased.", prompt: "What happened with Machine EA-04 yesterday?" },
@@ -466,64 +466,232 @@ export const toyotaDailyWorkspace: DailyWorkspace = {
     { id: "ku-t3", label: "Safety Rule — EA Line", prompt: "Show safety rules for EA assembly line" }
   ],
   proactiveGreeting:
-    "Selamat pagi. Saya menemukan tiga hal yang mungkin perlu perhatianmu hari ini. Apakah ingin saya jelaskan?",
+    "Selamat pagi Sari. Saya menemukan tiga hal yang mungkin perlu perhatianmu hari ini. Apakah ingin saya jelaskan?",
   proactiveCards: [
     {
       icon: "🔧",
-      text: "Machine EA-04 vibration meningkat.",
-      prompt: "What happened with Machine EA-04 yesterday?",
-      contextLabel: "Machine EA-04"
+      text: "Torque Station EA-04 gagal — perlu investigasi.",
+      prompt: "Bolt torque out of specification at EA-04",
+      contextLabel: "Station EA-04"
     },
     {
       icon: "📈",
-      text: "Target produksi shift A diperkirakan terlambat 3%.",
-      prompt: "Why might production target miss by 3% today?",
-      contextLabel: "Today's KPI"
+      text: "Engine Inspection terlambat — 3 unit menunggu.",
+      prompt: "Engine inspection backlog status",
+      contextLabel: "Engine Inspection"
     },
     {
-      icon: "📩",
-      text: "Ada 4 email yang berkaitan dengan quality issue.",
-      prompt: "Summarize emails related to quality issues today",
-      contextLabel: "Inbox"
+      icon: "🟢",
+      text: "Body Welding berjalan normal.",
+      prompt: "Show body welding station status",
+      contextLabel: "Body Welding"
     }
   ]
 };
 
 export const nestleDailyWorkspace: DailyWorkspace = {
-  ...epsonDailyWorkspace,
-  continueWorking: [
-    { id: "cw-n1", label: "Line P-03", prompt: "Packaging contamination near seal area" },
-    { id: "cw-n2", label: "HACCP-011", prompt: "Show HACCP-011 packaging contamination response" },
-    { id: "cw-n3", label: "Cleaning Verification", prompt: "Show cleaning verification status for Line P-03" }
-  ],
-  aiSuggestions: [
-    { text: "Line P-03 held due to contamination.", prompt: "Packaging contamination near seal area" },
-    { text: "Cleaning verification still pending.", prompt: "Show cleaning verification status for Line P-03" }
-  ],
-  activityFeed: [
-    { time: "07:45", message: "Pre-op inspection started on Line P-03." },
-    { time: "08:30", message: "Packaging contamination detected." },
-    { time: "09:00", message: "Line P-03 held for QA review." },
-    { time: "10:15", message: "Supplier lot placed on hold." }
-  ],
-  proactiveCards: [
+  dailyBrief: [
     {
-      icon: "⚠",
-      text: "Kontaminasi kemasan terdeteksi di Line P-03.",
-      prompt: "Packaging contamination near seal area",
+      id: "brief-n1",
+      severity: "critical",
+      icon: "🔴",
+      title: "Metal Detector Alarm",
+      detail: "Alarm terpicu di Line P-03.",
+      confidence: "94%",
+      actionLabel: "Investigate",
+      prompt: "Metal detector alarm on Line P-03 — HACCP response",
       contextLabel: "Line P-03"
     },
     {
-      icon: "📄",
-      text: "HACCP-011 perlu ditinjau segera.",
-      prompt: "Show HACCP-011 packaging contamination response",
-      contextLabel: "HACCP-011"
+      id: "brief-n2",
+      severity: "warning",
+      icon: "🟠",
+      title: "Packaging Line berhenti",
+      detail: "Line ditahan menunggu QA review.",
+      actionLabel: "Review",
+      prompt: "Packaging line P-03 stop — root cause and containment",
+      contextLabel: "Packaging"
     },
     {
-      icon: "📩",
-      text: "Ada email supplier terkait lot kemasan.",
-      prompt: "Summarize supplier emails about packaging lot hold",
-      contextLabel: "Inbox"
+      id: "brief-n3",
+      severity: "success",
+      icon: "🟢",
+      title: "CCP Check selesai",
+      detail: "Semua critical control point terverifikasi.",
+      actionLabel: "View",
+      prompt: "Show CCP check results for today",
+      contextLabel: "CCP"
+    }
+  ],
+  focusCategories: [
+    {
+      id: "food-safety",
+      label: "Food Safety",
+      status: "red",
+      summary: "Metal detector alarm",
+      prompt: "Metal detector alarm on Line P-03"
+    },
+    {
+      id: "production",
+      label: "Production",
+      status: "yellow",
+      summary: "Line P-03 held",
+      prompt: "Show packaging line production status"
+    },
+    {
+      id: "quality",
+      label: "Quality",
+      status: "yellow",
+      summary: "Packaging stop",
+      prompt: "Packaging line P-03 stop status"
+    },
+    {
+      id: "compliance",
+      label: "Compliance",
+      status: "green",
+      summary: "CCP verified",
+      prompt: "Show CCP compliance status"
+    },
+    {
+      id: "supplier",
+      label: "Supplier",
+      status: "yellow",
+      summary: "Lot on hold",
+      prompt: "Supplier packaging lot hold status"
+    },
+    {
+      id: "email",
+      label: "Email",
+      status: "yellow",
+      summary: "3 need review",
+      prompt: "Summarize supplier emails about packaging lot hold"
+    }
+  ],
+  copilotSuggestions: [
+    { label: "HACCP Response", prompt: "Show HACCP-011 packaging contamination response" },
+    { label: "CCP Status", prompt: "Show CCP check results for today" },
+    { label: "Containment Plan", prompt: "Draft containment plan for metal detector alarm" },
+    { label: "Release Criteria", prompt: "What are the release criteria for Line P-03?" }
+  ],
+  recentSearchCategories: ["HACCP", "GMP", "Packaging SOP", "CCP", "Cleaning SOP", "Batch Record"],
+  todayFocus: [
+    { icon: "🔴", label: "Metal Detector Alarm" },
+    { icon: "🟠", label: "Packaging Line Held" },
+    { icon: "🟢", label: "CCP Check Complete" },
+    { icon: "📩", label: "3 Emails Need Review" }
+  ],
+  quickActions: [
+    {
+      icon: "⚠",
+      label: "HACCP Response",
+      prompt: "Show HACCP-011 packaging contamination response",
+      contextLabel: "HACCP"
+    },
+    {
+      icon: "📈",
+      label: "CCP Dashboard",
+      prompt: "Show CCP check results for today",
+      contextLabel: "CCP"
+    },
+    {
+      icon: "🔧",
+      label: "Line P-03 Status",
+      prompt: "What is the current status of Line P-03?",
+      contextLabel: "Line P-03"
+    },
+    {
+      icon: "📚",
+      label: "Food Safety Docs",
+      prompt: "Show food safety documents for packaging line",
+      contextLabel: "Documents"
+    }
+  ],
+  continueWorking: [
+    { id: "cw-n1", label: "Metal Detector Alarm", prompt: "Metal detector alarm on Line P-03" },
+    { id: "cw-n2", label: "HACCP-011", prompt: "Show HACCP-011 packaging contamination response" },
+    { id: "cw-n3", label: "Packaging Line Stop", prompt: "Packaging line P-03 stop status" }
+  ],
+  aiSuggestions: [
+    { text: "Metal detector alarm di Line P-03.", prompt: "Metal detector alarm on Line P-03" },
+    { text: "Packaging line ditahan menunggu QA.", prompt: "Packaging line P-03 stop status" }
+  ],
+  todayKpi: [
+    { label: "Production", value: "87%", status: "yellow", prompt: "Show production KPI for packaging line" },
+    { label: "HACCP", value: "Alert", status: "red", prompt: "Show HACCP status" },
+    { label: "CCP", value: "OK", status: "green", prompt: "Show CCP check results" }
+  ],
+  inbox: {
+    unread: 3,
+    aiSummary: ["1 HACCP action pending.", "1 supplier lot on hold."]
+  },
+  meeting: {
+    time: "10:00",
+    title: "Food Safety Review",
+    agenda: ["Metal detector alarm P-03", "Batch hold decision", "CCP verification"],
+    linkLabel: "Open Teams"
+  },
+  activityFeed: [
+    { time: "07:45", message: "Pre-op inspection started on Line P-03." },
+    { time: "08:30", message: "Metal detector alarm triggered." },
+    { time: "09:00", message: "Line P-03 held for QA review." },
+    { time: "10:15", message: "Supplier lot placed on hold." }
+  ],
+  notifications: [
+    {
+      id: "n-n1",
+      category: "Food Safety",
+      message: "Metal detector alarm on Line P-03",
+      prompt: "Metal detector alarm on Line P-03"
+    },
+    {
+      id: "n-n2",
+      category: "Production",
+      message: "Packaging line P-03 stopped",
+      prompt: "Packaging line P-03 stop status"
+    },
+    {
+      id: "n-n3",
+      category: "CCP",
+      message: "CCP check completed for shift A",
+      prompt: "Show CCP check results for today"
+    },
+    {
+      id: "n-n4",
+      category: "HACCP",
+      message: "HACCP-011 triggered — review required",
+      prompt: "Show HACCP-011 packaging contamination response"
+    }
+  ],
+  knowledgeRecent: [
+    { id: "kr-n1", label: "HACCP-011", prompt: "Show HACCP-011 packaging contamination response" },
+    { id: "kr-n2", label: "GMP Packaging", prompt: "Show GMP packaging standard" },
+    { id: "kr-n3", label: "CCP Checklist", prompt: "Show CCP checklist for packaging line" }
+  ],
+  knowledgeRecentlyUpdated: [
+    { id: "ku-n1", label: "HACCP-011 — Containment", prompt: "Show HACCP-011 updates" },
+    { id: "ku-n2", label: "Cleaning SOP CLN-004", prompt: "Show cleaning verification procedure" },
+    { id: "ku-n3", label: "Metal Detector Calibration", prompt: "Show metal detector calibration procedure" }
+  ],
+  proactiveGreeting:
+    "Selamat pagi Budi. Saya menemukan tiga hal yang mungkin perlu perhatianmu hari ini. Apakah ingin saya jelaskan?",
+  proactiveCards: [
+    {
+      icon: "🔴",
+      text: "Metal Detector Alarm di Line P-03.",
+      prompt: "Metal detector alarm on Line P-03",
+      contextLabel: "Line P-03"
+    },
+    {
+      icon: "🟠",
+      text: "Packaging Line berhenti — menunggu QA.",
+      prompt: "Packaging line P-03 stop status",
+      contextLabel: "Packaging"
+    },
+    {
+      icon: "🟢",
+      text: "CCP Check selesai untuk shift ini.",
+      prompt: "Show CCP check results for today",
+      contextLabel: "CCP"
     }
   ]
 };

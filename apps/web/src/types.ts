@@ -1,3 +1,7 @@
+import type { TenantThemePayload } from "./lib/tenant-theme.js";
+
+export type { TenantThemePayload };
+
 export interface RoleHomeData {
   roleKey: "operator" | "engineer" | "supervisor" | "manager";
   personaLabel: string;
@@ -43,6 +47,7 @@ export interface RoleHomeData {
       owner: string;
       status: string;
       prompt: string;
+      issueKey?: string;
     }>;
     teamPerformance: Array<{ name: string; closed: number; pending: number }>;
   };
@@ -190,6 +195,7 @@ export interface Workspace {
     title: string;
     summary: string;
   }>;
+  theme?: TenantThemePayload;
 }
 
 export interface DemoUser {
@@ -202,9 +208,17 @@ export interface DemoUser {
   workspaceId: string;
 }
 
+
 export interface DemoWorkspaceOption {
   id: string;
   label: string;
+  emoji?: string;
+  industry?: string;
+  sopCount?: number;
+  modules?: string[];
+  knowledgeTopics?: string[];
+  theme?: TenantThemePayload;
+  available?: boolean;
 }
 
 export interface ChatReference {

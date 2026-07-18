@@ -8,10 +8,19 @@ import {
 } from "./daily-workspace.js";
 import { buildRoleHome, normalizeRoleKey, type RoleHomeData } from "./role-workspaces.js";
 import { enrichRoleHomeFromDb } from "./services/enrich-role-home.js";
+import {
+  comingSoonTenants,
+  getTenantThemeOrDefault,
+  tenantThemes,
+  toTenantThemePayload,
+  type TenantThemePayload
+} from "./tenants/index.js";
 
 export type { DailyWorkspace } from "./daily-workspace.js";
 export type { RoleHomeData, RoleKey } from "./role-workspaces.js";
 export { buildRoleHome, normalizeRoleKey } from "./role-workspaces.js";
+
+export type { TenantThemePayload } from "./tenants/index.js";
 
 export interface Workspace {
   id: string;
@@ -98,6 +107,7 @@ export interface Workspace {
     title: string;
     summary: string;
   }>;
+  theme?: TenantThemePayload;
 }
 
 export interface DemoUser {
@@ -115,12 +125,22 @@ export const demoRoles = ["Operator", "Engineer", "Supervisor", "Plant Manager"]
 
 export type DemoRole = (typeof demoRoles)[number];
 
-export const demoWorkspaceOptions = [
-  { id: "epson-factory", label: "Epson Indonesia" },
-  { id: "toyota-plant", label: "Toyota Indonesia" },
-  { id: "nestle-factory", label: "Nestlé Indonesia" },
-  { id: "custom-company", label: "Custom Workspace" }
-] as const;
+export const demoWorkspaceOptions = Object.values(tenantThemes).map((tenant) => ({
+  id: tenant.id,
+  label: tenant.label,
+  emoji: tenant.emoji,
+  industry: tenant.industry,
+  sopCount: tenant.sopCount,
+  modules: tenant.modules,
+  knowledgeTopics: tenant.knowledgeTopics,
+  theme: toTenantThemePayload(tenant),
+  available: true
+}));
+
+export const demoComingSoonOptions = comingSoonTenants.map((tenant) => ({
+  ...tenant,
+  available: false
+}));
 
 export const demoUsers: DemoUser[] = [
   {
@@ -148,8 +168,8 @@ export const demoUsers: DemoUser[] = [
     companyId: "Nestle Demo",
     username: "demo",
     password: "BuekDemo2026!",
-    email: "raka@nestle.demo",
-    name: "Raka",
+    email: "budi@nestle.demo",
+    name: "Budi",
     role: "Food Safety Assistant",
     workspaceId: "nestle-factory"
   },
@@ -165,7 +185,7 @@ export const demoUsers: DemoUser[] = [
   }
 ];
 
-export const workspaces: Workspace[] = [
+export const workspaces = [
   {
     id: "epson-factory",
     companyId: "epson-demo",
@@ -781,12 +801,24 @@ export const workspaces: Workspace[] = [
   }
 ];
 
+for (const workspace of workspaces) {
+  (workspace as Workspace).theme = toTenantThemePayload(getTenantThemeOrDefault(workspace.id));
+}
+
 export function getDefaultWorkspace(): Workspace {
-  return workspaces[0]!;
+  return withWorkspaceTheme(workspaces[0]! as Workspace);
 }
 
 export function findWorkspace(workspaceId?: string): Workspace {
-  return workspaces.find((workspace) => workspace.id === workspaceId) ?? getDefaultWorkspace();
+  const match = workspaces.find((workspace) => workspace.id === workspaceId) ?? workspaces[0]!;
+  return withWorkspaceTheme(match as Workspace);
+}
+
+function withWorkspaceTheme(workspace: Workspace): Workspace {
+  return {
+    ...workspace,
+    theme: toTenantThemePayload(getTenantThemeOrDefault(workspace.id))
+  };
 }
 
 export async function authenticateDemoUser(
@@ -824,15 +856,17 @@ export async function authenticateProductionUser(
   return buildAuthResult(user);
 }
 
-const roleDisplayNames: Record<string, string> = {
-  operator: "Budi",
-  engineer: "Abdul",
-  supervisor: "Sari",
-  manager: "Raka"
+const roleDisplayNames: Record<string, Record<string, string>> = {
+  "epson-factory": { operator: "Budi", engineer: "Abdul", supervisor: "Sari", manager: "Raka" },
+  "toyota-plant": { operator: "Budi", engineer: "Abdul", supervisor: "Sari", manager: "Raka" },
+  "nestle-factory": { operator: "Budi", engineer: "Abdul", supervisor: "Sari", manager: "Raka" },
+  "custom-company": { operator: "Budi", engineer: "Abdul", supervisor: "Sari", manager: "Raka" }
 };
 
-function displayNameForRole(role: string, fallback: string): string {
-  return roleDisplayNames[normalizeRoleKey(role)] ?? fallback;
+function displayNameForRole(workspaceId: string, role: string, fallback: string): string {
+  const names = roleDisplayNames[workspaceId];
+  const key = normalizeRoleKey(role);
+  return names?.[key] ?? getTenantThemeOrDefault(workspaceId).defaultUserName ?? fallback;
 }
 
 export async function launchDemoWorkspace(
@@ -853,7 +887,7 @@ export async function launchDemoWorkspace(
   return buildAuthResult({
     ...user,
     role: selectedRole,
-    name: displayNameForRole(selectedRole, user.name)
+    name: displayNameForRole(workspaceId, selectedRole, user.name)
   });
 }
 

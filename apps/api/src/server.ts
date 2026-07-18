@@ -50,6 +50,7 @@ import { handleKnowledgeSearchRequest } from "./knowledge.js";
 import {
   authenticateDemoUser,
   authenticateProductionUser,
+  demoComingSoonOptions,
   demoRoles,
   demoWorkspaceOptions,
   launchDemoWorkspace,
@@ -125,6 +126,7 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/auth/demo-options", (_req, res) => {
     res.json({
       workspaces: demoWorkspaceOptions,
+      comingSoon: demoComingSoonOptions,
       roles: demoRoles
     });
   });

@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
+import { getTenantThemeOrDefault } from "../src/tenants/index.js";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -149,7 +150,9 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
       const code =
         config.slug === "toyota-plant" && lineIdx === 1
           ? `EA-${String(m).padStart(2, "0")}`
-          : `M-${lineIdx}${String(m).padStart(2, "0")}`;
+          : config.slug === "nestle-factory" && lineIdx === 1
+            ? `P-${String(m).padStart(2, "0")}`
+            : `M-${lineIdx}${String(m).padStart(2, "0")}`;
       machineCodes.push(code);
 
       const machine = await prisma.machine.upsert({
@@ -160,13 +163,13 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
           lineId: line.id,
           code,
           name: `Machine ${code}`,
-          status: code.endsWith("12") || code === "EA-04" ? "alarm" : m % 7 === 0 ? "maintenance" : "running"
+          status: code.endsWith("12") || code === "EA-04" || code === "P-03" ? "alarm" : m % 7 === 0 ? "maintenance" : "running"
         }
       });
 
       for (let h = 4; h >= 0; h--) {
         const baseTemp = code.endsWith("12") || code === "EA-04" ? 72 : 68;
-        const baseVib = code.endsWith("12") || code === "EA-04" ? 3.2 : 1.8;
+        const baseVib = code.endsWith("12") || code === "EA-04" || code === "P-03" ? 3.2 : 1.8;
         const recordedAt = hoursAgo(h * 0.5);
         await prisma.machineTelemetry.createMany({
           data: [
@@ -205,49 +208,57 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     });
   }
 
+  const tenant = getTenantThemeOrDefault(config.slug);
   const flagshipMachineCode =
-    config.slug === "toyota-plant" ? "EA-04" : config.slug === "epson-factory" ? "M-312" : "M-310";
+    config.slug === "custom-company"
+      ? "M-101"
+      : tenant.machineCode;
   const flagshipMachine = await prisma.machine.findFirst({
     where: { id: `machine-${config.slug}-${flagshipMachineCode}` }
   });
   const flagshipMachineId = flagshipMachine?.id ?? `machine-${config.slug}-${machineCodes[0] ?? "M-101"}`;
 
-  const whiteStreakIssue = await prisma.issue.upsert({
-    where: { id: `issue-${config.slug}-white-streak` },
-    update: { progress: 65, status: "investigating" },
+  if (config.slug === "custom-company") {
+    console.log(`Seeded ${config.slug}: empty workspace`);
+    return;
+  }
+
+  const primaryIssue = await prisma.issue.upsert({
+    where: { id: `issue-${config.slug}-${tenant.primaryIssue.key}` },
+    update: { progress: tenant.primaryIssue.progress, status: tenant.primaryIssue.status },
     create: {
-      id: `issue-${config.slug}-white-streak`,
+      id: `issue-${config.slug}-${tenant.primaryIssue.key}`,
       workspaceId: workspace.id,
       machineId: flagshipMachineId,
-      title: "White Streak Defect",
-      description: "White streak defect rate increased 18% compared to yesterday.",
-      status: "investigating",
-      severity: "high",
-      progress: 65,
+      title: tenant.primaryIssue.title,
+      description: tenant.primaryIssue.description,
+      status: tenant.primaryIssue.status,
+      severity: tenant.primaryIssue.severity,
+      progress: tenant.primaryIssue.progress,
       ownerId: engineer.id,
       dueAt: todayAt(17, 0)
     }
   });
 
   await prisma.investigation.upsert({
-    where: { issueId: whiteStreakIssue.id },
+    where: { issueId: primaryIssue.id },
     update: {
-      progress: 65,
+      progress: tenant.primaryIssue.progress,
       steps: [
         { key: "evidence", label: "Evidence", done: true },
-        { key: "root_cause", label: "Root Cause", done: true },
+        { key: "root_cause", label: "Root Cause", done: tenant.primaryIssue.progress > 50 },
         { key: "countermeasure", label: "Countermeasure", done: false },
         { key: "approval", label: "Approval", done: false },
         { key: "closed", label: "Closed", done: false }
       ]
     },
     create: {
-      issueId: whiteStreakIssue.id,
+      issueId: primaryIssue.id,
       status: "in_progress",
-      progress: 65,
+      progress: tenant.primaryIssue.progress,
       steps: [
         { key: "evidence", label: "Evidence", done: true },
-        { key: "root_cause", label: "Root Cause", done: true },
+        { key: "root_cause", label: "Root Cause", done: tenant.primaryIssue.progress > 50 },
         { key: "countermeasure", label: "Countermeasure", done: false },
         { key: "approval", label: "Approval", done: false },
         { key: "closed", label: "Closed", done: false }
@@ -255,30 +266,30 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     }
   });
 
-  const vibrationIssue = await prisma.issue.upsert({
-    where: { id: `issue-${config.slug}-vibration` },
+  const secondaryIssue = await prisma.issue.upsert({
+    where: { id: `issue-${config.slug}-${tenant.secondaryIssue.key}` },
     update: {},
     create: {
-      id: `issue-${config.slug}-vibration`,
+      id: `issue-${config.slug}-${tenant.secondaryIssue.key}`,
       workspaceId: workspace.id,
       machineId: flagshipMachineId,
-      title: `${flagshipMachineCode} Vibration Alarm`,
-      description: "Elevated vibration detected — likely bearing wear.",
-      status: "open",
-      severity: "critical",
-      progress: 20,
+      title: tenant.secondaryIssue.title,
+      description: tenant.secondaryIssue.description,
+      status: tenant.secondaryIssue.status,
+      severity: tenant.secondaryIssue.severity,
+      progress: tenant.secondaryIssue.progress,
       ownerId: engineer.id,
       dueAt: todayAt(15, 0)
     }
   });
 
   await prisma.investigation.upsert({
-    where: { issueId: vibrationIssue.id },
+    where: { issueId: secondaryIssue.id },
     update: {},
     create: {
-      issueId: vibrationIssue.id,
+      issueId: secondaryIssue.id,
       status: "in_progress",
-      progress: 20,
+      progress: tenant.secondaryIssue.progress,
       steps: INVESTIGATION_STEPS.map((step, idx) => ({
         ...step,
         done: idx === 0
@@ -307,35 +318,92 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     });
   }
 
-  const pendingWorkOrders = [
-    {
-      id: `wo-${config.slug}-001`,
-      number: "WO-240701",
-      title: "Bearing Replacement",
-      reason: "Bearing replacement for elevated vibration",
-      risk: "medium",
-      machineId: flagshipMachineId,
-      issueId: vibrationIssue.id
-    },
-    {
-      id: `wo-${config.slug}-002`,
-      number: "WO-240702",
-      title: "Nozzle Calibration",
-      reason: "Recalibrate print head nozzle after white streak spike",
-      risk: "low",
-      machineId: flagshipMachineId,
-      issueId: whiteStreakIssue.id
-    },
-    {
-      id: `wo-${config.slug}-003`,
-      number: "WO-240703",
-      title: "Alignment Check",
-      reason: "Alignment verification after repeated bearing failures",
-      risk: "high",
-      machineId: flagshipMachineId,
-      issueId: vibrationIssue.id
-    }
-  ];
+  const workOrderTemplates =
+    config.slug === "toyota-plant"
+      ? [
+          {
+            id: `wo-${config.slug}-001`,
+            number: "WO-240701",
+            title: "Torque Tool Recalibration",
+            reason: "Recalibrate torque tool after EA-04 drift",
+            risk: "medium",
+            issueId: primaryIssue.id
+          },
+          {
+            id: `wo-${config.slug}-002`,
+            number: "WO-240702",
+            title: "Engine Inspection Catch-up",
+            reason: "Clear engine inspection backlog at chassis line",
+            risk: "high",
+            issueId: secondaryIssue.id
+          },
+          {
+            id: `wo-${config.slug}-003`,
+            number: "WO-240703",
+            title: "Welding Station Review",
+            reason: "Verify welding parameters after torque incident",
+            risk: "low",
+            issueId: primaryIssue.id
+          }
+        ]
+      : config.slug === "nestle-factory"
+        ? [
+            {
+              id: `wo-${config.slug}-001`,
+              number: "WO-240701",
+              title: "Metal Detector Verification",
+              reason: "Verify metal detector after alarm on P-03",
+              risk: "high",
+              issueId: primaryIssue.id
+            },
+            {
+              id: `wo-${config.slug}-002`,
+              number: "WO-240702",
+              title: "Packaging Line Sanitation",
+              reason: "Complete sanitation before line release",
+              risk: "medium",
+              issueId: secondaryIssue.id
+            },
+            {
+              id: `wo-${config.slug}-003`,
+              number: "WO-240703",
+              title: "CCP Re-verification",
+              reason: "Re-verify CCP after packaging hold",
+              risk: "medium",
+              issueId: primaryIssue.id
+            }
+          ]
+        : [
+            {
+              id: `wo-${config.slug}-001`,
+              number: "WO-240701",
+              title: "Print Head Cleaning",
+              reason: "Clean print head after white streak spike",
+              risk: "medium",
+              issueId: primaryIssue.id
+            },
+            {
+              id: `wo-${config.slug}-002`,
+              number: "WO-240702",
+              title: "Ink Line Inspection",
+              reason: "Investigate elevated ink consumption on Line 2",
+              risk: "low",
+              issueId: secondaryIssue.id
+            },
+            {
+              id: `wo-${config.slug}-003`,
+              number: "WO-240703",
+              title: "Nozzle Calibration",
+              reason: "Recalibrate nozzle after white streak analysis",
+              risk: "high",
+              issueId: primaryIssue.id
+            }
+          ];
+
+  const pendingWorkOrders = workOrderTemplates.map((wo) => ({
+    ...wo,
+    machineId: flagshipMachineId
+  }));
 
   for (const wo of pendingWorkOrders) {
     const workOrder = await prisma.workOrder.upsert({
@@ -443,14 +511,93 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     }
   }
 
-  const timelineEvents = [
-    { at: todayAt(8, 0), title: "Production Start", category: "production" },
-    { at: todayAt(9, 15), title: "Machine Alarm", detail: `${flagshipMachineCode} vibration threshold exceeded`, category: "maintenance" },
-    { at: todayAt(9, 40), title: "Engineer Assigned", detail: `${engineer.name} assigned to ${flagshipMachineCode}`, category: "maintenance" },
-    { at: todayAt(10, 5), title: "White Streak Spike", detail: "+18% vs yesterday", category: "quality" },
-    { at: todayAt(10, 30), title: "Countermeasure Drafted", detail: "Nozzle recalibration proposed", category: "quality" },
-    { at: todayAt(11, 0), title: "Line Running", detail: "Production resumed at reduced speed", category: "production" }
-  ];
+  const timelineEvents =
+    config.slug === "toyota-plant"
+      ? [
+          { at: todayAt(8, 0), title: "Assembly Start", category: "production" },
+          {
+            at: todayAt(9, 15),
+            title: "Torque Alarm",
+            detail: `Station ${flagshipMachineCode} torque out of spec`,
+            category: "quality"
+          },
+          {
+            at: todayAt(9, 40),
+            title: "Engineer Assigned",
+            detail: `${engineer.name} assigned to ${flagshipMachineCode}`,
+            category: "maintenance"
+          },
+          {
+            at: todayAt(10, 5),
+            title: "Engine Inspection Delay",
+            detail: "3 units waiting at chassis line",
+            category: "production"
+          },
+          {
+            at: todayAt(10, 30),
+            title: "ASM-022 Referenced",
+            detail: "Torque standard review initiated",
+            category: "quality"
+          },
+          { at: todayAt(11, 0), title: "Body Welding OK", detail: "Welding stations within tolerance", category: "production" }
+        ]
+      : config.slug === "nestle-factory"
+        ? [
+            { at: todayAt(7, 45), title: "Pre-op Inspection", category: "production" },
+            {
+              at: todayAt(8, 30),
+              title: "Metal Detector Alarm",
+              detail: `Alarm on Line ${flagshipMachineCode}`,
+              category: "quality"
+            },
+            {
+              at: todayAt(9, 0),
+              title: "Line Held",
+              detail: "Packaging line stopped for QA review",
+              category: "production"
+            },
+            {
+              at: todayAt(9, 30),
+              title: "HACCP-011 Triggered",
+              detail: "Containment procedure started",
+              category: "quality"
+            },
+            {
+              at: todayAt(10, 15),
+              title: "Supplier Lot Hold",
+              detail: "Packaging lot placed on hold",
+              category: "quality"
+            },
+            { at: todayAt(11, 0), title: "CCP Check Complete", detail: "All CCP verified for shift A", category: "production" }
+          ]
+        : [
+            { at: todayAt(8, 0), title: "Production Start", category: "production" },
+            {
+              at: todayAt(9, 15),
+              title: "White Streak Alert",
+              detail: "+12% vs yesterday on Line 2",
+              category: "quality"
+            },
+            {
+              at: todayAt(9, 40),
+              title: "Engineer Assigned",
+              detail: `${engineer.name} assigned to white streak investigation`,
+              category: "quality"
+            },
+            {
+              at: todayAt(10, 5),
+              title: "Ink Consumption High",
+              detail: "18% above target",
+              category: "production"
+            },
+            {
+              at: todayAt(10, 30),
+              title: "SOP-014 Opened",
+              detail: "Print head troubleshooting started",
+              category: "quality"
+            },
+            { at: todayAt(11, 0), title: "Line 2 Running", detail: "Printer assembly within spec", category: "production" }
+          ];
 
   await prisma.activityEvent.deleteMany({ where: { workspaceId: workspace.id } });
   for (const event of timelineEvents) {
@@ -489,16 +636,16 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
       {
         workspaceId: workspace.id,
         fromType: "issue",
-        fromId: whiteStreakIssue.id,
+        fromId: primaryIssue.id,
         relation: "similar_issue",
         toType: "issue",
         toId: `issue-${config.slug}-hist-12`,
-        label: "Issue #202 — same defect pattern"
+        label: "Issue #202 — same pattern"
       },
       {
         workspaceId: workspace.id,
         fromType: "issue",
-        fromId: vibrationIssue.id,
+        fromId: secondaryIssue.id,
         relation: "owned_by",
         toType: "employee",
         toId: engineer.id,
@@ -507,16 +654,35 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     ]
   });
 
+  const sopRevision =
+    config.slug === "toyota-plant"
+      ? {
+          referenceId: "ASM-022",
+          title: "Engine Bolt Torque Standard",
+          summary: "Updated torque values after EA-04 drift analysis."
+        }
+      : config.slug === "nestle-factory"
+        ? {
+            referenceId: "HACCP-011",
+            title: "Packaging Contamination Response",
+            summary: "Updated containment steps after metal detector alarm."
+          }
+        : {
+            referenceId: "SOP-014",
+            title: "Nozzle Calibration Procedure",
+            summary: "Updated calibration interval after white streak analysis."
+          };
+
   await prisma.sopRevision.upsert({
     where: { id: `sop-rev-${config.slug}-014` },
     update: { status: "pending_approval" },
     create: {
       id: `sop-rev-${config.slug}-014`,
       workspaceId: workspace.id,
-      referenceId: "SOP-014",
-      title: "Nozzle Calibration Procedure",
+      referenceId: sopRevision.referenceId,
+      title: sopRevision.title,
       revision: "Rev.6",
-      summary: "Updated torque values and calibration interval after white streak analysis.",
+      summary: sopRevision.summary,
       status: "pending_approval",
       submitterId: engineer.id,
       aiReview: {
@@ -536,10 +702,19 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     create: {
       id: `report-${config.slug}-001`,
       workspaceId: workspace.id,
-      issueId: whiteStreakIssue.id,
-      title: "White Streak Root Cause Analysis",
+      issueId: primaryIssue.id,
+      title:
+        config.slug === "toyota-plant"
+          ? "Torque EA-04 Root Cause Analysis"
+          : config.slug === "nestle-factory"
+            ? "Metal Detector Alarm Investigation"
+            : "White Streak Root Cause Analysis",
       content:
-        "Preliminary analysis indicates nozzle pressure drift during shift changeover. Recommend recalibration per SOP-014.",
+        config.slug === "toyota-plant"
+          ? "Preliminary analysis indicates torque tool drift at EA-04. Recommend recalibration per ASM-022."
+          : config.slug === "nestle-factory"
+            ? "Metal detector alarm triggered during packaging run. HACCP-011 containment applied, supplier lot held."
+            : "Preliminary analysis indicates nozzle pressure drift. Recommend recalibration per SOP-014.",
       status: "pending_approval",
       authorId: engineer.id
     }
@@ -551,15 +726,47 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     create: {
       id: `report-${config.slug}-002`,
       workspaceId: workspace.id,
-      issueId: vibrationIssue.id,
-      title: "M-12 Vibration Investigation Draft",
-      content: "Bearing wear suspected. Historical data shows similar pattern 3 weeks ago — alignment may be root cause.",
+      issueId: secondaryIssue.id,
+      title:
+        config.slug === "toyota-plant"
+          ? "Engine Inspection Backlog Report"
+          : config.slug === "nestle-factory"
+            ? "Packaging Line Hold Report"
+            : "Ink Consumption Analysis",
+      content:
+        config.slug === "toyota-plant"
+          ? "Engine inspection backlog affecting chassis throughput. Prioritize units waiting > 2 hours."
+          : config.slug === "nestle-factory"
+            ? "Packaging line held pending sanitation verification and CCP re-check."
+            : "Ink consumption 18% above target — investigate ink filling process on Line 2.",
       status: "pending_approval",
       authorId: engineer.id
     }
   });
 
-  const lineName = config.slug === "toyota-plant" ? "EA Line" : "Line 3";
+  const lineName = tenant.lineLabel;
+  const checklistItems =
+    config.slug === "toyota-plant"
+      ? [
+          { id: "c1", label: "Torque Check EA-04", done: false },
+          { id: "c2", label: "Engine Mount Verification", done: true },
+          { id: "c3", label: "Body Welding Visual", done: false },
+          { id: "c4", label: "Chassis Assembly Sign-off", done: false }
+        ]
+      : config.slug === "nestle-factory"
+        ? [
+            { id: "c1", label: "CCP Temperature Check", done: true },
+            { id: "c2", label: "Metal Detector Test", done: false },
+            { id: "c3", label: "Packaging Seal Inspection", done: false },
+            { id: "c4", label: "Cleaning Verification", done: false }
+          ]
+        : [
+            { id: "c1", label: "Print Head Inspection", done: true },
+            { id: "c2", label: "Ink Level Check", done: false },
+            { id: "c3", label: "White Streak Sample", done: false },
+            { id: "c4", label: "PPM Verification", done: false }
+          ];
+
   await prisma.operatorChecklistRun.upsert({
     where: { id: `checklist-${config.slug}-today` },
     update: {},
@@ -570,12 +777,7 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
       shift: "Shift A",
       targetOutput: 420,
       progress: 165,
-      items: [
-        { id: "c1", label: "First Article Inspection", done: true },
-        { id: "c2", label: "Torque Check", done: false },
-        { id: "c3", label: "Material Verification", done: false },
-        { id: "c4", label: "Final Cleaning", done: false }
-      ]
+      items: checklistItems
     }
   });
 
@@ -588,14 +790,33 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
         workspaceId: workspace.id,
         scope: `machine:${flagshipMachineCode}`,
         content:
-          "Bearing was replaced 3 weeks ago on this machine. If vibration returns, check alignment before replacing bearing again.",
-        tags: ["bearing", "history", "root_cause"]
+          config.slug === "toyota-plant"
+            ? "Torque tool TQ-07 was recalibrated 28 days ago. If drift returns at EA-04, check tool before bolt sequence."
+            : config.slug === "nestle-factory"
+              ? "Metal detector alarm on P-03 last month was caused by foil fragment — verify supplier lot before release."
+              : "Similar white streak defect occurred in Issue #202 — resolved by print head cleaning per SOP-014.",
+        tags:
+          config.slug === "toyota-plant"
+            ? ["torque", "history", "root_cause"]
+            : config.slug === "nestle-factory"
+              ? ["haccp", "metal_detector", "history"]
+              : ["quality", "similar_case"]
       },
       {
         workspaceId: workspace.id,
-        scope: `issue:white-streak`,
-        content: "Similar white streak defect occurred in Issue #202 — resolved by nozzle recalibration.",
-        tags: ["quality", "similar_case"]
+        scope: `issue:${tenant.primaryIssueKey}`,
+        content:
+          config.slug === "toyota-plant"
+            ? "Torque drift at EA-04 concentrated in last 3 shifts — ASM-022 revision may be needed."
+            : config.slug === "nestle-factory"
+              ? "HACCP-011 triggered — hold all product from affected batch until QA release."
+              : "White streak rate increased 12% — ink consumption also elevated on same line.",
+        tags:
+          config.slug === "toyota-plant"
+            ? ["torque", "ea-04"]
+            : config.slug === "nestle-factory"
+              ? ["haccp", "packaging"]
+              : ["white_streak", "ink"]
       }
     ]
   });
