@@ -59,6 +59,11 @@ export interface Workspace {
   quickActions: string[];
   knowledgeCollections: string[];
   knowledgeSourceIds: string[];
+  similarCases: Array<{
+    id: string;
+    title: string;
+    summary: string;
+  }>;
 }
 
 export interface DemoUser {
@@ -247,6 +252,28 @@ export const workspaces: Workspace[] = [
       "printer-root-cause-matrix",
       "printer-maintenance-frequency",
       "operator-escalation-rule"
+    ],
+    similarCases: [
+      {
+        id: "sim-1",
+        title: "White streak on Line 3 — Shift B",
+        summary: "Clogged nozzle. Resolved after printhead cleaning per SOP-014."
+      },
+      {
+        id: "sim-2",
+        title: "White streak after consumable change",
+        summary: "Test pattern failed. Replaced cartridge, 3 OK samples before release."
+      },
+      {
+        id: "sim-3",
+        title: "Machine 12 alarm — bearing wear",
+        summary: "Same alarm 3 times this week. Bearing replaced, PM schedule updated."
+      },
+      {
+        id: "sim-4",
+        title: "Reject spike ink filling",
+        summary: "18% increase traced to ink filling process. Kaizen KAIZEN-004 applied."
+      }
     ]
   },
   {
@@ -343,7 +370,19 @@ export const workspaces: Workspace[] = [
       "5 Why",
       "Safety"
     ],
-    knowledgeSourceIds: ["toyota-engine-torque-standard", "operator-escalation-rule"]
+    knowledgeSourceIds: ["toyota-engine-torque-standard", "operator-escalation-rule"],
+    similarCases: [
+      {
+        id: "sim-t1",
+        title: "Torque drift EA-04 — last week",
+        summary: "Tool recalibration resolved drift. ASM-022 followed."
+      },
+      {
+        id: "sim-t2",
+        title: "Bolt torque out of spec — housing",
+        summary: "Cross-threading found. Bolt replaced, sequence repeated."
+      }
+    ]
   },
   {
     id: "nestle-factory",
@@ -424,7 +463,19 @@ export const workspaces: Workspace[] = [
     ],
     quickActions: ["Production", "Quality", "Maintenance", "Documents", "AI Worker"],
     knowledgeCollections: ["Food Safety", "Packaging", "HACCP", "Cleaning SOP"],
-    knowledgeSourceIds: ["nestle-packaging-contamination", "operator-escalation-rule"]
+    knowledgeSourceIds: ["nestle-packaging-contamination", "operator-escalation-rule"],
+    similarCases: [
+      {
+        id: "sim-n1",
+        title: "Seal area contamination — Line P-02",
+        summary: "Supplier lot held. HACCP-011 containment applied."
+      },
+      {
+        id: "sim-n2",
+        title: "Foreign particle on packaging roll",
+        summary: "Roll replaced after sanitation verification."
+      }
+    ]
   },
   {
     id: "custom-company",
@@ -469,7 +520,8 @@ export const workspaces: Workspace[] = [
     ],
     quickActions: ["Upload SOP", "Upload Work Instruction", "Upload QC Standard", "Settings"],
     knowledgeCollections: ["No Knowledge Uploaded"],
-    knowledgeSourceIds: []
+    knowledgeSourceIds: [],
+    similarCases: []
   }
 ];
 

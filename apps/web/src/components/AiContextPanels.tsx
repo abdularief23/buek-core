@@ -1,5 +1,5 @@
 import { ExpandableSection } from "@buek/ui";
-import { FactorySummary } from "./FactorySummary.js";
+import { FactoryAreas } from "./FactoryAreas.js";
 import type { ContextPanel } from "../lib/ai-actions.js";
 import type { Workspace } from "../types.js";
 
@@ -12,7 +12,7 @@ export function AiContextPanels({ panels, workspace }: AiContextPanelsProps) {
   if (!panels.length) return null;
 
   return (
-    <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
+    <div className="mt-3 space-y-1">
       {panels.map((panel) => {
         if (panel.kind === "sop") {
           return (
@@ -20,7 +20,7 @@ export function AiContextPanels({ panels, workspace }: AiContextPanelsProps) {
               {panel.excerpt ? (
                 <p className="text-sm leading-6 text-slate-400">{panel.excerpt}</p>
               ) : (
-                <p className="text-sm text-slate-500">SOP retrieved from workspace knowledge.</p>
+                <p className="text-sm text-slate-500">Retrieved from workspace knowledge.</p>
               )}
             </ExpandableSection>
           );
@@ -42,11 +42,26 @@ export function AiContextPanels({ panels, workspace }: AiContextPanelsProps) {
                   ))}
                 </ul>
               ) : (
-                <div className="space-y-2 text-sm text-slate-400">
-                  <p>Runtime, alarm, PM, and downtime scoped to this workspace.</p>
-                  {panel.machineItem.issue ? <p>Issue: {panel.machineItem.issue}</p> : null}
+                <div className="space-y-1 text-sm text-slate-400">
+                  <p>Runtime · Alarm · PM · Downtime</p>
+                  {panel.machineItem.issue ? <p>{panel.machineItem.issue}</p> : null}
                 </div>
               )}
+            </ExpandableSection>
+          );
+        }
+
+        if (panel.kind === "similar" && panel.similarCases?.length) {
+          return (
+            <ExpandableSection key={panel.id} title={panel.label}>
+              <ul className="space-y-2 text-sm text-slate-400">
+                {panel.similarCases.map((item) => (
+                  <li key={item.id}>
+                    <span className="text-slate-300">{item.title}</span>
+                    <p className="mt-0.5 text-xs">{item.summary}</p>
+                  </li>
+                ))}
+              </ul>
             </ExpandableSection>
           );
         }
@@ -54,7 +69,7 @@ export function AiContextPanels({ panels, workspace }: AiContextPanelsProps) {
         if (panel.kind === "factory") {
           return (
             <ExpandableSection key={panel.id} title={panel.label}>
-              <FactorySummary workspace={workspace} />
+              <FactoryAreas workspace={workspace} />
             </ExpandableSection>
           );
         }
@@ -62,11 +77,11 @@ export function AiContextPanels({ panels, workspace }: AiContextPanelsProps) {
         if (panel.kind === "kpi" && panel.metrics?.length) {
           return (
             <ExpandableSection key={panel.id} title={panel.label}>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-2">
                 {panel.metrics.map((metric) => (
-                  <div key={metric.label} className="rounded-xl bg-slate-950/50 px-3 py-2 text-sm">
+                  <div key={metric.label} className="flex justify-between text-sm">
                     <span className="text-slate-500">{metric.label}</span>
-                    <span className="ml-2 font-medium text-slate-200">{metric.value}</span>
+                    <span className="text-slate-200">{metric.value}</span>
                   </div>
                 ))}
               </div>

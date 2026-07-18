@@ -57,6 +57,11 @@ export interface Workspace {
   quickActions: string[];
   knowledgeCollections: string[];
   knowledgeSourceIds: string[];
+  similarCases: Array<{
+    id: string;
+    title: string;
+    summary: string;
+  }>;
 }
 
 export interface DemoUser {
