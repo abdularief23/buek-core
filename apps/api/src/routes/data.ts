@@ -16,6 +16,8 @@ import {
 } from "../services/data-engine.js";
 import { listActiveWorkflows } from "../services/workflow-engine.js";
 import { getNotifications } from "../services/notifications.js";
+import { getBusinessRules, evaluateBusinessRules, getCriticalAlerts } from "../services/business-rules.js";
+import { listConnectors, fetchOperationalSnapshot } from "../connectors/index.js";
 import { getKpiDetail, getProductionDashboard } from "../services/production-dashboard.js";
 import {
   approveReport,
@@ -342,6 +344,46 @@ export async function handleAiAction(req: Request, res: Response) {
       body.params ?? {}
     );
     res.json({ result });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleConnectors(req: Request, res: Response) {
+  try {
+    const slug = getSlug(req);
+    const [connectors, snapshot] = await Promise.all([
+      Promise.resolve(listConnectors()),
+      fetchOperationalSnapshot(slug)
+    ]);
+    res.json({ connectors, snapshot, principle: "Buek Core reads operational data — it does not replace ERP/MES." });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleBusinessRules(req: Request, res: Response) {
+  try {
+    const rules = await getBusinessRules(getSlug(req));
+    res.json({ rules, principle: "Critical severity is determined by business rules — not by AI." });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleEvaluateRules(req: Request, res: Response) {
+  try {
+    const evaluations = await evaluateBusinessRules(getSlug(req));
+    res.json({ evaluations });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleCriticalAlerts(req: Request, res: Response) {
+  try {
+    const alerts = await getCriticalAlerts(getSlug(req));
+    res.json({ alerts });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

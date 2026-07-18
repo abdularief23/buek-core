@@ -1,5 +1,6 @@
 import { prisma } from "../db.js";
 import { getSupervisorStats } from "./data-engine.js";
+import { getCriticalAlerts } from "./business-rules.js";
 
 export interface NotificationDto {
   id: string;
@@ -35,13 +36,14 @@ export async function getNotifications(slug: string): Promise<NotificationDto[]>
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) return [];
 
-  const [events, stats] = await Promise.all([
+  const [events, stats, criticalAlerts] = await Promise.all([
     prisma.activityEvent.findMany({
       where: { workspaceId },
       orderBy: { occurredAt: "desc" },
       take: 25
     }),
-    getSupervisorStats(slug)
+    getSupervisorStats(slug),
+    getCriticalAlerts(slug)
   ]);
 
   const notifications: NotificationDto[] = events.map((event) => ({
@@ -70,6 +72,16 @@ export async function getNotifications(slug: string): Promise<NotificationDto[]>
       category: "Quality",
       message: `${stats.pendingReports} engineering report${stats.pendingReports > 1 ? "s" : ""} pending review`,
       prompt: "Show pending engineering reports",
+      time: formatTime(new Date())
+    });
+  }
+
+  for (const alert of criticalAlerts.slice(0, 3)) {
+    notifications.unshift({
+      id: alert.id,
+      category: "Business Rule",
+      message: `🔴 ${alert.ruleName}: ${alert.message}`,
+      prompt: `Explain critical alert: ${alert.ruleName}`,
       time: formatTime(new Date())
     });
   }

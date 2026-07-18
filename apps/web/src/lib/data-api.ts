@@ -249,6 +249,75 @@ export function searchKnowledge(query: string, moduleId?: string, workspaceId?: 
   }>(`/api/knowledge/search?${params.toString()}`);
 }
 
+export interface KnowledgeDocumentSummary {
+  id: string;
+  title: string;
+  type: string;
+  referenceId: string | null;
+  status: string;
+  chunkCount: number;
+  createdAt: string;
+}
+
+export function fetchKnowledgeDocuments(workspaceId: string) {
+  const params = new URLSearchParams({ workspace: workspaceId });
+  return fetchJson<{ documents: KnowledgeDocumentSummary[] }>(`/api/knowledge/documents?${params.toString()}`);
+}
+
+export function uploadKnowledgeDocument(input: {
+  workspaceId: string;
+  title: string;
+  type: string;
+  content: string;
+  referenceId?: string;
+  fileName?: string;
+}) {
+  return fetchJson<{ document: KnowledgeDocumentSummary; message: string }>(`/api/knowledge/upload`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
+export interface CriticalAlert {
+  id: string;
+  ruleName: string;
+  category: string;
+  severity: string;
+  message: string;
+  metric: string;
+  currentValue: number | null;
+  threshold: number | null;
+}
+
+export function fetchCriticalAlerts(slug: string) {
+  return fetchJson<{ alerts: CriticalAlert[] }>(`/api/data/${slug}/critical-alerts`);
+}
+
+export interface BusinessRule {
+  id: string;
+  name: string;
+  category: string;
+  metric: string;
+  operator: string;
+  threshold: number | null;
+  severity: string;
+  enabled: boolean;
+  description: string | null;
+}
+
+export function fetchBusinessRules(slug: string) {
+  return fetchJson<{ rules: BusinessRule[]; principle: string }>(`/api/data/${slug}/business-rules`);
+}
+
+export function fetchConnectors(slug: string) {
+  return fetchJson<{
+    connectors: Array<{ id: string; label: string; type: string; status: string; readOnly: boolean }>;
+    snapshot: { metrics: Record<string, number>; fetchedAt: string };
+    principle: string;
+  }>(`/api/data/${slug}/connectors`);
+}
+
 export function refreshRoleHome(workspaceId: string, role: string) {
   const params = new URLSearchParams({ workspaceId, role });
   return fetchJson<{ roleHome: import("../types.js").RoleHomeData }>(

@@ -3,6 +3,8 @@ import type { DomainModule, KnowledgeSource } from "@buek/shared-types";
 import type { Request, Response } from "express";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { searchUploadedKnowledge } from "./services/knowledge-upload.js";
+import { findWorkspace } from "./workspaces.js";
 import { findWorkspace as resolveWorkspace } from "./workspaces.js";
 
 function readKnowledgeSourceContent(source: KnowledgeSource): string {
@@ -40,11 +42,11 @@ function buildKnowledgeEngine(module: DomainModule, knowledge: KnowledgeSource[]
   );
 }
 
-export function handleKnowledgeSearchRequest(
+export async function handleKnowledgeSearchRequest(
   req: Request,
   res: Response,
   modules: DomainModule[]
-): void {
+): Promise<void> {
   const query = typeof req.query.q === "string" ? req.query.q : "";
   const moduleId = typeof req.query.module === "string" ? req.query.module : modules[0]?.id;
   const workspaceId = typeof req.query.workspace === "string" ? req.query.workspace : undefined;
@@ -85,7 +87,30 @@ export function handleKnowledgeSearchRequest(
       title: chunk.source.title,
       referenceId: chunk.source.referenceId,
       sourceId: chunk.source.id,
+      source: "module" as const,
       excerpt: chunk.content.replace(/\s+/g, " ").slice(0, 300)
+    })),
+    ...uploadedResults.map((hit) => ({
+      id: hit.id,
+      score: hit.score,
+      title: hit.title,
+      referenceId: hit.referenceId,
+      sourceId: hit.id,
+      source: "uploaded" as const,
+      excerpt: hit.excerpt
     }))
+  ].sort((a, b) => b.score - a.score);
+
+  res.json({
+    module: {
+      id: module.id,
+      name: module.name
+    },
+    workspaceId: workspaceId ?? null,
+    query,
+    totalChunks: engine.listChunks().length,
+    layer: "knowledge",
+    readOnly: true,
+    results
   });
 }

@@ -35,8 +35,17 @@ import {
   handleTimeline,
   handleToggleChecklistItem,
   handleWorkOrderDetail,
-  handleWorkflows
+  handleWorkflows,
+  handleConnectors,
+  handleBusinessRules,
+  handleEvaluateRules,
+  handleCriticalAlerts
 } from "./routes/data.js";
+import {
+  handleKnowledgeDocuments,
+  handleKnowledgeUpload,
+  handleUploadedKnowledgeSearch
+} from "./routes/knowledge.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
 import {
   authenticateDemoUser,
@@ -233,10 +242,18 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/data/:slug/production", (req, res) => void handleProductionDashboard(req, res));
   app.get("/api/data/:slug/kpis/:kpiLabel", (req, res) => void handleKpiDetail(req, res));
   app.get("/api/data/:slug/notifications", (req, res) => void handleNotifications(req, res));
+  app.get("/api/data/:slug/connectors", (req, res) => void handleConnectors(req, res));
+  app.get("/api/data/:slug/business-rules", (req, res) => void handleBusinessRules(req, res));
+  app.post("/api/data/:slug/business-rules/evaluate", (req, res) => void handleEvaluateRules(req, res));
+  app.get("/api/data/:slug/critical-alerts", (req, res) => void handleCriticalAlerts(req, res));
   app.post("/api/data/:slug/ai/actions", (req, res) => void handleAiAction(req, res));
 
+  app.get("/api/knowledge/documents", (req, res) => void handleKnowledgeDocuments(req, res));
+  app.post("/api/knowledge/upload", (req, res) => void handleKnowledgeUpload(req, res));
+  app.get("/api/knowledge/uploaded/search", (req, res) => void handleUploadedKnowledgeSearch(req, res));
+
   app.get("/api/knowledge/search", (req, res) => {
-    handleKnowledgeSearchRequest(req, res, discovery.modules);
+    void handleKnowledgeSearchRequest(req, res, discovery.modules);
   });
 
   app.post("/api/ask", (_req, res) => {
