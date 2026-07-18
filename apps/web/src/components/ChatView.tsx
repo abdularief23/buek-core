@@ -34,9 +34,22 @@ export function ChatView({
       </header>
 
       <div className="flex-1 space-y-4 overflow-y-auto pb-4">
-        {messages.map((message) => (
-          <ChatMessageBlock key={message.id} message={message} isStreaming={isStreaming} />
-        ))}
+        {messages.map((message, index) => {
+          const previousUserMessage = [...messages]
+            .slice(0, index)
+            .reverse()
+            .find((candidate) => candidate.role === "user")?.content;
+
+          return (
+            <ChatMessageBlock
+              key={message.id}
+              message={message}
+              workspace={workspace}
+              previousUserMessage={previousUserMessage}
+              isStreaming={isStreaming && index === messages.length - 1 && message.role === "assistant"}
+            />
+          );
+        })}
         <div ref={endRef} />
       </div>
 

@@ -1,12 +1,25 @@
-import { ExpandableSection } from "@buek/ui";
-import type { ChatMessage } from "../types.js";
+import type { ChatMessage, Workspace } from "../types.js";
+import { deriveContextPanels } from "../lib/ai-actions.js";
+import { AiContextPanels } from "./AiContextPanels.js";
 
 interface ChatMessageBlockProps {
   message: ChatMessage;
+  workspace: Workspace;
+  previousUserMessage?: string | undefined;
   isStreaming: boolean;
 }
 
-export function ChatMessageBlock({ message, isStreaming }: ChatMessageBlockProps) {
+export function ChatMessageBlock({
+  message,
+  workspace,
+  previousUserMessage = "",
+  isStreaming
+}: ChatMessageBlockProps) {
+  const contextPanels =
+    message.role === "assistant" && message.content
+      ? deriveContextPanels(workspace, message.content, previousUserMessage, message.metadata)
+      : [];
+
   return (
     <article className={message.role === "user" ? "ml-auto max-w-xl" : "max-w-2xl"}>
       <div
@@ -20,25 +33,8 @@ export function ChatMessageBlock({ message, isStreaming }: ChatMessageBlockProps
           {message.content || (message.role === "assistant" && isStreaming ? "Thinking..." : "")}
         </div>
 
-        {message.metadata?.references.length ? (
-          <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
-            {message.metadata.references.map((reference) => (
-              <ExpandableSection
-                key={reference.id}
-                title={reference.referenceId ?? reference.id}
-                subtitle={reference.title}
-              >
-                {reference.excerpt ? (
-                  <p className="text-sm leading-6 text-slate-400">{reference.excerpt}</p>
-                ) : (
-                  <p className="text-sm text-slate-500">Reference retrieved from workspace knowledge.</p>
-                )}
-                {typeof reference.score === "number" ? (
-                  <p className="mt-2 text-xs text-slate-500">Relevance score: {reference.score}</p>
-                ) : null}
-              </ExpandableSection>
-            ))}
-          </div>
+        {message.role === "assistant" && !isStreaming ? (
+          <AiContextPanels panels={contextPanels} workspace={workspace} />
         ) : null}
       </div>
     </article>
