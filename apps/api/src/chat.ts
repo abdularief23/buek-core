@@ -68,8 +68,22 @@ function readKnowledgeSourceContent(source: KnowledgeSource): string {
     return source.content ?? source.summary;
   }
 
+  const candidates = [
+    resolve(process.cwd(), source.contentPath),
+    resolve(process.cwd(), "..", source.contentPath),
+    resolve(process.cwd(), "..", "..", source.contentPath)
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      return readFileSync(candidate, "utf8");
+    } catch {
+      // Try the next known runtime root.
+    }
+  }
+
   try {
-    return readFileSync(resolve(process.cwd(), source.contentPath), "utf8");
+    return readFileSync(resolve(source.contentPath), "utf8");
   } catch {
     return source.content ?? source.summary;
   }
