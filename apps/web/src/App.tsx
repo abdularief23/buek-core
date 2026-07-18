@@ -1,5 +1,6 @@
 import type { AppNavItem } from "@buek/ui";
 import { useEffect, useMemo, useState } from "react";
+import { DynamicWorkspace, type DynamicWorkspaceState } from "./components/DynamicWorkspace.js";
 import { AiCopilot } from "./components/AiCopilot.js";
 import { AiWorkspaceView } from "./components/AiWorkspaceView.js";
 import { AppShell } from "./components/AppShell.js";
@@ -50,6 +51,7 @@ export function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
+  const [dynamicWorkspace, setDynamicWorkspace] = useState<DynamicWorkspaceState | null>(null);
   const [aiContext, setAiContext] = useState<AiContext>({ label: "Home" });
 
   const installedModule = modules[0];
@@ -101,6 +103,7 @@ export function App() {
     setAiContext(contextForView("home", data.user.role, data.roleHome));
     setCopilotOpen(false);
     setInboxOpen(false);
+    setDynamicWorkspace(null);
   }
 
   async function handleProductionSignIn(email: string, password: string) {
@@ -276,6 +279,7 @@ export function App() {
     setInput("");
     setCopilotOpen(false);
     setInboxOpen(false);
+    setDynamicWorkspace(null);
   }
 
   if (!isSignedIn) {
@@ -323,22 +327,35 @@ export function App() {
         }
       >
         {activeView === "home" ? (
-          <HomeView
-            user={currentUser}
-            workspace={currentWorkspace}
-            roleHome={roleHome}
-            input={input}
-            isStreaming={isStreaming}
-            onInputChange={setInput}
-            onAsk={handleHomeAsk}
-            onAction={(prompt, contextLabel) =>
-              handleContextualAsk(prompt, contextLabel, [
-                currentUser.role,
-                currentWorkspace.organization,
-                currentWorkspace.shift
-              ])
-            }
-          />
+          dynamicWorkspace ? (
+            <DynamicWorkspace
+              workspace={dynamicWorkspace}
+              userName={currentUser.name}
+              onClose={() => setDynamicWorkspace(null)}
+              onAskAi={(prompt, contextLabel) =>
+                handleContextualAsk(prompt, contextLabel, [currentUser.role, contextLabel])
+              }
+              onWorkspaceChange={setDynamicWorkspace}
+            />
+          ) : (
+            <HomeView
+              user={currentUser}
+              workspace={currentWorkspace}
+              roleHome={roleHome}
+              input={input}
+              isStreaming={isStreaming}
+              onInputChange={setInput}
+              onAsk={handleHomeAsk}
+              onAction={(prompt, contextLabel) =>
+                handleContextualAsk(prompt, contextLabel, [
+                  currentUser.role,
+                  currentWorkspace.organization,
+                  currentWorkspace.shift
+                ])
+              }
+              onOpenWorkspace={setDynamicWorkspace}
+            />
+          )
         ) : null}
 
         {activeView === "workspace" ? (

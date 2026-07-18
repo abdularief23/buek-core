@@ -8,6 +8,20 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleChatRequest } from "./chat.js";
 import type { ApiEnv } from "./config/env.js";
+import {
+  handleAdvanceInvestigation,
+  handleApproveWorkOrder,
+  handleIssueByKey,
+  handleIssueDetail,
+  handleIssues,
+  handleLiveKpis,
+  handleMachineTelemetry,
+  handlePendingWorkOrders,
+  handleRejectWorkOrder,
+  handleSupervisorStats,
+  handleTimeline,
+  handleWorkOrderDetail
+} from "./routes/data.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
 import {
   authenticateDemoUser,
@@ -90,13 +104,13 @@ export async function createServer(env: ApiEnv): Promise<Express> {
     });
   });
 
-  app.post("/api/auth/demo-launch", (req, res) => {
+  app.post("/api/auth/demo-launch", async (req, res) => {
     const body = req.body as Partial<{
       workspaceId: string;
       role: string;
     }>;
 
-    const result = launchDemoWorkspace(body.workspaceId ?? "", body.role ?? "");
+    const result = await launchDemoWorkspace(body.workspaceId ?? "", body.role ?? "");
 
     if (!result) {
       res.status(400).json({
@@ -111,13 +125,13 @@ export async function createServer(env: ApiEnv): Promise<Express> {
     res.json(result);
   });
 
-  app.post("/api/auth/sign-in", (req, res) => {
+  app.post("/api/auth/sign-in", async (req, res) => {
     const body = req.body as Partial<{
       email: string;
       password: string;
     }>;
 
-    const result = authenticateProductionUser(body.email ?? "", body.password ?? "");
+    const result = await authenticateProductionUser(body.email ?? "", body.password ?? "");
 
     if (!result) {
       res.status(401).json({
@@ -132,14 +146,14 @@ export async function createServer(env: ApiEnv): Promise<Express> {
     res.json(result);
   });
 
-  app.post("/api/auth/demo-login", (req, res) => {
+  app.post("/api/auth/demo-login", async (req, res) => {
     const body = req.body as Partial<{
       companyId: string;
       username: string;
       password: string;
     }>;
 
-    const result = authenticateDemoUser(body.companyId ?? "", body.username ?? "", body.password ?? "");
+    const result = await authenticateDemoUser(body.companyId ?? "", body.username ?? "", body.password ?? "");
 
     if (!result) {
       res.status(401).json({
@@ -153,6 +167,19 @@ export async function createServer(env: ApiEnv): Promise<Express> {
 
     res.json(result);
   });
+
+  app.get("/api/data/:slug/timeline", (req, res) => void handleTimeline(req, res));
+  app.get("/api/data/:slug/kpis/live", (req, res) => void handleLiveKpis(req, res));
+  app.get("/api/data/:slug/supervisor/stats", (req, res) => void handleSupervisorStats(req, res));
+  app.get("/api/data/:slug/work-orders/pending", (req, res) => void handlePendingWorkOrders(req, res));
+  app.get("/api/data/:slug/work-orders/:workOrderId", (req, res) => void handleWorkOrderDetail(req, res));
+  app.post("/api/data/:slug/work-orders/:workOrderId/approve", (req, res) => void handleApproveWorkOrder(req, res));
+  app.post("/api/data/:slug/work-orders/:workOrderId/reject", (req, res) => void handleRejectWorkOrder(req, res));
+  app.get("/api/data/:slug/issues", (req, res) => void handleIssues(req, res));
+  app.get("/api/data/:slug/issues/key/:issueKey", (req, res) => void handleIssueByKey(req, res));
+  app.get("/api/data/:slug/issues/:issueId", (req, res) => void handleIssueDetail(req, res));
+  app.post("/api/data/:slug/issues/:issueId/advance", (req, res) => void handleAdvanceInvestigation(req, res));
+  app.get("/api/data/:slug/machines/:machineCode/telemetry", (req, res) => void handleMachineTelemetry(req, res));
 
   app.get("/api/knowledge/search", (req, res) => {
     handleKnowledgeSearchRequest(req, res, discovery.modules);

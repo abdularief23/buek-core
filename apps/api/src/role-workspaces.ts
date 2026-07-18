@@ -25,6 +25,8 @@ export interface RoleHomeData {
       actionLabel: string;
       prompt: string;
       contextLabel: string;
+      action?: string;
+      issueKey?: string;
     }>;
     investigations: Array<{ id: string; label: string; prompt: string }>;
     aiSuggestions: Array<{
@@ -38,7 +40,7 @@ export interface RoleHomeData {
   };
   supervisor?: {
     overview: Array<{ label: string; status: "green" | "yellow" | "red" }>;
-    waitingApproval: Array<{ label: string; count: number; prompt: string }>;
+    waitingApproval: Array<{ label: string; count: number; prompt?: string; action?: string }>;
     openIssues: Array<{
       id: string;
       title: string;
@@ -98,7 +100,9 @@ function engineerHome(workspaceId: string, daily: DailyWorkspace) {
         detail: isToyota ? "Torque drift detected" : "Likely bearing wear",
         actionLabel: "Investigate",
         prompt: machinePrompt,
-        contextLabel: machine
+        contextLabel: machine,
+        action: "investigation",
+        issueKey: "vibration"
       },
       {
         id: "p2",
@@ -108,7 +112,9 @@ function engineerHome(workspaceId: string, daily: DailyWorkspace) {
         detail: "Compared with yesterday",
         actionLabel: "Root Cause",
         prompt: "Continue white streak investigation — root cause analysis",
-        contextLabel: "White Streak Investigation"
+        contextLabel: "White Streak Investigation",
+        action: "investigation",
+        issueKey: "white-streak"
       },
       {
         id: "p3",
@@ -157,9 +163,9 @@ function supervisorHome(workspaceId: string) {
       { label: "Maintenance", status: "yellow" as const }
     ],
     waitingApproval: [
-      { label: "Work Orders", count: 2, prompt: "Show work orders waiting for my approval" },
-      { label: "SOP Revision", count: 1, prompt: "Show SOP revisions pending approval" },
-      { label: "Engineering Reports", count: 3, prompt: "Show engineering reports waiting for approval" }
+      { label: "Work Orders", count: 2, action: "approval-queue" },
+      { label: "SOP Revision", count: 1, action: "sop-revisions" },
+      { label: "Engineering Reports", count: 3, action: "engineering-reports" }
     ],
     openIssues: [
       {

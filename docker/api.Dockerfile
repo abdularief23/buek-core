@@ -33,4 +33,4 @@ ENV NODE_ENV=production
 COPY --from=build /app /app
 
 EXPOSE 4000
-CMD ["pnpm", "--filter", "@buek/api", "start"]
+CMD ["sh", "apps/api/scripts/start.sh"]

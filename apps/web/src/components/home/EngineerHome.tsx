@@ -1,9 +1,10 @@
+import { TodayTimeline } from "../TodayTimeline.js";
 import { InvestigationWorkflow } from "../InvestigationWorkflow.js";
 import { AskBuekSection } from "./AskBuekSection.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
 
-export function EngineerHome({ user, workspace, roleHome, onAction, ...askProps }: RoleHomeProps) {
+export function EngineerHome({ user, workspace, roleHome, onAction, onOpenWorkspace, ...askProps }: RoleHomeProps) {
   const eng = roleHome.engineer!;
 
   return (
@@ -30,7 +31,17 @@ export function EngineerHome({ user, workspace, roleHome, onAction, ...askProps 
               </div>
               <button
                 type="button"
-                onClick={() => onAction(problem.prompt, problem.contextLabel)}
+                onClick={() => {
+                  if (problem.action === "investigation" && problem.issueKey) {
+                    onOpenWorkspace({
+                      kind: "investigation",
+                      slug: workspace.id,
+                      issueKey: problem.issueKey
+                    });
+                  } else {
+                    onAction(problem.prompt, problem.contextLabel);
+                  }
+                }}
                 className="shrink-0 rounded-xl bg-white px-6 py-3 text-base font-semibold text-slate-950 hover:bg-slate-200"
               >
                 {problem.actionLabel}
@@ -47,7 +58,13 @@ export function EngineerHome({ user, workspace, roleHome, onAction, ...askProps 
             <li key={item.id}>
               <button
                 type="button"
-                onClick={() => onAction(item.prompt, item.label)}
+                onClick={() =>
+                  onOpenWorkspace({
+                    kind: "investigation",
+                    slug: workspace.id,
+                    issueKey: item.id.replace(`issue-${workspace.id}-`, "")
+                  })
+                }
                 className="flex w-full items-center justify-between px-6 py-5 text-left buek-body text-slate-300 hover:bg-white/[0.03] hover:text-white"
               >
                 <span>{item.label}</span>
@@ -70,7 +87,13 @@ export function EngineerHome({ user, workspace, roleHome, onAction, ...askProps 
             <p className="mt-1 buek-body text-cyan-300">{suggestion.confidence}</p>
             <button
               type="button"
-              onClick={() => onAction(suggestion.prompt, suggestion.candidate)}
+              onClick={() =>
+                onOpenWorkspace({
+                  kind: "investigation",
+                  slug: workspace.id,
+                  issueKey: "white-streak"
+                })
+              }
               className="mt-4 text-base font-medium text-cyan-400 hover:text-cyan-300"
             >
               Investigate ↓
@@ -79,7 +102,7 @@ export function EngineerHome({ user, workspace, roleHome, onAction, ...askProps 
         ))}
       </section>
 
-      <InvestigationWorkflow steps={eng.workflowSteps} activeStep={0} />
+      <TodayTimeline workspaceSlug={workspace.id} />
 
       <AskBuekSection {...askProps} />
     </div>

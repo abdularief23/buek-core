@@ -1,3 +1,4 @@
+import type { DynamicWorkspaceState } from "../DynamicWorkspace.js";
 import type { DemoUser, RoleHomeData, Workspace } from "../../types.js";
 
 export interface RoleHomeProps {
@@ -9,6 +10,7 @@ export interface RoleHomeProps {
   onInputChange: (value: string) => void;
   onAsk: (prompt: string) => void;
   onAction: (prompt: string, contextLabel: string) => void;
+  onOpenWorkspace: (workspace: DynamicWorkspaceState) => void;
 }
 
 export function RoleHomeHeader({
