@@ -254,3 +254,31 @@ export function refreshRoleHome(workspaceId: string, role: string) {
     `/api/auth/refresh-role-home?${params.toString()}`
   );
 }
+
+export interface ProductionDashboard {
+  target: number;
+  current: number;
+  achievement: number;
+  unit: string;
+  shifts: Array<{ name: string; status: "done" | "running" | "waiting" }>;
+  issues: { total: number; critical: number };
+  risks: string[];
+}
+
+export interface KpiDetail {
+  label: string;
+  value: string;
+  status: "green" | "yellow" | "red";
+  target: string;
+  trend: "up" | "down" | "flat";
+  series: Array<{ time: string; value: number }>;
+  highlights: string[];
+}
+
+export function fetchProductionDashboard(slug: string) {
+  return fetchJson<{ dashboard: ProductionDashboard }>(`/api/data/${slug}/production`);
+}
+
+export function fetchKpiDetail(slug: string, label: string) {
+  return fetchJson<{ kpi: KpiDetail }>(`/api/data/${slug}/kpis/${encodeURIComponent(label)}`);
+}

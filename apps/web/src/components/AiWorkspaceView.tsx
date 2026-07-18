@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
-import type { Workspace } from "../types.js";
 import { fetchLiveKpis, fetchTimeline, type LiveKpi, type TimelineEvent } from "../lib/data-api.js";
+import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
+import type { Workspace } from "../types.js";
 import { focusStatusColor, kpiStatusIcon } from "../lib/context.js";
 
 interface AiWorkspaceViewProps {
   workspace: Workspace;
-  onFocusSelect: (prompt: string, contextLabel: string) => void;
-  onKpiSelect: (prompt: string) => void;
+  onOpenDataPage: (page: DynamicWorkspaceState) => void;
 }
 
-export function AiWorkspaceView({ workspace, onFocusSelect, onKpiSelect }: AiWorkspaceViewProps) {
-  const daily = workspace.dailyWorkspace;
+export function AiWorkspaceView({ workspace, onOpenDataPage }: AiWorkspaceViewProps) {
   const [kpis, setKpis] = useState<LiveKpi[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,73 +23,55 @@ export function AiWorkspaceView({ workspace, onFocusSelect, onKpiSelect }: AiWor
       .finally(() => setLoading(false));
   }, [workspace.id]);
 
-  const focusCategories = kpis.length
-    ? kpis.slice(0, 3).map((kpi, idx) => ({
-        id: `focus-${idx}`,
-        label: kpi.label,
-        summary: kpi.value,
-        status: kpi.status,
-        prompt: `Show ${kpi.label} KPI dashboard and trends`
-      }))
-    : daily.focusCategories;
-
-  const todayKpi = kpis.length
-    ? kpis.map((kpi) => ({
-        label: kpi.label,
-        value: kpi.value,
-        status: kpi.status,
-        prompt: `Analyze ${kpi.label} performance today`
-      }))
-    : daily.todayKpi;
-
-  const activityFeed = timeline.length
-    ? timeline.slice(-8).reverse().map((event) => ({
-        time: event.time,
-        message: event.detail ? `${event.title} — ${event.detail}` : event.title
-      }))
-    : daily.activityFeed;
+  function openKpi(label: string) {
+    if (label === "Production") {
+      onOpenDataPage({ kind: "production-dashboard", slug: workspace.id });
+      return;
+    }
+    onOpenDataPage({ kind: "kpi-detail", slug: workspace.id, kpiLabel: label });
+  }
 
   return (
     <div className="space-y-10 pb-12">
       <header>
         <h1 className="text-2xl font-semibold text-white">AI Workspace</h1>
         <p className="mt-2 text-base text-slate-400">
-          Your factory context — live KPIs and activity from the operating graph.
+          Konteks pabrik — data live dari operating graph. Klik untuk melihat detail.
         </p>
       </header>
 
       <section className="space-y-4">
         <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500">
-          Today&apos;s Focus
+          Fokus Hari Ini {loading ? "" : "· Live"}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {focusCategories.map((category) => (
+          {kpis.slice(0, 3).map((kpi) => (
             <button
-              key={category.id}
+              key={kpi.label}
               type="button"
-              onClick={() => onFocusSelect(category.prompt, category.label)}
+              onClick={() => openKpi(kpi.label)}
               className="rounded-2xl border border-white/10 px-5 py-4 text-left transition hover:border-cyan-400/30 hover:bg-white/[0.02]"
             >
-              <p className="text-sm text-slate-500">{category.label}</p>
-              <p className={`mt-1 text-lg font-medium ${focusStatusColor(category.status)}`}>
-                {category.summary}
+              <p className="text-sm text-slate-500">{kpi.label}</p>
+              <p className={`mt-1 text-lg font-medium ${focusStatusColor(kpi.status)}`}>
+                {kpi.value}
               </p>
             </button>
           ))}
         </div>
       </section>
 
-      {todayKpi.length > 0 ? (
+      {kpis.length > 0 ? (
         <section className="space-y-4">
           <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500">
-            Today&apos;s Factory {loading ? "" : "· Live"}
+            Pabrik Hari Ini
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {todayKpi.map((kpi) => (
+            {kpis.map((kpi) => (
               <button
                 key={kpi.label}
                 type="button"
-                onClick={() => onKpiSelect(kpi.prompt)}
+                onClick={() => openKpi(kpi.label)}
                 className="rounded-2xl border border-white/10 px-6 py-5 text-left transition hover:border-white/20"
               >
                 <p className="text-sm text-slate-500">{kpi.label}</p>
@@ -99,20 +80,22 @@ export function AiWorkspaceView({ workspace, onFocusSelect, onKpiSelect }: AiWor
               </button>
             ))}
           </div>
-          <p className="text-sm text-slate-500">Click any metric to open KPI dashboard via AI.</p>
+          <p className="text-sm text-slate-500">Klik metrik untuk membuka halaman data. Gunakan ✨ Jelaskan jika butuh analisis AI.</p>
         </section>
       ) : null}
 
-      {activityFeed.length > 0 ? (
+      {timeline.length > 0 ? (
         <section className="space-y-4">
           <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500">
-            Live Activity
+            Aktivitas Live
           </h2>
           <ul className="space-y-3 rounded-2xl border border-white/10 px-6 py-4">
-            {activityFeed.map((event) => (
-              <li key={`${event.time}-${event.message}`} className="flex gap-4 text-base">
+            {timeline.slice(-8).reverse().map((event) => (
+              <li key={event.id} className="flex gap-4 text-base">
                 <span className="w-12 shrink-0 font-mono text-sm text-slate-600">{event.time}</span>
-                <span className="text-slate-300">{event.message}</span>
+                <span className="text-slate-300">
+                  {event.detail ? `${event.title} — ${event.detail}` : event.title}
+                </span>
               </li>
             ))}
           </ul>

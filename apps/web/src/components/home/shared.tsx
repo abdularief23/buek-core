@@ -9,7 +9,7 @@ export interface RoleHomeProps {
   isStreaming: boolean;
   onInputChange: (value: string) => void;
   onAsk: (prompt: string) => void;
-  onAction: (prompt: string, contextLabel: string) => void;
+  onAction?: (prompt: string, contextLabel: string) => void;
   onOpenWorkspace: (workspace: DynamicWorkspaceState) => void;
 }
 
@@ -24,7 +24,7 @@ export function RoleHomeHeader({
 }) {
   return (
     <header className="space-y-3 border-b border-white/10 pb-8">
-      <h1 className="buek-heading text-white">Good Morning, {user.name} 👋</h1>
+      <h1 className="buek-heading text-white">Selamat Pagi, {user.name} 👋</h1>
       <p className="buek-body text-slate-400">
         {user.role} <span className="text-slate-600">•</span> {workspace.organization}
       </p>

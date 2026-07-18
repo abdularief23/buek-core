@@ -14,7 +14,6 @@ interface HomeViewProps {
   isStreaming: boolean;
   onInputChange: (value: string) => void;
   onAsk: (prompt: string) => void;
-  onAction: (prompt: string, contextLabel: string) => void;
   onOpenWorkspace: (workspace: DynamicWorkspaceState) => void;
 }
 

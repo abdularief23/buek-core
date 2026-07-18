@@ -16,6 +16,7 @@ import {
 } from "../services/data-engine.js";
 import { listActiveWorkflows } from "../services/workflow-engine.js";
 import { getNotifications } from "../services/notifications.js";
+import { getKpiDetail, getProductionDashboard } from "../services/production-dashboard.js";
 import {
   approveReport,
   approveSopRevision,
@@ -305,6 +306,28 @@ export async function handleNotifications(req: Request, res: Response) {
   try {
     const notifications = await getNotifications(getSlug(req));
     res.json({ notifications });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleProductionDashboard(req: Request, res: Response) {
+  try {
+    res.json({ dashboard: await getProductionDashboard(getSlug(req)) });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleKpiDetail(req: Request, res: Response) {
+  try {
+    const label = String(req.params.kpiLabel ?? "");
+    const detail = await getKpiDetail(getSlug(req), decodeURIComponent(label));
+    if (!detail) {
+      res.status(404).json({ error: { message: "KPI not found" } });
+      return;
+    }
+    res.json({ kpi: detail });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

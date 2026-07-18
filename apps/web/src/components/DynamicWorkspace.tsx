@@ -5,14 +5,18 @@ import {
   approveSopRevision,
   approveWorkOrder,
   fetchIssueByKey,
+  fetchKpiDetail,
   fetchPendingReports,
   fetchPendingSopRevisions,
   fetchPendingWorkOrders,
+  fetchProductionDashboard,
   fetchReport,
   fetchSopRevision,
   fetchWorkOrder,
   rejectWorkOrder,
   type EngineeringReport,
+  type KpiDetail,
+  type ProductionDashboard,
   type SopRevision,
   type WorkOrder
 } from "../lib/data-api.js";
@@ -24,7 +28,9 @@ export type DynamicWorkspaceState =
   | { kind: "sop-revisions"; slug: string }
   | { kind: "sop-revision"; slug: string; revisionId: string }
   | { kind: "engineering-reports"; slug: string }
-  | { kind: "engineering-report"; slug: string; reportId: string };
+  | { kind: "engineering-report"; slug: string; reportId: string }
+  | { kind: "production-dashboard"; slug: string }
+  | { kind: "kpi-detail"; slug: string; kpiLabel: string };
 
 interface DynamicWorkspaceProps {
   workspace: DynamicWorkspaceState;
@@ -44,6 +50,27 @@ export function DynamicWorkspace({
   onDataChange
 }: DynamicWorkspaceProps) {
   const notifyChange = onDataChange ?? (() => {});
+
+  if (workspace.kind === "production-dashboard") {
+    return (
+      <ProductionDashboardWorkspace
+        slug={workspace.slug}
+        onClose={onClose}
+        onAskAi={onAskAi}
+      />
+    );
+  }
+
+  if (workspace.kind === "kpi-detail") {
+    return (
+      <KpiDetailWorkspace
+        slug={workspace.slug}
+        kpiLabel={workspace.kpiLabel}
+        onClose={onClose}
+        onAskAi={onAskAi}
+      />
+    );
+  }
 
   if (workspace.kind === "approval-queue") {
     return (
@@ -334,7 +361,7 @@ function WorkOrderDetailWorkspace({
           }
           className="rounded-xl border border-white/10 px-6 py-3 font-semibold text-white hover:bg-white/5"
         >
-          Ask AI
+          ✨ Jelaskan
         </button>
       </div>
     </div>
@@ -642,7 +669,7 @@ function SopRevisionDetailWorkspace({
           }
           className="rounded-xl border border-white/10 px-6 py-3 font-semibold text-white hover:bg-white/5"
         >
-          Ask AI
+          ✨ Jelaskan
         </button>
       </div>
     </div>
@@ -792,9 +819,196 @@ function ReportDetailWorkspace({
           onClick={() => onAskAi(`Review engineering report: ${report.title}`, report.title)}
           className="rounded-xl border border-white/10 px-6 py-3 font-semibold text-white hover:bg-white/5"
         >
-          Ask AI
+          ✨ Jelaskan
         </button>
       </div>
+    </div>
+  );
+}
+
+const shiftIcon = { done: "✔", running: "▶", waiting: "○" } as const;
+
+function ProductionDashboardWorkspace({
+  slug,
+  onClose,
+  onAskAi
+}: {
+  slug: string;
+  onClose: () => void;
+  onAskAi: (prompt: string, contextLabel: string) => void;
+}) {
+  const [data, setData] = useState<ProductionDashboard | null>(null);
+
+  useEffect(() => {
+    fetchProductionDashboard(slug).then((res) => setData(res.dashboard));
+  }, [slug]);
+
+  if (!data) {
+    return <p className="buek-body text-slate-500">Memuat data produksi...</p>;
+  }
+
+  return (
+    <div className="space-y-8 pb-16">
+      <header className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <p className="buek-small text-slate-500">Workspace</p>
+          <h1 className="buek-heading text-white">Produksi Hari Ini</h1>
+        </div>
+        <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
+          ← Kembali
+        </button>
+      </header>
+
+      <div className="buek-card grid gap-6 rounded-2xl border border-white/10 sm:grid-cols-3">
+        <div>
+          <p className="buek-small text-slate-500">Target</p>
+          <p className="mt-2 text-3xl font-bold text-white">
+            {data.target.toLocaleString("id-ID")} {data.unit}
+          </p>
+        </div>
+        <div>
+          <p className="buek-small text-slate-500">Saat Ini</p>
+          <p className="mt-2 text-3xl font-bold text-cyan-400">
+            {data.current.toLocaleString("id-ID")} {data.unit}
+          </p>
+        </div>
+        <div>
+          <p className="buek-small text-slate-500">Pencapaian</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-400">{data.achievement}%</p>
+        </div>
+      </div>
+
+      <section className="space-y-3">
+        <h2 className="buek-card-title text-slate-400">Shift</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {data.shifts.map((shift) => (
+            <div key={shift.name} className="buek-card rounded-xl border border-white/10 px-5 py-4">
+              <p className="buek-body text-white">{shift.name}</p>
+              <p className="mt-2 buek-small text-slate-400">
+                {shiftIcon[shift.status]}{" "}
+                {shift.status === "done"
+                  ? "Selesai"
+                  : shift.status === "running"
+                    ? "Berjalan"
+                    : "Menunggu"}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="buek-card grid gap-4 rounded-2xl border border-white/10 sm:grid-cols-2">
+        <div>
+          <p className="buek-small text-slate-500">Issue Terbuka</p>
+          <p className="mt-1 text-2xl font-bold text-white">{data.issues.total}</p>
+        </div>
+        <div>
+          <p className="buek-small text-slate-500">Kritis</p>
+          <p className="mt-1 text-2xl font-bold text-red-400">{data.issues.critical}</p>
+        </div>
+      </section>
+
+      {data.risks.length ? (
+        <section className="space-y-2">
+          <h2 className="buek-card-title text-slate-400">Risiko</h2>
+          {data.risks.map((risk) => (
+            <p key={risk} className="buek-body text-amber-300/90">
+              ⚠ {risk}
+            </p>
+          ))}
+        </section>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() =>
+          onAskAi(
+            "Jelaskan status produksi hari ini dan risiko yang perlu diperhatikan supervisor",
+            "Produksi Hari Ini"
+          )
+        }
+        className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-6 py-3 font-semibold text-cyan-300 hover:bg-cyan-500/20"
+      >
+        ✨ Jelaskan
+      </button>
+    </div>
+  );
+}
+
+function KpiDetailWorkspace({
+  slug,
+  kpiLabel,
+  onClose,
+  onAskAi
+}: {
+  slug: string;
+  kpiLabel: string;
+  onClose: () => void;
+  onAskAi: (prompt: string, contextLabel: string) => void;
+}) {
+  const [kpi, setKpi] = useState<KpiDetail | null>(null);
+
+  useEffect(() => {
+    fetchKpiDetail(slug, kpiLabel).then((res) => setKpi(res.kpi));
+  }, [slug, kpiLabel]);
+
+  if (!kpi) {
+    return <p className="buek-body text-slate-500">Memuat KPI {kpiLabel}...</p>;
+  }
+
+  const trendLabel = kpi.trend === "up" ? "▲ Naik" : kpi.trend === "down" ? "▼ Turun" : "→ Stabil";
+
+  return (
+    <div className="space-y-8 pb-16">
+      <header className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <p className="buek-small text-slate-500">KPI</p>
+          <h1 className="buek-heading text-white">{kpi.label}</h1>
+          <p className="mt-2 buek-body text-slate-400">Target: {kpi.target}</p>
+        </div>
+        <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
+          ← Kembali
+        </button>
+      </header>
+
+      <div className="buek-card rounded-2xl border border-white/10 text-center">
+        <p className="text-5xl font-bold text-white">{kpi.value}</p>
+        <p className="mt-2 buek-body text-slate-400">{trendLabel}</p>
+      </div>
+
+      <section className="space-y-3">
+        <h2 className="buek-card-title text-slate-400">Sorotan</h2>
+        <ul className="space-y-2">
+          {kpi.highlights.map((item) => (
+            <li key={item} className="buek-body text-slate-300">
+              • {item}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="h-24 overflow-hidden rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+        <div className="flex h-full items-end gap-1">
+          {kpi.series.map((point) => (
+            <div
+              key={point.time}
+              className="flex-1 rounded-t bg-cyan-500/70"
+              style={{ height: `${Math.max(12, point.value)}%` }}
+              title={`${point.time}: ${point.value}%`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() =>
+          onAskAi(`Jelaskan KPI ${kpi.label} hari ini dan berikan rekomendasi`, kpi.label)
+        }
+        className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-6 py-3 font-semibold text-cyan-300 hover:bg-cyan-500/20"
+      >
+        ✨ Jelaskan
+      </button>
     </div>
   );
 }

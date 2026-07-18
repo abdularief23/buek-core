@@ -1,39 +1,55 @@
 import { TodayTimeline } from "../TodayTimeline.js";
-import { AskBuekSection } from "./AskBuekSection.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
 import { focusStatusColor } from "../../lib/context.js";
 
-export function SupervisorHome({ user, workspace, roleHome, onAction, onOpenWorkspace, ...askProps }: RoleHomeProps) {
+const overviewRoute: Record<string, { kind: "production-dashboard" } | { kind: "kpi-detail"; kpiLabel: string }> = {
+  Production: { kind: "production-dashboard" },
+  Quality: { kind: "kpi-detail", kpiLabel: "Quality" },
+  Maintenance: { kind: "kpi-detail", kpiLabel: "Delivery" }
+};
+
+export function SupervisorHome({ user, workspace, roleHome, onOpenWorkspace }: RoleHomeProps) {
   const sup = roleHome.supervisor!;
+
+  function openOverview(label: string) {
+    const route = overviewRoute[label] ?? { kind: "kpi-detail" as const, kpiLabel: label };
+    if (route.kind === "production-dashboard") {
+      onOpenWorkspace({ kind: "production-dashboard", slug: workspace.id });
+    } else {
+      onOpenWorkspace({ kind: "kpi-detail", slug: workspace.id, kpiLabel: route.kpiLabel });
+    }
+  }
 
   return (
     <div className="space-y-12 pb-16">
       <RoleHomeHeader
         user={user}
         workspace={workspace}
-        subtitle="Ensure the line is running — approvals, owners, and team progress"
+        subtitle="Pastikan line berjalan — approval, owner, dan progress tim"
       />
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">Today&apos;s Overview</h2>
+        <h2 className="buek-card-title text-slate-400">Ringkasan Hari Ini</h2>
         <div className="grid grid-cols-3 gap-6">
           {sup.overview.map((item) => (
-            <div
+            <button
               key={item.label}
-              className="buek-card rounded-2xl border border-white/10 text-center"
+              type="button"
+              onClick={() => openOverview(item.label)}
+              className="buek-card rounded-2xl border border-white/10 text-center hover:border-cyan-400/30"
             >
               <p className="buek-body text-slate-500">{item.label}</p>
               <p className={`mt-3 text-3xl ${focusStatusColor(item.status)}`}>
                 {item.status === "green" ? "🟢" : item.status === "yellow" ? "🟠" : "🔴"}
               </p>
-            </div>
+            </button>
           ))}
         </div>
       </section>
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">Waiting Approval</h2>
+        <h2 className="buek-card-title text-slate-400">Menunggu Approval</h2>
         <ul className="divide-y divide-white/5 rounded-2xl border border-white/10">
           {sup.waitingApproval.map((item) => (
             <li key={item.label}>
@@ -46,8 +62,6 @@ export function SupervisorHome({ user, workspace, roleHome, onAction, onOpenWork
                     onOpenWorkspace({ kind: "sop-revisions", slug: workspace.id });
                   } else if (item.action === "engineering-reports") {
                     onOpenWorkspace({ kind: "engineering-reports", slug: workspace.id });
-                  } else if (item.prompt) {
-                    onAction(item.prompt, item.label);
                   }
                 }}
                 className="flex w-full items-center justify-between px-6 py-5 hover:bg-white/[0.03]"
@@ -61,12 +75,18 @@ export function SupervisorHome({ user, workspace, roleHome, onAction, onOpenWork
       </section>
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">Open Issues</h2>
+        <h2 className="buek-card-title text-slate-400">Isu Terbuka</h2>
         {sup.openIssues.map((issue) => (
           <button
             key={issue.id}
             type="button"
-            onClick={() => onAction(issue.prompt, issue.title)}
+            onClick={() =>
+              onOpenWorkspace({
+                kind: "investigation",
+                slug: workspace.id,
+                issueKey: issue.title.toLowerCase().includes("white") ? "white-streak" : "vibration"
+              })
+            }
             className="buek-card w-full rounded-2xl border border-white/10 text-left hover:border-cyan-400/30"
           >
             <p className="buek-card-title text-white">{issue.title}</p>
@@ -79,7 +99,7 @@ export function SupervisorHome({ user, workspace, roleHome, onAction, onOpenWork
       </section>
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">Team Performance</h2>
+        <h2 className="buek-card-title text-slate-400">Performa Tim</h2>
         <ul className="space-y-3">
           {sup.teamPerformance.map((member) => (
             <li
@@ -88,7 +108,7 @@ export function SupervisorHome({ user, workspace, roleHome, onAction, onOpenWork
             >
               <span className="buek-body text-slate-300">{member.name}</span>
               <span className="buek-small text-slate-500">
-                {member.closed} closed · {member.pending} pending
+                {member.closed} selesai · {member.pending} pending
               </span>
             </li>
           ))}
@@ -96,8 +116,6 @@ export function SupervisorHome({ user, workspace, roleHome, onAction, onOpenWork
       </section>
 
       <TodayTimeline workspaceSlug={workspace.id} />
-
-      <AskBuekSection {...askProps} />
     </div>
   );
 }
