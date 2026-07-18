@@ -15,6 +15,7 @@ interface AiCopilotProps {
   onToggle: () => void;
   onInputChange: (value: string) => void;
   onSubmit: (trimmedInput: string) => Promise<void>;
+  onSuggestion: (prompt: string) => void;
 }
 
 export function AiCopilot({
@@ -27,9 +28,11 @@ export function AiCopilot({
   isStreaming,
   onToggle,
   onInputChange,
-  onSubmit
+  onSubmit,
+  onSuggestion
 }: AiCopilotProps) {
   const endRef = useRef<HTMLDivElement | null>(null);
+  const suggestions = workspace.dailyWorkspace.copilotSuggestions;
 
   useEffect(() => {
     if (open) {
@@ -48,33 +51,59 @@ export function AiCopilot({
     <>
       {open ? (
         <div
-          className="fixed inset-0 z-40 bg-black/40 lg:bg-transparent"
+          className="fixed inset-0 z-40 bg-black/30"
           onClick={onToggle}
           aria-hidden="true"
         />
       ) : null}
 
-      <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-3 lg:bottom-6 lg:right-6">
+      <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-3 lg:bottom-8 lg:right-8">
         {open ? (
-          <div className="flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
-            <header className="border-b border-white/10 px-4 py-3">
-              <p className="text-sm font-medium text-white">Hi {user.name} 👋</p>
-              <p className="mt-0.5 text-xs text-slate-500">How can I help today?</p>
-              {context.label !== "Daily Workspace" ? (
-                <div className="mt-2 rounded-lg bg-cyan-400/10 px-3 py-2">
-                  <p className="text-[10px] uppercase tracking-wide text-cyan-400/80">
-                    Current Context
+          <div className="flex max-h-[min(80vh,640px)] w-[min(100vw-2rem,28rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
+            <header className="border-b border-white/10 px-5 py-4">
+              <p className="text-base font-medium text-white">Hi {user.name} 👋</p>
+              <p className="mt-0.5 text-sm text-slate-500">How can I help today?</p>
+
+              <div className="mt-3 rounded-xl bg-white/5 px-4 py-3">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                  Current Context
+                </p>
+                <p className="mt-1 text-sm font-medium text-cyan-200">{context.label}</p>
+                {context.details?.map((detail) => (
+                  <p key={detail} className="text-xs text-slate-500">
+                    {detail}
                   </p>
-                  <p className="text-xs text-cyan-100">{context.label}</p>
-                </div>
-              ) : null}
+                ))}
+                {user.role ? <p className="text-xs text-slate-500">{user.role}</p> : null}
+                {workspace.shift ? (
+                  <p className="text-xs text-slate-500">{workspace.shift}</p>
+                ) : null}
+              </div>
             </header>
 
-            <div className="max-h-72 space-y-4 overflow-y-auto px-4 py-3">
-              {messages.length === 0 ? (
-                <p className="text-xs text-slate-500">
-                  Ask about {workspace.organization} — production, machines, quality, documents.
+            {suggestions.length > 0 && messages.length === 0 ? (
+              <div className="border-b border-white/10 px-5 py-3">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                  Suggested
                 </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.label}
+                      type="button"
+                      onClick={() => onSuggestion(suggestion.prompt)}
+                      className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition hover:border-cyan-400/30 hover:text-white"
+                    >
+                      {suggestion.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+              {messages.length === 0 ? (
+                <p className="text-sm text-slate-500">Ask anything about your factory...</p>
               ) : (
                 messages.map((message, index) => {
                   const previousUserMessage = [...messages]
@@ -100,27 +129,34 @@ export function AiCopilot({
               <div ref={endRef} />
             </div>
 
-            <div className="border-t border-white/10 p-3">
+            <div className="border-t border-white/10 p-4">
               <AiPromptInput
                 value={input}
                 onChange={onInputChange}
                 onSubmit={handleSubmit}
                 disabled={isStreaming}
-                placeholder="Ask Buek..."
+                placeholder="Ask anything..."
                 id="copilot-prompt"
               />
             </div>
           </div>
         ) : null}
 
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label={open ? "Close Ask Buek" : "Open Ask Buek"}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-cyan-500 text-lg font-semibold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-400"
-        >
-          {open ? "✕" : "B"}
-        </button>
+        <div className="flex flex-col items-center gap-1">
+          {!open ? (
+            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-400 shadow">
+              Ask Buek
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={open ? "Close Ask Buek" : "Open Ask Buek"}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-cyan-500 text-lg font-bold text-slate-950 shadow-lg shadow-cyan-500/25 transition hover:bg-cyan-400"
+          >
+            {open ? "✕" : "B"}
+          </button>
+        </div>
       </div>
     </>
   );

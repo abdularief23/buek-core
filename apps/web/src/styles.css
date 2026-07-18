@@ -10,8 +10,10 @@
     "Segoe UI",
     sans-serif;
   color-scheme: dark;
+  font-size: 16px;
 }
 
 body {
   margin: 0;
+  background-color: #020617;
 }

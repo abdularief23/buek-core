@@ -1,4 +1,24 @@
 export interface DailyWorkspace {
+  dailyBrief: Array<{
+    id: string;
+    severity: "critical" | "warning" | "success";
+    icon: string;
+    title: string;
+    detail: string;
+    confidence?: string;
+    actionLabel: string;
+    prompt: string;
+    contextLabel: string;
+  }>;
+  focusCategories: Array<{
+    id: string;
+    label: string;
+    status: "green" | "yellow" | "red";
+    summary: string;
+    prompt: string;
+  }>;
+  copilotSuggestions: Array<{ label: string; prompt: string }>;
+  recentSearchCategories: string[];
   todayFocus: Array<{ icon: string; label: string }>;
   quickActions: Array<{ icon: string; label: string; prompt: string; contextLabel: string }>;
   continueWorking: Array<{ id: string; label: string; prompt: string }>;
@@ -30,6 +50,97 @@ export interface DailyWorkspace {
 }
 
 export const epsonDailyWorkspace: DailyWorkspace = {
+  dailyBrief: [
+    {
+      id: "brief-1",
+      severity: "critical",
+      icon: "🔴",
+      title: "Machine M-12 vibration increased",
+      detail: "Likely bearing wear.",
+      confidence: "82%",
+      actionLabel: "Investigate",
+      prompt: "Machine 12 alarm terus — show bearing vibration details and likely root cause",
+      contextLabel: "Machine M-12"
+    },
+    {
+      id: "brief-2",
+      severity: "warning",
+      icon: "🟠",
+      title: "White streak defects increased",
+      detail: "Compared with yesterday: +18%",
+      actionLabel: "Root Cause",
+      prompt: "Continue white streak investigation — root cause analysis",
+      contextLabel: "White Streak Investigation"
+    },
+    {
+      id: "brief-3",
+      severity: "success",
+      icon: "🟢",
+      title: "Production is on target",
+      detail: "Current achievement: 96%",
+      actionLabel: "View Summary",
+      prompt: "Show today's production status summary",
+      contextLabel: "Production"
+    }
+  ],
+  focusCategories: [
+    {
+      id: "machine",
+      label: "Machine",
+      status: "red",
+      summary: "M-12 vibration high",
+      prompt: "Machine 12 alarm terus"
+    },
+    {
+      id: "production",
+      label: "Production",
+      status: "green",
+      summary: "96% on target",
+      prompt: "Show today's production status"
+    },
+    {
+      id: "quality",
+      label: "Quality",
+      status: "yellow",
+      summary: "White streak +18%",
+      prompt: "Continue white streak investigation"
+    },
+    {
+      id: "meeting",
+      label: "Meeting",
+      status: "green",
+      summary: "13:00 Production standup",
+      prompt: "What is the agenda for today's production meeting?"
+    },
+    {
+      id: "supplier",
+      label: "Supplier",
+      status: "yellow",
+      summary: "1 delayed shipment",
+      prompt: "Summarize supplier delay emails today"
+    },
+    {
+      id: "email",
+      label: "Email",
+      status: "yellow",
+      summary: "4 need review",
+      prompt: "Summarize emails that need my attention today"
+    }
+  ],
+  copilotSuggestions: [
+    { label: "Explain Alarm", prompt: "Explain the Machine M-12 alarm and what happened" },
+    { label: "Show SOP", prompt: "Show SOP-014 printer white streak troubleshooting" },
+    { label: "Generate Countermeasure", prompt: "Recommend countermeasure for Machine M-12 vibration" },
+    { label: "Create Work Order", prompt: "Create a maintenance work order for Machine M-12 bearing inspection" }
+  ],
+  recentSearchCategories: [
+    "Machine Manual",
+    "SOP",
+    "QC Standard",
+    "Meeting Notes",
+    "Supplier",
+    "Engineering Drawing"
+  ],
   todayFocus: [
     { icon: "🟡", label: "2 Production Issues" },
     { icon: "🟠", label: "1 Machine Needs Attention" },
@@ -159,6 +270,97 @@ export const epsonDailyWorkspace: DailyWorkspace = {
 };
 
 export const toyotaDailyWorkspace: DailyWorkspace = {
+  dailyBrief: [
+    {
+      id: "brief-t1",
+      severity: "critical",
+      icon: "🔴",
+      title: "Machine EA-04 vibration increased",
+      detail: "Likely bearing wear.",
+      confidence: "78%",
+      actionLabel: "Investigate",
+      prompt: "What happened with Machine EA-04 yesterday?",
+      contextLabel: "Machine EA-04"
+    },
+    {
+      id: "brief-t2",
+      severity: "warning",
+      icon: "🟠",
+      title: "Bolt torque drift at EA-04",
+      detail: "Compared with standard: +12%",
+      actionLabel: "Root Cause",
+      prompt: "Bolt torque out of specification at EA-04 — root cause",
+      contextLabel: "Station EA-04"
+    },
+    {
+      id: "brief-t3",
+      severity: "success",
+      icon: "🟢",
+      title: "Production is on target",
+      detail: "Current achievement: 96%",
+      actionLabel: "View Summary",
+      prompt: "Show today's assembly production status",
+      contextLabel: "Production"
+    }
+  ],
+  focusCategories: [
+    {
+      id: "machine",
+      label: "Machine",
+      status: "red",
+      summary: "EA-04 torque drift",
+      prompt: "Bolt torque out of specification at EA-04"
+    },
+    {
+      id: "production",
+      label: "Production",
+      status: "green",
+      summary: "96% on target",
+      prompt: "Show today's assembly production status"
+    },
+    {
+      id: "quality",
+      label: "Quality",
+      status: "yellow",
+      summary: "Torque inspection flagged",
+      prompt: "Show QC torque inspection results for EA-04"
+    },
+    {
+      id: "meeting",
+      label: "Meeting",
+      status: "green",
+      summary: "13:00 Daily standup",
+      prompt: "What is the agenda for today's production meeting?"
+    },
+    {
+      id: "supplier",
+      label: "Supplier",
+      status: "yellow",
+      summary: "1 delayed shipment",
+      prompt: "Summarize supplier delay emails today"
+    },
+    {
+      id: "email",
+      label: "Email",
+      status: "yellow",
+      summary: "4 need review",
+      prompt: "Summarize emails related to quality issues today"
+    }
+  ],
+  copilotSuggestions: [
+    { label: "Explain Alarm", prompt: "Explain the Machine EA-04 alarm" },
+    { label: "Show SOP", prompt: "Show ASM-022 engine bolt torque standard" },
+    { label: "Generate Countermeasure", prompt: "Recommend countermeasure for EA-04 torque drift" },
+    { label: "Create Work Order", prompt: "Create work order for torque tool calibration" }
+  ],
+  recentSearchCategories: [
+    "Machine Manual",
+    "SOP",
+    "QC Standard",
+    "Meeting Notes",
+    "Supplier",
+    "Engineering Drawing"
+  ],
   todayFocus: [
     { icon: "🟡", label: "2 Production Issues" },
     { icon: "🟠", label: "1 Machine Needs Attention" },
@@ -327,6 +529,13 @@ export const nestleDailyWorkspace: DailyWorkspace = {
 };
 
 export const customDailyWorkspace: DailyWorkspace = {
+  dailyBrief: [],
+  focusCategories: [],
+  copilotSuggestions: [
+    { label: "Upload SOP", prompt: "How do I upload SOP documents?" },
+    { label: "Activate AI", prompt: "What do I need to activate the AI worker?" }
+  ],
+  recentSearchCategories: ["SOP", "Work Instruction", "QC Standard"],
   todayFocus: [{ icon: "📄", label: "Upload knowledge to get started" }],
   quickActions: [
     {

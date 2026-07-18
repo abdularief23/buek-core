@@ -1,4 +1,24 @@
 export interface DailyWorkspace {
+  dailyBrief: Array<{
+    id: string;
+    severity: "critical" | "warning" | "success";
+    icon: string;
+    title: string;
+    detail: string;
+    confidence?: string;
+    actionLabel: string;
+    prompt: string;
+    contextLabel: string;
+  }>;
+  focusCategories: Array<{
+    id: string;
+    label: string;
+    status: "green" | "yellow" | "red";
+    summary: string;
+    prompt: string;
+  }>;
+  copilotSuggestions: Array<{ label: string; prompt: string }>;
+  recentSearchCategories: string[];
   todayFocus: Array<{ icon: string; label: string }>;
   quickActions: Array<{ icon: string; label: string; prompt: string; contextLabel: string }>;
   continueWorking: Array<{ id: string; label: string; prompt: string }>;

@@ -1,13 +1,15 @@
 import type { AppNavItem } from "@buek/ui";
 import { useEffect, useMemo, useState } from "react";
 import { AiCopilot } from "./components/AiCopilot.js";
+import { AiWorkspaceView } from "./components/AiWorkspaceView.js";
 import { AppShell } from "./components/AppShell.js";
 import { HomeView } from "./components/HomeView.js";
 import { KnowledgeView } from "./components/KnowledgeView.js";
 import { LoginScreen } from "./components/LoginScreen.js";
-import { NotificationsView } from "./components/NotificationsView.js";
-import { ProactiveAiModal } from "./components/ProactiveAiModal.js";
+import { NotificationsPanel } from "./components/NotificationsPanel.js";
+import { ProfileView } from "./components/ProfileView.js";
 import { SettingsView } from "./components/SettingsView.js";
+import { WorkflowView } from "./components/WorkflowView.js";
 import {
   createMessageId,
   hasErrorMessage,
@@ -46,8 +48,8 @@ export function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [copilotOpen, setCopilotOpen] = useState(false);
-  const [showProactiveModal, setShowProactiveModal] = useState(false);
-  const [aiContext, setAiContext] = useState<AiContext>({ label: "Daily Workspace" });
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [aiContext, setAiContext] = useState<AiContext>({ label: "Home" });
 
   const installedModule = modules[0];
 
@@ -81,10 +83,10 @@ export function App() {
   }, [isSignedIn]);
 
   useEffect(() => {
-    if (isSignedIn) {
-      setAiContext(contextForView(activeView));
+    if (isSignedIn && currentUser) {
+      setAiContext(contextForView(activeView, currentUser.role));
     }
-  }, [activeView, isSignedIn]);
+  }, [activeView, isSignedIn, currentUser]);
 
   function completeSignIn(data: LoginResponse) {
     setCurrentUser(data.user);
@@ -94,8 +96,9 @@ export function App() {
     setMessages([]);
     setInput("");
     setLoginError(null);
-    setAiContext({ label: "Daily Workspace" });
-    setShowProactiveModal(data.workspace.dailyWorkspace.proactiveCards.length > 0);
+    setAiContext({ label: "Home" });
+    setCopilotOpen(false);
+    setNotificationsOpen(false);
   }
 
   async function handleProductionSignIn(email: string, password: string) {
@@ -224,22 +227,34 @@ export function App() {
     }
   }
 
-  function handleContextualAsk(prompt: string, contextLabel: string) {
+  function handleContextualAsk(
+    prompt: string,
+    contextLabel: string,
+    details?: string[]
+  ) {
     const context: AiContext = {
       label: contextLabel,
+      details,
       promptPrefix: `[Context: ${contextLabel}] `
     };
     setAiContext(context);
     void streamChat(prompt, context);
   }
 
+  function handleHomeAsk(prompt: string) {
+    void streamChat(prompt, { label: "Home" });
+  }
+
   function handleCopilotSubmit(trimmedInput: string) {
     return streamChat(trimmedInput, aiContext);
   }
 
-  function handleProactiveCard(prompt: string, contextLabel: string) {
-    setShowProactiveModal(false);
-    handleContextualAsk(prompt, contextLabel);
+  function handleSuggestion(prompt: string) {
+    void streamChat(prompt, aiContext);
+  }
+
+  function handleGlobalSearch(query: string) {
+    handleContextualAsk(`Search: ${query}`, "Global Search");
   }
 
   function handleLogout() {
@@ -250,7 +265,7 @@ export function App() {
     setMessages([]);
     setInput("");
     setCopilotOpen(false);
-    setShowProactiveModal(false);
+    setNotificationsOpen(false);
   }
 
   if (!isSignedIn) {
@@ -273,8 +288,12 @@ export function App() {
     <main className="min-h-screen bg-slate-950 text-white">
       <AppShell
         activeView={activeView}
+        user={currentUser}
+        organization={currentWorkspace.organization}
         onNavigate={setActiveView}
+        onOpenNotifications={() => setNotificationsOpen(true)}
         onLogout={handleLogout}
+        onSearch={handleGlobalSearch}
         notificationCount={notificationCount}
         copilot={
           <AiCopilot
@@ -288,6 +307,7 @@ export function App() {
             onToggle={() => setCopilotOpen((current) => !current)}
             onInputChange={setInput}
             onSubmit={handleCopilotSubmit}
+            onSuggestion={handleSuggestion}
           />
         }
       >
@@ -295,16 +315,46 @@ export function App() {
           <HomeView
             user={currentUser}
             workspace={currentWorkspace}
-            onAction={handleContextualAsk}
+            input={input}
+            isStreaming={isStreaming}
+            onInputChange={setInput}
+            onAsk={handleHomeAsk}
+            onBriefAction={(prompt, label) =>
+              handleContextualAsk(prompt, label, [
+                currentWorkspace.organization,
+                currentUser.role,
+                currentWorkspace.shift
+              ])
+            }
+            onContinue={(prompt, label) => handleContextualAsk(prompt, label)}
+          />
+        ) : null}
+
+        {activeView === "workspace" ? (
+          <AiWorkspaceView
+            workspace={currentWorkspace}
+            onFocusSelect={(prompt, label) => handleContextualAsk(prompt, label)}
+            onKpiSelect={(prompt) => handleContextualAsk(prompt, "Today's KPI")}
           />
         ) : null}
 
         {activeView === "knowledge" ? (
-          <KnowledgeView workspace={currentWorkspace} onAsk={handleContextualAsk} />
+          <KnowledgeView
+            workspace={currentWorkspace}
+            onSearch={(query) => handleContextualAsk(query, "Knowledge")}
+          />
         ) : null}
 
-        {activeView === "notifications" ? (
-          <NotificationsView workspace={currentWorkspace} onAsk={handleContextualAsk} />
+        {activeView === "workflow" ? (
+          <WorkflowView onAsk={(prompt) => handleContextualAsk(prompt, "Workflow")} />
+        ) : null}
+
+        {activeView === "profile" ? (
+          <ProfileView
+            workspace={currentWorkspace}
+            user={currentUser}
+            installedModule={installedModule}
+          />
         ) : null}
 
         {activeView === "settings" ? (
@@ -317,13 +367,12 @@ export function App() {
         ) : null}
       </AppShell>
 
-      {showProactiveModal ? (
-        <ProactiveAiModal
-          workspace={currentWorkspace}
-          onDismiss={() => setShowProactiveModal(false)}
-          onSelectCard={handleProactiveCard}
-        />
-      ) : null}
+      <NotificationsPanel
+        workspace={currentWorkspace}
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+        onSelect={(prompt, label) => handleContextualAsk(prompt, label)}
+      />
     </main>
   );
 }

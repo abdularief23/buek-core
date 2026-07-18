@@ -1,9 +1,14 @@
 import { AppNav, type AppNavItem } from "@buek/ui";
+import type { DemoUser } from "../types.js";
 
 interface AppShellProps {
   activeView: AppNavItem;
+  user: DemoUser;
+  organization: string;
   onNavigate: (view: AppNavItem) => void;
+  onOpenNotifications: () => void;
   onLogout: () => void;
+  onSearch: (query: string) => void;
   notificationCount?: number;
   children: React.ReactNode;
   copilot?: React.ReactNode;
@@ -11,34 +16,105 @@ interface AppShellProps {
 
 export function AppShell({
   activeView,
+  user,
+  organization,
   onNavigate,
+  onOpenNotifications,
   onLogout,
+  onSearch,
   notificationCount,
   children,
   copilot
 }: AppShellProps) {
+  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const input = form.elements.namedItem("global-search") as HTMLInputElement;
+    const query = input.value.trim();
+    if (query) {
+      onSearch(query);
+      input.value = "";
+    }
+  }
+
   return (
-    <div className="relative mx-auto flex min-h-screen max-w-3xl">
-      <aside className="hidden shrink-0 border-r border-white/5 lg:block">
-        <AppNav active={activeView} onChange={onNavigate} notificationCount={notificationCount} />
+    <div className="flex min-h-screen w-full bg-slate-950 text-white">
+      <aside className="hidden w-[280px] shrink-0 border-r border-white/5 bg-slate-950 lg:flex lg:flex-col">
+        <div className="flex items-center gap-3 border-b border-white/5 px-6 py-5">
+          <img src="/logo-mark.svg" alt="" className="h-8 w-8 rounded-lg bg-white p-1" />
+          <div>
+            <p className="text-sm font-semibold text-white">Buek Core</p>
+            <p className="text-xs text-slate-500">AI Employee</p>
+          </div>
+        </div>
+        <AppNav
+          active={activeView}
+          onChange={onNavigate}
+          onOpenNotifications={onOpenNotifications}
+          notificationCount={notificationCount}
+        />
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col">
-        <header className="flex items-center justify-between px-4 py-3 lg:px-8">
-          <img src="/logo-mark.svg" alt="Buek Core" className="h-6 w-6 rounded bg-white p-0.5" />
-          <button
-            type="button"
-            onClick={onLogout}
-            className="text-xs text-slate-600 hover:text-slate-400"
-          >
-            Sign out
-          </button>
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <header className="flex h-16 shrink-0 items-center gap-4 border-b border-white/5 px-4 lg:px-8">
+          <img src="/logo-mark.svg" alt="Buek Core" className="h-7 w-7 rounded bg-white p-0.5 lg:hidden" />
+
+          <form onSubmit={handleSearchSubmit} className="hidden flex-1 md:block md:max-w-xl">
+            <input
+              name="global-search"
+              type="search"
+              placeholder="Search factory, machines, SOP, KPI..."
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-400/40"
+            />
+          </form>
+
+          <div className="ml-auto flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onOpenNotifications}
+              className="relative rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white lg:hidden"
+              aria-label="Notifications"
+            >
+              🔔
+              {notificationCount && notificationCount > 0 ? (
+                <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-500 px-1 text-[9px] font-bold text-slate-950">
+                  {notificationCount}
+                </span>
+              ) : null}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigate("profile")}
+              className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 sm:flex"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-medium">
+                {user.name.charAt(0)}
+              </span>
+              <span className="hidden lg:inline">{user.name}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onLogout}
+              className="text-xs text-slate-500 hover:text-slate-300"
+            >
+              Sign out
+            </button>
+          </div>
         </header>
 
-        <main className="flex-1 px-4 pb-24 lg:px-8 lg:pb-8">{children}</main>
+        <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1400px]">{children}</div>
+        </main>
 
         <aside className="fixed inset-x-0 bottom-0 z-30 border-t border-white/5 bg-slate-950 lg:hidden">
-          <AppNav active={activeView} onChange={onNavigate} notificationCount={notificationCount} />
+          <AppNav
+            active={activeView}
+            onChange={onNavigate}
+            onOpenNotifications={onOpenNotifications}
+            notificationCount={notificationCount}
+          />
         </aside>
       </div>
 
