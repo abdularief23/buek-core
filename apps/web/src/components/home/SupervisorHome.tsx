@@ -1,9 +1,10 @@
+import { TodayTimeline } from "../TodayTimeline.js";
 import { AskBuekSection } from "./AskBuekSection.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
 import { focusStatusColor } from "../../lib/context.js";
 
-export function SupervisorHome({ user, workspace, roleHome, onAction, ...askProps }: RoleHomeProps) {
+export function SupervisorHome({ user, workspace, roleHome, onAction, onOpenWorkspace, ...askProps }: RoleHomeProps) {
   const sup = roleHome.supervisor!;
 
   return (
@@ -38,7 +39,13 @@ export function SupervisorHome({ user, workspace, roleHome, onAction, ...askProp
             <li key={item.label}>
               <button
                 type="button"
-                onClick={() => onAction(item.prompt, item.label)}
+                onClick={() => {
+                  if (item.action === "approval-queue") {
+                    onOpenWorkspace({ kind: "approval-queue", slug: workspace.id });
+                  } else if (item.prompt) {
+                    onAction(item.prompt, item.label);
+                  }
+                }}
                 className="flex w-full items-center justify-between px-6 py-5 hover:bg-white/[0.03]"
               >
                 <span className="buek-body text-slate-300">{item.label}</span>
@@ -83,6 +90,8 @@ export function SupervisorHome({ user, workspace, roleHome, onAction, ...askProp
           ))}
         </ul>
       </section>
+
+      <TodayTimeline workspaceSlug={workspace.id} />
 
       <AskBuekSection {...askProps} />
     </div>

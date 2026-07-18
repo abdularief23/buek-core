@@ -7,13 +7,13 @@ datasource db {
 }
 
 model InstalledDomainModule {
-  id          String   @id @default(cuid())
-  moduleId    String   @unique
-  name        String
-  version     String
-  status      String   @default("installed")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  moduleId  String   @unique
+  name      String
+  version   String
+  status    String   @default("installed")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Company {
@@ -25,39 +25,257 @@ model Company {
   knowledge     KnowledgeDocument[]
   conversations Conversation[]
   modules       CompanyModule[]
+  employees     Employee[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 }
 
 model Workspace {
-  id            String              @id @default(cuid())
-  companyId     String
-  name          String
-  industry      String
-  domain        String
-  knowledgeVersion String           @default("2026.07")
-  company       Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  knowledge     KnowledgeDocument[]
-  conversations Conversation[]
-  modules       CompanyModule[]
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  id               String            @id @default(cuid())
+  companyId        String
+  slug             String            @unique
+  name             String
+  organization     String
+  industry         String
+  domain           String
+  plant            String
+  shift            String            @default("Shift A")
+  moduleId         String            @default("manufacturing")
+  knowledgeVersion String            @default("2026.07")
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  knowledge        KnowledgeDocument[]
+  conversations    Conversation[]
+  modules          CompanyModule[]
+  plants           Plant[]
+  employees        Employee[]
+  issues           Issue[]
+  workOrders       WorkOrder[]
+  timeline         ActivityEvent[]
+  sops             SopDocument[]
+  graphEdges       GraphEdge[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@index([companyId])
 }
 
 model User {
-  id        String   @id @default(cuid())
-  companyId String
-  email     String
-  role      String   @default("member")
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id            String         @id @default(cuid())
+  companyId     String
+  workspaceId   String?
+  email         String
+  name          String?
+  role          String         @default("member")
+  password      String?
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   conversations Conversation[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@unique([companyId, email])
   @@index([companyId])
+  @@index([workspaceId])
+}
+
+model Plant {
+  id           String           @id @default(cuid())
+  workspaceId  String
+  name         String
+  workspace    Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lines        ProductionLine[]
+  kpiSnapshots KpiSnapshot[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([workspaceId])
+}
+
+model ProductionLine {
+  id        String    @id @default(cuid())
+  plantId   String
+  name      String
+  plant     Plant     @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  machines  Machine[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([plantId])
+}
+
+model Machine {
+  id         String             @id @default(cuid())
+  lineId     String
+  code       String
+  name       String
+  status     String             @default("running")
+  line       ProductionLine     @relation(fields: [lineId], references: [id], onDelete: Cascade)
+  telemetry  MachineTelemetry[]
+  issues     Issue[]
+  workOrders WorkOrder[]
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@unique([lineId, code])
+  @@index([lineId])
+}
+
+model Employee {
+  id             String      @id @default(cuid())
+  companyId      String
+  workspaceId    String
+  name           String
+  email          String
+  role           String
+  company        Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace      Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ownedIssues    Issue[]     @relation("IssueOwner")
+  workOrders     WorkOrder[] @relation("WorkOrderEngineer")
+  approvals      Approval[]  @relation("ApprovalDecider")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([companyId])
+  @@index([workspaceId])
+}
+
+model SopDocument {
+  id          String    @id @default(cuid())
+  workspaceId String
+  referenceId String
+  title       String
+  revision    String
+  category    String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workspaceId, referenceId])
+  @@index([workspaceId])
+}
+
+model Issue {
+  id            String         @id @default(cuid())
+  workspaceId   String
+  machineId     String?
+  title         String
+  description   String?
+  status        String         @default("open")
+  severity      String         @default("medium")
+  progress      Int            @default(0)
+  ownerId       String?
+  dueAt         DateTime?
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  machine       Machine?       @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  owner         Employee?      @relation("IssueOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  investigation Investigation?
+  workOrders    WorkOrder[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([workspaceId])
+  @@index([machineId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+model Investigation {
+  id        String   @id @default(cuid())
+  issueId   String   @unique
+  status    String   @default("in_progress")
+  progress  Int      @default(0)
+  steps     Json
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkOrder {
+  id          String    @id @default(cuid())
+  workspaceId String
+  number      String
+  machineId   String?
+  issueId     String?
+  title       String
+  reason      String
+  risk        String    @default("medium")
+  status      String    @default("pending_approval")
+  engineerId  String?
+  aiReview    Json?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  machine     Machine?  @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  issue       Issue?    @relation(fields: [issueId], references: [id], onDelete: SetNull)
+  engineer    Employee? @relation("WorkOrderEngineer", fields: [engineerId], references: [id], onDelete: SetNull)
+  approval    Approval?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workspaceId, number])
+  @@index([workspaceId])
+  @@index([status])
+}
+
+model Approval {
+  id          String    @id @default(cuid())
+  workOrderId String    @unique
+  status      String    @default("waiting")
+  decidedById String?
+  decidedAt   DateTime?
+  notes       String?
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  decidedBy   Employee? @relation("ApprovalDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model KpiSnapshot {
+  id         String   @id @default(cuid())
+  plantId    String
+  metric     String
+  value      Float
+  recordedAt DateTime
+  plant      Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
+  @@index([plantId, metric, recordedAt])
+}
+
+model MachineTelemetry {
+  id         String   @id @default(cuid())
+  machineId  String
+  metric     String
+  value      Float
+  recordedAt DateTime
+  machine    Machine  @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@index([machineId, metric, recordedAt])
+}
+
+model ActivityEvent {
+  id          String    @id @default(cuid())
+  workspaceId String
+  occurredAt  DateTime
+  title       String
+  detail      String?
+  category    String
+  entityType  String?
+  entityId    String?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, occurredAt])
+}
+
+model GraphEdge {
+  id          String    @id @default(cuid())
+  workspaceId String
+  fromType    String
+  fromId      String
+  relation    String
+  toType      String
+  toId        String
+  label       String?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, fromType, fromId])
+  @@index([workspaceId, toType, toId])
 }
 
 model KnowledgeDocument {
@@ -93,7 +311,7 @@ model EmbeddingRecord {
 }
 
 model Conversation {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   companyId   String
   workspaceId String
   userId      String?
@@ -101,8 +319,8 @@ model Conversation {
   company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([companyId])
   @@index([workspaceId])
@@ -110,15 +328,15 @@ model Conversation {
 }
 
 model CompanyModule {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   companyId   String
   workspaceId String
   moduleName  String
-  status      String   @default("installed")
+  status      String    @default("installed")
   company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@unique([workspaceId, moduleName])
   @@index([companyId])

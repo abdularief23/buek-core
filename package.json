@@ -12,7 +12,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "pnpm --filter @buek/api prisma:generate",
-    "db:migrate": "pnpm --filter @buek/api prisma:migrate"
+    "db:migrate": "pnpm --filter @buek/api prisma:migrate",
+    "db:deploy": "pnpm --filter @buek/api prisma:deploy",
+    "db:seed": "pnpm --filter @buek/api prisma:seed"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

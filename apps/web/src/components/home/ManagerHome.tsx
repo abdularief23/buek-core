@@ -1,3 +1,4 @@
+import { TodayTimeline } from "../TodayTimeline.js";
 import { AskBuekSection } from "./AskBuekSection.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
@@ -83,6 +84,8 @@ export function ManagerHome({ user, workspace, roleHome, onAction, ...askProps }
           ))}
         </div>
       </section>
+
+      <TodayTimeline workspaceSlug={workspace.id} />
 
       <AskBuekSection {...askProps} />
     </div>

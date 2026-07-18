@@ -7,6 +7,7 @@ import {
   type DailyWorkspace
 } from "./daily-workspace.js";
 import { buildRoleHome, normalizeRoleKey, type RoleHomeData } from "./role-workspaces.js";
+import { enrichRoleHomeFromDb } from "./services/enrich-role-home.js";
 
 export type { DailyWorkspace } from "./daily-workspace.js";
 export type { RoleHomeData, RoleKey } from "./role-workspaces.js";
@@ -788,11 +789,11 @@ export function findWorkspace(workspaceId?: string): Workspace {
   return workspaces.find((workspace) => workspace.id === workspaceId) ?? getDefaultWorkspace();
 }
 
-export function authenticateDemoUser(
+export async function authenticateDemoUser(
   companyId: string,
   username: string,
   password: string
-): { user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined {
+): Promise<{ user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined> {
   const user = demoUsers.find(
     (candidate) =>
       candidate.companyId.toLowerCase() === companyId.trim().toLowerCase() &&
@@ -807,10 +808,10 @@ export function authenticateDemoUser(
   return buildAuthResult(user);
 }
 
-export function authenticateProductionUser(
+export async function authenticateProductionUser(
   email: string,
   password: string
-): { user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined {
+): Promise<{ user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined> {
   const user = demoUsers.find(
     (candidate) =>
       candidate.email.toLowerCase() === email.trim().toLowerCase() && candidate.password === password
@@ -834,10 +835,10 @@ function displayNameForRole(role: string, fallback: string): string {
   return roleDisplayNames[normalizeRoleKey(role)] ?? fallback;
 }
 
-export function launchDemoWorkspace(
+export async function launchDemoWorkspace(
   workspaceId: string,
   role: string
-): { user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined {
+): Promise<{ user: Omit<DemoUser, "password">; workspace: Workspace; roleHome: RoleHomeData } | undefined> {
   const workspace = workspaces.find((candidate) => candidate.id === workspaceId);
   if (!workspace) {
     return undefined;
@@ -856,14 +857,17 @@ export function launchDemoWorkspace(
   });
 }
 
-function buildAuthResult(user: DemoUser): {
+async function buildAuthResult(user: DemoUser): Promise<{
   user: Omit<DemoUser, "password">;
   workspace: Workspace;
   roleHome: RoleHomeData;
-} {
+}> {
   const { password: _password, ...safeUser } = user;
   const workspace = findWorkspace(user.workspaceId);
-  const roleHome = buildRoleHome(workspace.id, user.role, workspace.dailyWorkspace);
+  const roleHome = await enrichRoleHomeFromDb(
+    workspace.id,
+    buildRoleHome(workspace.id, user.role, workspace.dailyWorkspace)
+  );
 
   return {
     user: safeUser,

@@ -21,6 +21,8 @@ export interface RoleHomeData {
       actionLabel: string;
       prompt: string;
       contextLabel: string;
+      action?: string;
+      issueKey?: string;
     }>;
     investigations: Array<{ id: string; label: string; prompt: string }>;
     aiSuggestions: Array<{
@@ -34,7 +36,7 @@ export interface RoleHomeData {
   };
   supervisor?: {
     overview: Array<{ label: string; status: "green" | "yellow" | "red" }>;
-    waitingApproval: Array<{ label: string; count: number; prompt: string }>;
+    waitingApproval: Array<{ label: string; count: number; prompt?: string; action?: string }>;
     openIssues: Array<{
       id: string;
       title: string;

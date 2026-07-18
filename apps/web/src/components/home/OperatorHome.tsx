@@ -1,16 +1,6 @@
-import type { DemoUser, RoleHomeData, Workspace } from "../../types.js";
+import type { RoleHomeData, Workspace } from "../../types.js";
 import { AskBuekSection } from "./AskBuekSection.js";
-
-interface RoleHomeProps {
-  user: DemoUser;
-  workspace: Workspace;
-  roleHome: RoleHomeData;
-  input: string;
-  isStreaming: boolean;
-  onInputChange: (value: string) => void;
-  onAsk: (prompt: string) => void;
-  onAction: (prompt: string, contextLabel: string) => void;
-}
+import type { RoleHomeProps } from "./shared.js";
 
 export function OperatorHome({
   user,

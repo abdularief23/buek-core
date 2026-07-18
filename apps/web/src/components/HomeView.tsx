@@ -1,3 +1,4 @@
+import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
 import type { DemoUser, RoleHomeData, Workspace } from "../types.js";
 import { EngineerHome } from "./home/EngineerHome.js";
 import { ManagerHome } from "./home/ManagerHome.js";
@@ -14,6 +15,7 @@ interface HomeViewProps {
   onInputChange: (value: string) => void;
   onAsk: (prompt: string) => void;
   onAction: (prompt: string, contextLabel: string) => void;
+  onOpenWorkspace: (workspace: DynamicWorkspaceState) => void;
 }
 
 export function HomeView(props: HomeViewProps) {
