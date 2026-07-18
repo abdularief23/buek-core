@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/shared-types" },
+    { "path": "packages/ai-core" },
+    { "path": "packages/agents" },
+    { "path": "packages/knowledge" },
+    { "path": "packages/memory" },
+    { "path": "packages/prompts" },
+    { "path": "packages/tools" },
+    { "path": "packages/ui" },
+    { "path": "packages/workflows" },
+    { "path": "domains/manufacturing" },
+    { "path": "apps/api" },
+    { "path": "apps/web" }
+  ]
+}

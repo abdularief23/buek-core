@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model InstalledDomainModule {
+  id          String   @id @default(cuid())
+  moduleId    String   @unique
+  name        String
+  version     String
+  status      String   @default("installed")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
