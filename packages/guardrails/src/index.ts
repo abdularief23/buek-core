@@ -21,6 +21,7 @@ export interface GuardWarning {
 export interface GuardInputOptions {
   text: string;
   modules: DomainModule[];
+  domainContext?: string;
   maxCharacters?: number;
   minimumDomainScore?: number;
 }
@@ -104,17 +105,6 @@ function moduleSearchText(module: DomainModule): string {
     module.tools.map((tool) => [tool.name, tool.description, tool.id].join(" ")).join(" "),
     module.workflows
       .map((workflow) => [workflow.name, workflow.description, workflow.steps.join(" ")].join(" "))
-      .join(" "),
-    module.knowledge
-      .map((source) =>
-        [
-          source.title,
-          source.summary,
-          source.tags.join(" "),
-          source.referenceId ?? "",
-          source.content ?? ""
-        ].join(" ")
-      )
       .join(" ")
   ]
     .join(" ")
@@ -125,8 +115,8 @@ function moduleScope(module: DomainModule): string {
   return Array.from(
     new Set(
       [
-        ...module.capabilities.map((capability) => capability.replaceAll("-", " ")),
-        ...module.knowledge.flatMap((source) => source.tags.map((tag) => tag.replaceAll("-", " ")))
+        module.name,
+        ...module.capabilities.map((capability) => capability.replaceAll("-", " "))
       ].filter(Boolean)
     )
   )
@@ -134,8 +124,8 @@ function moduleScope(module: DomainModule): string {
     .join(", ");
 }
 
-function scoreModule(module: DomainModule, text: string): number {
-  const searchText = moduleSearchText(module);
+function scoreModule(module: DomainModule, text: string, domainContext = ""): number {
+  const searchText = `${moduleSearchText(module)} ${domainContext}`.toLowerCase();
   const queryTokens = tokenize(text);
   let score = 0;
 
@@ -158,10 +148,11 @@ function scoreModule(module: DomainModule, text: string): number {
 
 function detectBestModule(
   modules: DomainModule[],
-  text: string
+  text: string,
+  domainContext = ""
 ): { module: DomainModule; score: number } | undefined {
   return modules
-    .map((module) => ({ module, score: scoreModule(module, text) }))
+    .map((module) => ({ module, score: scoreModule(module, text, domainContext) }))
     .sort((left, right) => right.score - left.score)[0];
 }
 
@@ -221,7 +212,7 @@ export function guardInput(options: GuardInputOptions): GuardInputResult {
     }
   }
 
-  const bestModule = detectBestModule(options.modules, text);
+  const bestModule = detectBestModule(options.modules, text, options.domainContext);
 
   if (!bestModule || bestModule.score < minimumDomainScore) {
     return {
