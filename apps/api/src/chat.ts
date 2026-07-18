@@ -100,10 +100,26 @@ function buildKnowledgeEngine(module: DomainModule): KnowledgeEngine {
 
 function selectKnowledge(module: DomainModule, latestUserMessage: string): KnowledgeSearchResult[] {
   const engine = buildKnowledgeEngine(module);
-  const results = engine.search(latestUserMessage, 8);
+  const results = engine.search(latestUserMessage, 24);
 
   if (results.length) {
-    return results;
+    const seenSources = new Set<string>();
+    const diversified: KnowledgeSearchResult[] = [];
+
+    for (const result of results) {
+      if (seenSources.has(result.chunk.source.id)) {
+        continue;
+      }
+
+      seenSources.add(result.chunk.source.id);
+      diversified.push(result);
+
+      if (diversified.length >= 8) {
+        break;
+      }
+    }
+
+    return diversified;
   }
 
   return engine
