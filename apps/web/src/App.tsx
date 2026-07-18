@@ -231,13 +231,7 @@ export function App() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <AppShell
-        activeView={activeView}
-        workspace={currentWorkspace}
-        user={currentUser}
-        onNavigate={setActiveView}
-        onLogout={handleLogout}
-      >
+      <AppShell activeView={activeView} onNavigate={setActiveView} onLogout={handleLogout}>
         {activeView === "home" ? (
           <HomeView
             user={currentUser}
