@@ -60,6 +60,53 @@ BUEK_DOMAIN_MODULES=@buek/domain-manufacturing
 
 ## Run with Docker Compose
 
+### Current VPS mode: existing host Nginx
+
+The current VPS already runs Nginx on ports 80 and 443 for `buekwebsite.com`. In this mode, run
+Buek Core on localhost ports and let host Nginx proxy `core.buekwebsite.com` to the web container:
+
+```bash
+docker compose up --build -d
+```
+
+Expected container bindings:
+
+```text
+web      127.0.0.1:8080->80
+api      127.0.0.1:4000->4000
+postgres 127.0.0.1:5432->5432
+```
+
+Host Nginx server block:
+
+```nginx
+server {
+    listen 80;
+    server_name core.buekwebsite.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+After DNS points to the VPS, enable HTTPS with Certbot:
+
+```bash
+sudo certbot --nginx -d core.buekwebsite.com
+```
+
+### Full Docker mode: Caddy
+
+If no host service is using ports 80 and 443, Caddy can manage HTTPS inside Docker:
+
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 ```
