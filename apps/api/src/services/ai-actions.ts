@@ -1,4 +1,5 @@
 import { prisma } from "../db.js";
+import { getTenantThemeOrDefault } from "../tenants/index.js";
 import { getIssueByKey, getWorkOrderById } from "./data-engine.js";
 import { logAgentAction, saveMemory } from "./workflow-data.js";
 
@@ -51,14 +52,16 @@ export async function executeAiAction(
   }
 
   try {
+    const tenant = getTenantThemeOrDefault(slug);
+
     switch (action) {
       case "create_work_order": {
-        const machineCode = params.machineCode ?? (slug === "toyota-plant" ? "EA-04" : "M-312");
+        const machineCode = params.machineCode ?? tenant.machineCode;
         const machine = await prisma.machine.findFirst({
           where: { code: machineCode, line: { plant: { workspaceId } } }
         });
         const engineer = await getEngineer(slug, params.engineerName);
-        const issueKey = params.issueKey ?? "vibration";
+        const issueKey = params.issueKey ?? tenant.primaryIssueKey;
         const issue = await prisma.issue.findUnique({ where: { id: `issue-${slug}-${issueKey}` } });
 
         const number = `WO-${Date.now().toString().slice(-6)}`;
@@ -119,7 +122,7 @@ export async function executeAiAction(
 
       case "assign_engineer": {
         const engineerName = params.engineerName ?? "Abdul";
-        const issueKey = params.issueKey ?? "vibration";
+        const issueKey = params.issueKey ?? tenant.primaryIssueKey;
         const engineer = await getEngineer(slug, engineerName);
         if (!engineer) {
           return { success: false, toolName: action, message: `Engineer ${engineerName} not found.` };
@@ -163,20 +166,56 @@ export async function executeAiAction(
       }
 
       case "draft_report": {
-        const issueKey = params.issueKey ?? "white-streak";
+        const issueKey = params.issueKey ?? tenant.primaryIssueKey;
+        const issue = await getIssueByKey(slug, issueKey);
         const engineer = await getEngineer(slug);
-        const engineerName = params.engineerName ?? engineer?.name ?? "Engineer";
-        const { createDraftReport, getAiSuggestionForIssue } = await import("./workflow-data.js");
-        const suggestion = await getAiSuggestionForIssue(slug, issueKey);
-        const report = await createDraftReport(slug, issueKey, engineerName, suggestion);
-        if (!report) {
-          return { success: false, toolName: action, message: "Issue not found." };
-        }
+        const content = [
+          `# Investigation Report: ${issue?.title ?? issueKey}`,
+          "",
+          "## Summary",
+          issue?.description ?? tenant.primaryIssue.description,
+          "",
+          "## Evidence",
+          "- Visual inspection confirms streak pattern on Line 3",
+          "- Torque readings within spec",
+          "",
+          "## Root Cause",
+          "Likely nozzle pressure variance during shift changeover.",
+          "",
+          "## Countermeasure",
+          "Recalibrate nozzle per SOP-014 Rev.5. Monitor for 2 hours.",
+          "",
+          "## Recommendation",
+          "Submit for supervisor approval before production resume."
+        ].join("\n");
+
+        const report = await prisma.engineeringReport.create({
+          data: {
+            workspaceId,
+            issueId: issue?.id ?? null,
+            title: `Investigation Report — ${issue?.title ?? issueKey}`,
+            content,
+            status: "pending_approval",
+            authorId: engineer?.id ?? null
+          }
+        });
+
+        await prisma.activityEvent.create({
+          data: {
+            workspaceId,
+            occurredAt: new Date(),
+            title: "AI Drafted Report",
+            detail: report.title,
+            category: "quality",
+            entityType: "engineering_report",
+            entityId: report.id
+          }
+        });
 
         await saveMemory(
           slug,
           `issue:${issueKey}`,
-          "Bearing was replaced 3 weeks ago. Similar white streak occurred — root cause may be alignment, not bearing.",
+          `Investigation report drafted on ${new Date().toISOString().slice(0, 10)} for ${issue?.title ?? issueKey}.`,
           ["root_cause", "history", "ai_memory"]
         );
 
@@ -193,7 +232,7 @@ export async function executeAiAction(
       }
 
       case "start_investigation": {
-        const issueKey = params.issueKey ?? "vibration";
+        const issueKey = params.issueKey ?? tenant.primaryIssueKey;
         const issue = await getIssueByKey(slug, issueKey);
         const result: AiActionResult = {
           success: true,
@@ -233,9 +272,8 @@ const ACTION_PATTERNS: Array<{ pattern: RegExp; action: AiActionType; extract?: 
     action: "draft_report"
   },
   {
-    pattern: /investigate\s+white\s+streak|root\s+cause\s+analysis/i,
-    action: "start_investigation",
-    extract: () => ({ issueKey: "white-streak" })
+    pattern: /investigate|root\s+cause\s+analysis|analisis\s+akar/i,
+    action: "start_investigation"
   }
 ];
 

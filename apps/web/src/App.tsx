@@ -10,6 +10,7 @@ import { LoginScreen } from "./components/LoginScreen.js";
 import { NotificationsPanel } from "./components/NotificationsPanel.js";
 import { ProfileView } from "./components/ProfileView.js";
 import { WorkflowView } from "./components/WorkflowView.js";
+import { applyTenantTheme } from "./lib/tenant-theme.js";
 import {
   createMessageId,
   hasErrorMessage,
@@ -119,6 +120,7 @@ export function App() {
     setCurrentUser(data.user);
     setCurrentWorkspace(data.workspace);
     setRoleHome(data.roleHome);
+    applyTenantTheme(data.workspace.theme ?? null);
     setIsSignedIn(true);
     setActiveView("home");
     setMessages([]);
@@ -192,6 +194,8 @@ export function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           workspaceId: currentWorkspace?.id,
+          role: currentUser?.role,
+          chatPersona: roleHome?.chatPersona,
           messages: [...chatPayload, { role: "user", content: contextualPrompt }]
         })
       });
@@ -269,10 +273,16 @@ export function App() {
                 setDynamicWorkspace({ kind: "engineering-reports", slug });
                 setActiveView("home");
               } else if (action.toolName === "start_investigation") {
+                const issueKey =
+                  currentWorkspace.id === "toyota-plant"
+                    ? "torque-drift"
+                    : currentWorkspace.id === "nestle-factory"
+                      ? "metal-detector"
+                      : "white-streak";
                 setDynamicWorkspace({
                   kind: "investigation",
                   slug,
-                  issueKey: "white-streak"
+                  issueKey
                 });
                 setActiveView("home");
               }
