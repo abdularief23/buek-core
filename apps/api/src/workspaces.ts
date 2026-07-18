@@ -34,6 +34,55 @@ export interface Workspace {
   knowledgeSourceIds: string[];
 }
 
+export interface DemoUser {
+  id: string;
+  companyId: string;
+  username: string;
+  password: string;
+  name: string;
+  role: string;
+  workspaceId: string;
+}
+
+export const demoUsers: DemoUser[] = [
+  {
+    id: "user-epson-demo",
+    companyId: "Epson Demo",
+    username: "demo",
+    password: "demo123",
+    name: "Abdul",
+    role: "Manufacturing Engineer",
+    workspaceId: "epson-factory"
+  },
+  {
+    id: "user-toyota-demo",
+    companyId: "Toyota Demo",
+    username: "demo",
+    password: "demo123",
+    name: "Sari",
+    role: "Assembly Quality Engineer",
+    workspaceId: "toyota-plant"
+  },
+  {
+    id: "user-nestle-demo",
+    companyId: "Nestle Demo",
+    username: "demo",
+    password: "demo123",
+    name: "Raka",
+    role: "Food Safety Assistant",
+    workspaceId: "nestle-factory"
+  },
+  {
+    id: "user-custom-demo",
+    companyId: "Custom Company",
+    username: "demo",
+    password: "demo123",
+    name: "New User",
+    role: "Knowledge Admin",
+    workspaceId: "custom-company"
+  }
+];
+
 export const workspaces: Workspace[] = [
   {
     id: "epson-factory",
@@ -241,6 +290,30 @@ export function getDefaultWorkspace(): Workspace {
 
 export function findWorkspace(workspaceId?: string): Workspace {
   return workspaces.find((workspace) => workspace.id === workspaceId) ?? getDefaultWorkspace();
+}
+
+export function authenticateDemoUser(
+  companyId: string,
+  username: string,
+  password: string
+): { user: Omit<DemoUser, "password">; workspace: Workspace } | undefined {
+  const user = demoUsers.find(
+    (candidate) =>
+      candidate.companyId.toLowerCase() === companyId.trim().toLowerCase() &&
+      candidate.username.toLowerCase() === username.trim().toLowerCase() &&
+      candidate.password === password
+  );
+
+  if (!user) {
+    return undefined;
+  }
+
+  const { password: _password, ...safeUser } = user;
+
+  return {
+    user: safeUser,
+    workspace: findWorkspace(user.workspaceId)
+  };
 }
 
 export function findWorkspaceModule(workspace: Workspace, modules: DomainModule[]): DomainModule {

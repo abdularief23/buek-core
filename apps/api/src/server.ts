@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { handleChatRequest } from "./chat.js";
 import type { ApiEnv } from "./config/env.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
-import { workspaces } from "./workspaces.js";
+import { authenticateDemoUser, workspaces } from "./workspaces.js";
 
 export async function createServer(env: ApiEnv): Promise<Express> {
   const app = express();
@@ -74,6 +74,28 @@ export async function createServer(env: ApiEnv): Promise<Express> {
 
   app.get("/api/workspaces", (_req, res) => {
     res.json({ workspaces });
+  });
+
+  app.post("/api/auth/demo-login", (req, res) => {
+    const body = req.body as Partial<{
+      companyId: string;
+      username: string;
+      password: string;
+    }>;
+
+    const result = authenticateDemoUser(body.companyId ?? "", body.username ?? "", body.password ?? "");
+
+    if (!result) {
+      res.status(401).json({
+        error: {
+          code: "invalid_demo_login",
+          message: "Invalid demo credentials."
+        }
+      });
+      return;
+    }
+
+    res.json(result);
   });
 
   app.get("/api/knowledge/search", (req, res) => {
