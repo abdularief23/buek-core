@@ -1,7 +1,7 @@
 import type { AppNavItem } from "@buek/ui";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { DynamicWorkspace, type DynamicWorkspaceState } from "./components/DynamicWorkspace.js";
-import { AiCopilot } from "./components/AiCopilot.js";
+import { AiCopilot, type AiAssistantMode } from "./components/AiCopilot.js";
 import { AiWorkspaceView } from "./components/AiWorkspaceView.js";
 import { AppShell } from "./components/AppShell.js";
 import { HomeView } from "./components/HomeView.js";
@@ -55,6 +55,7 @@ export function App() {
   const [dynamicWorkspace, setDynamicWorkspace] = useState<DynamicWorkspaceState | null>(null);
   const [aiContext, setAiContext] = useState<AiContext>({ label: "Home" });
   const [inboxCount, setInboxCount] = useState(0);
+  const [aiMode, setAiMode] = useState<AiAssistantMode>(null);
 
   const installedModule = modules[0];
 
@@ -125,6 +126,7 @@ export function App() {
     setLoginError(null);
     setAiContext(contextForView("home", data.user.role, data.roleHome));
     setCopilotOpen(false);
+    setAiMode(null);
     setInboxOpen(false);
     setDynamicWorkspace(null);
   }
@@ -163,7 +165,12 @@ export function App() {
     }
   }
 
-  async function streamChat(trimmedInput: string, context: AiContext = aiContext) {
+  async function streamChat(
+    trimmedInput: string,
+    context: AiContext = aiContext,
+    options: { openCopilot?: boolean } = {}
+  ) {
+    const { openCopilot = true } = options;
     const contextualPrompt = withContextPrompt(context, trimmedInput);
 
     const userMessage: ChatMessage = {
@@ -173,7 +180,9 @@ export function App() {
     };
     const assistantMessage: ChatMessage = { id: createMessageId(), role: "assistant", content: "" };
 
-    setCopilotOpen(true);
+    if (openCopilot) {
+      setCopilotOpen(true);
+    }
     setMessages((current) => [...current, userMessage, assistantMessage]);
     setIsStreaming(true);
 
@@ -287,37 +296,41 @@ export function App() {
     }
   }
 
+  function handleOpenDataPage(workspace: DynamicWorkspaceState) {
+    setDynamicWorkspace(workspace);
+    setActiveView("home");
+  }
+
+  function handleExplainAi(prompt: string, contextLabel: string, details?: string[]) {
+    const context: AiContext = {
+      label: contextLabel,
+      ...(details ? { details } : {}),
+      ...(roleHome?.chatPersona ? { chatPersona: roleHome.chatPersona } : {}),
+      promptPrefix: ""
+    };
+    setAiContext(context);
+    setAiMode("analyze");
+    void streamChat(prompt, context, { openCopilot: true });
+  }
+
   function handleContextualAsk(
     prompt: string,
     contextLabel: string,
     details?: string[]
   ) {
-    const context: AiContext = {
-      label: contextLabel,
-      ...(details ? { details } : {}),
-      ...(roleHome?.chatPersona ? { chatPersona: roleHome.chatPersona } : {}),
-      promptPrefix: `[Context: ${contextLabel}] `
-    };
-    setAiContext(context);
-    void streamChat(prompt, context);
+    handleExplainAi(prompt, contextLabel, details);
   }
 
   function handleHomeAsk(prompt: string) {
-    const context: AiContext = {
-      label: "Home",
-      ...(roleHome ? { details: [roleHome.personaLabel] } : {}),
-      ...(roleHome?.chatPersona ? { chatPersona: roleHome.chatPersona } : {})
-    };
-    setAiContext(context);
-    void streamChat(prompt, context);
+    handleExplainAi(prompt, "Home", roleHome ? [roleHome.personaLabel] : undefined);
   }
 
   function handleCopilotSubmit(trimmedInput: string) {
-    return streamChat(trimmedInput, aiContext);
+    return streamChat(trimmedInput, aiContext, { openCopilot: true });
   }
 
   function handleSuggestion(prompt: string) {
-    void streamChat(prompt, aiContext);
+    void streamChat(prompt, aiContext, { openCopilot: true });
   }
 
   function handleGlobalSearch(query: string) {
@@ -367,15 +380,17 @@ export function App() {
             user={currentUser}
             workspace={currentWorkspace}
             roleHome={roleHome}
-            context={aiContext}
             open={copilotOpen}
             messages={messages}
             input={input}
             isStreaming={isStreaming}
+            mode={aiMode}
             onToggle={() => setCopilotOpen((current) => !current)}
+            onModeChange={setAiMode}
             onInputChange={setInput}
             onSubmit={handleCopilotSubmit}
-            onSuggestion={handleSuggestion}
+            onOpenWorkspace={handleOpenDataPage}
+            onExplain={handleExplainAi}
           />
         }
       >
@@ -385,9 +400,7 @@ export function App() {
               workspace={dynamicWorkspace}
               userName={currentUser.name}
               onClose={() => setDynamicWorkspace(null)}
-              onAskAi={(prompt, contextLabel) =>
-                handleContextualAsk(prompt, contextLabel, [currentUser.role, contextLabel])
-              }
+              onAskAi={(prompt, contextLabel) => handleExplainAi(prompt, contextLabel)}
               onWorkspaceChange={setDynamicWorkspace}
               onDataChange={() => void refreshLiveData()}
             />
@@ -400,14 +413,7 @@ export function App() {
               isStreaming={isStreaming}
               onInputChange={setInput}
               onAsk={handleHomeAsk}
-              onAction={(prompt, contextLabel) =>
-                handleContextualAsk(prompt, contextLabel, [
-                  currentUser.role,
-                  currentWorkspace.organization,
-                  currentWorkspace.shift
-                ])
-              }
-              onOpenWorkspace={setDynamicWorkspace}
+              onOpenWorkspace={handleOpenDataPage}
             />
           )
         ) : null}
@@ -415,8 +421,7 @@ export function App() {
         {activeView === "workspace" ? (
           <AiWorkspaceView
             workspace={currentWorkspace}
-            onFocusSelect={(prompt, label) => handleContextualAsk(prompt, label)}
-            onKpiSelect={(prompt) => handleContextualAsk(prompt, "Today's KPI")}
+            onOpenDataPage={handleOpenDataPage}
           />
         ) : null}
 

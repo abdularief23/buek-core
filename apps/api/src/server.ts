@@ -25,6 +25,8 @@ import {
   handlePendingReports,
   handlePendingSopRevisions,
   handlePendingWorkOrders,
+  handleProductionDashboard,
+  handleKpiDetail,
   handleRejectSopRevision,
   handleRejectWorkOrder,
   handleReportDetail,
@@ -226,6 +228,8 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/data/:slug/operator/checklist", (req, res) => void handleOperatorChecklist(req, res));
   app.post("/api/data/:slug/operator/checklist/toggle", (req, res) => void handleToggleChecklistItem(req, res));
   app.get("/api/data/:slug/memory", (req, res) => void handleMemory(req, res));
+  app.get("/api/data/:slug/production", (req, res) => void handleProductionDashboard(req, res));
+  app.get("/api/data/:slug/kpis/:kpiLabel", (req, res) => void handleKpiDetail(req, res));
   app.get("/api/data/:slug/notifications", (req, res) => void handleNotifications(req, res));
   app.post("/api/data/:slug/ai/actions", (req, res) => void handleAiAction(req, res));
 

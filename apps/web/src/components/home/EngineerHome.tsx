@@ -1,10 +1,8 @@
 import { TodayTimeline } from "../TodayTimeline.js";
-import { InvestigationWorkflow } from "../InvestigationWorkflow.js";
-import { AskBuekSection } from "./AskBuekSection.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
 
-export function EngineerHome({ user, workspace, roleHome, onAction, onOpenWorkspace, ...askProps }: RoleHomeProps) {
+export function EngineerHome({ user, workspace, roleHome, onOpenWorkspace }: RoleHomeProps) {
   const eng = roleHome.engineer!;
 
   return (
@@ -12,11 +10,11 @@ export function EngineerHome({ user, workspace, roleHome, onAction, onOpenWorksp
       <RoleHomeHeader
         user={user}
         workspace={workspace}
-        subtitle="Today's engineering priorities"
+        subtitle="Prioritas engineering hari ini"
       />
 
       <section className="buek-section space-y-6">
-        <h2 className="buek-card-title text-slate-400">Today&apos;s Problems</h2>
+        <h2 className="buek-card-title text-slate-400">Masalah Hari Ini</h2>
         <div className="buek-gap grid gap-6">
           {eng.problems.map((problem) => (
             <article
@@ -32,14 +30,12 @@ export function EngineerHome({ user, workspace, roleHome, onAction, onOpenWorksp
               <button
                 type="button"
                 onClick={() => {
-                  if (problem.action === "investigation" && problem.issueKey) {
+                  if (problem.issueKey) {
                     onOpenWorkspace({
                       kind: "investigation",
                       slug: workspace.id,
                       issueKey: problem.issueKey
                     });
-                  } else {
-                    onAction(problem.prompt, problem.contextLabel);
                   }
                 }}
                 className="shrink-0 rounded-xl bg-white px-6 py-3 text-base font-semibold text-slate-950 hover:bg-slate-200"
@@ -52,7 +48,7 @@ export function EngineerHome({ user, workspace, roleHome, onAction, onOpenWorksp
       </section>
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">My Investigations</h2>
+        <h2 className="buek-card-title text-slate-400">Investigasi Saya</h2>
         <ul className="divide-y divide-white/5 rounded-2xl border border-white/10">
           {eng.investigations.map((item) => (
             <li key={item.id}>
@@ -68,7 +64,7 @@ export function EngineerHome({ user, workspace, roleHome, onAction, onOpenWorksp
                 className="flex w-full items-center justify-between px-6 py-5 text-left buek-body text-slate-300 hover:bg-white/[0.03] hover:text-white"
               >
                 <span>{item.label}</span>
-                <span className="text-cyan-400">Continue ↓</span>
+                <span className="text-cyan-400">Lanjutkan ↓</span>
               </button>
             </li>
           ))}
@@ -76,7 +72,7 @@ export function EngineerHome({ user, workspace, roleHome, onAction, onOpenWorksp
       </section>
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">AI Suggestions</h2>
+        <h2 className="buek-card-title text-slate-400">Saran AI</h2>
         {eng.aiSuggestions.map((suggestion) => (
           <article
             key={suggestion.id}
@@ -96,15 +92,13 @@ export function EngineerHome({ user, workspace, roleHome, onAction, onOpenWorksp
               }
               className="mt-4 text-base font-medium text-cyan-400 hover:text-cyan-300"
             >
-              Investigate ↓
+              Investigasi ↓
             </button>
           </article>
         ))}
       </section>
 
       <TodayTimeline workspaceSlug={workspace.id} />
-
-      <AskBuekSection {...askProps} />
     </div>
   );
 }

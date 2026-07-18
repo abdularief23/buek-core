@@ -41,27 +41,11 @@ export function contextForView(
 }
 
 export function withContextPrompt(context: AiContext, prompt: string): string {
-  const parts: string[] = [];
-
+  // Context is used server-side via workspace knowledge; keep user message clean.
   if (context.chatPersona) {
-    parts.push(`[AI Persona: ${context.chatPersona}]`);
+    return `[Mode: ${context.label}] ${prompt}`;
   }
-
-  if (context.promptPrefix) {
-    parts.push(context.promptPrefix.trim());
-  } else if (context.label !== "Home" && context.label !== "Knowledge" && context.label !== "AI Workspace") {
-    parts.push(`[Context: ${context.label}]`);
-  }
-
-  if (context.details?.length) {
-    parts.push(`[Details: ${context.details.join(" · ")}]`);
-  }
-
-  if (parts.length === 0) {
-    return prompt;
-  }
-
-  return `${parts.join(" ")} ${prompt}`;
+  return prompt;
 }
 
 export function formatTodayDate(): string {

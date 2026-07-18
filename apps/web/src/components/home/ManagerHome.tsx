@@ -1,30 +1,37 @@
 import { TodayTimeline } from "../TodayTimeline.js";
-import { AskBuekSection } from "./AskBuekSection.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
 import { kpiStatusIcon } from "../../lib/context.js";
 
 const trendIcon = { up: "▲", down: "▼", flat: "→" } as const;
 
-export function ManagerHome({ user, workspace, roleHome, onAction, ...askProps }: RoleHomeProps) {
+export function ManagerHome({ user, workspace, roleHome, onOpenWorkspace }: RoleHomeProps) {
   const mgr = roleHome.manager!;
+
+  function openKpi(label: string) {
+    if (label === "Production") {
+      onOpenWorkspace({ kind: "production-dashboard", slug: workspace.id });
+      return;
+    }
+    onOpenWorkspace({ kind: "kpi-detail", slug: workspace.id, kpiLabel: label });
+  }
 
   return (
     <div className="space-y-12 pb-16">
       <RoleHomeHeader
         user={user}
         workspace={workspace}
-        subtitle="Factory overview — KPI, risk, and executive decisions"
+        subtitle="Ringkasan pabrik — KPI, risiko, dan keputusan eksekutif"
       />
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">Factory Overview</h2>
+        <h2 className="buek-card-title text-slate-400">Ringkasan Pabrik</h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {mgr.factoryOverview.map((kpi) => (
             <button
               key={kpi.label}
               type="button"
-              onClick={() => onAction(`Show ${kpi.label} KPI dashboard and trends`, kpi.label)}
+              onClick={() => openKpi(kpi.label)}
               className="buek-card rounded-2xl border border-white/10 text-left hover:border-white/20"
             >
               <p className="buek-body text-slate-500">{kpi.label}</p>
@@ -36,13 +43,13 @@ export function ManagerHome({ user, workspace, roleHome, onAction, ...askProps }
       </section>
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">Critical Issues</h2>
+        <h2 className="buek-card-title text-slate-400">Isu Kritis</h2>
         <ul className="space-y-3">
           {mgr.criticalIssues.map((issue) => (
             <li key={issue.id}>
               <button
                 type="button"
-                onClick={() => onAction(issue.prompt, issue.title)}
+                onClick={() => openKpi("Production")}
                 className="buek-card w-full rounded-xl border border-red-500/20 bg-red-500/5 text-left buek-body text-slate-200 hover:border-red-500/40"
               >
                 {issue.title}
@@ -53,7 +60,7 @@ export function ManagerHome({ user, workspace, roleHome, onAction, ...askProps }
       </section>
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">Weekly Trend</h2>
+        <h2 className="buek-card-title text-slate-400">Tren Mingguan</h2>
         <div className="flex flex-wrap gap-8">
           {mgr.weeklyTrend.map((item) => (
             <div key={item.label} className="buek-body text-slate-300">
@@ -75,7 +82,7 @@ export function ManagerHome({ user, workspace, roleHome, onAction, ...askProps }
       </section>
 
       <section className="buek-section space-y-4">
-        <h2 className="buek-card-title text-slate-400">AI Executive Summary</h2>
+        <h2 className="buek-card-title text-slate-400">Ringkasan Eksekutif</h2>
         <div className="buek-card rounded-2xl border border-white/10 bg-white/[0.02]">
           {mgr.executiveSummary.map((line) => (
             <p key={line} className="buek-body text-slate-300">
@@ -86,8 +93,6 @@ export function ManagerHome({ user, workspace, roleHome, onAction, ...askProps }
       </section>
 
       <TodayTimeline workspaceSlug={workspace.id} />
-
-      <AskBuekSection {...askProps} />
     </div>
   );
 }

@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import { fetchOperatorChecklist, toggleChecklistItem, type OperatorChecklist } from "../../lib/data-api.js";
-import { AskBuekSection } from "./AskBuekSection.js";
+import { TodayTimeline } from "../TodayTimeline.js";
 import type { RoleHomeProps } from "./shared.js";
 
 export function OperatorHome({
   user,
   workspace,
-  roleHome,
-  input,
-  isStreaming,
-  onInputChange,
-  onAsk
+  roleHome
 }: RoleHomeProps) {
   const op = roleHome.operator!;
   const [checklist, setChecklist] = useState<OperatorChecklist | null>(null);
@@ -108,13 +104,7 @@ export function OperatorHome({
         </ul>
       </section>
 
-      <AskBuekSection
-        input={input}
-        isStreaming={isStreaming}
-        onInputChange={onInputChange}
-        onAsk={onAsk}
-        helpTopics={["SOP", "Machine setup", "Quality checkpoint", "Basic troubleshooting"]}
-      />
+      <TodayTimeline workspaceSlug={workspace.id} />
     </div>
   );
 }
