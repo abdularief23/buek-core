@@ -15,6 +15,7 @@ import {
   rejectWorkOrder
 } from "../services/data-engine.js";
 import { listActiveWorkflows } from "../services/workflow-engine.js";
+import { getNotifications } from "../services/notifications.js";
 import {
   approveReport,
   approveSopRevision,
@@ -295,6 +296,15 @@ export async function handleMemory(req: Request, res: Response) {
   try {
     const scope = req.query.scope ? String(req.query.scope) : undefined;
     res.json({ memories: await getMemories(getSlug(req), scope) });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleNotifications(req: Request, res: Response) {
+  try {
+    const notifications = await getNotifications(getSlug(req));
+    res.json({ notifications });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

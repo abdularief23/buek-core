@@ -213,3 +213,44 @@ export function isAiActionResult(data: unknown): data is AiActionResult {
       typeof (data as AiActionResult).message === "string"
   );
 }
+
+export interface NotificationItem {
+  id: string;
+  category: string;
+  message: string;
+  prompt: string;
+  time: string;
+  entityType?: string;
+  entityId?: string;
+}
+
+export function fetchNotifications(slug: string) {
+  return fetchJson<{ notifications: NotificationItem[] }>(`/api/data/${slug}/notifications`);
+}
+
+export interface KnowledgeSearchHit {
+  id: string;
+  score: number;
+  title: string;
+  referenceId?: string;
+  sourceId: string;
+  excerpt: string;
+}
+
+export function searchKnowledge(query: string, moduleId?: string) {
+  const params = new URLSearchParams({ q: query });
+  if (moduleId) params.set("module", moduleId);
+  return fetchJson<{
+    module: { id: string; name: string };
+    query: string;
+    totalChunks: number;
+    results: KnowledgeSearchHit[];
+  }>(`/api/knowledge/search?${params.toString()}`);
+}
+
+export function refreshRoleHome(workspaceId: string, role: string) {
+  const params = new URLSearchParams({ workspaceId, role });
+  return fetchJson<{ roleHome: import("../types.js").RoleHomeData }>(
+    `/api/auth/refresh-role-home?${params.toString()}`
+  );
+}

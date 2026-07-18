@@ -1,10 +1,12 @@
-import type { Workspace } from "../types.js";
+import { useEffect, useState } from "react";
+import { fetchNotifications, type NotificationItem } from "../lib/data-api.js";
 
 interface NotificationsPanelProps {
-  workspace: Workspace;
+  workspaceSlug: string;
   open: boolean;
   onClose: () => void;
   onSelect: (prompt: string, contextLabel: string) => void;
+  onCountChange?: (count: number) => void;
 }
 
 const categoryIcon: Record<string, string> = {
@@ -13,13 +15,42 @@ const categoryIcon: Record<string, string> = {
   Production: "🟢",
   Meeting: "📅",
   Email: "📩",
-  "New SOP": "📄"
+  "New SOP": "📄",
+  Approval: "📋",
+  Safety: "⚠️"
 };
 
-export function NotificationsPanel({ workspace, open, onClose, onSelect }: NotificationsPanelProps) {
-  if (!open) return null;
+export function NotificationsPanel({
+  workspaceSlug,
+  open,
+  onClose,
+  onSelect,
+  onCountChange
+}: NotificationsPanelProps) {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const notifications = workspace.dailyWorkspace.notifications;
+  useEffect(() => {
+    fetchNotifications(workspaceSlug)
+      .then((data) => {
+        setNotifications(data.notifications);
+        onCountChange?.(data.notifications.length);
+      })
+      .catch(() => setNotifications([]));
+  }, [workspaceSlug, onCountChange]);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    fetchNotifications(workspaceSlug)
+      .then((data) => {
+        setNotifications(data.notifications);
+        onCountChange?.(data.notifications.length);
+      })
+      .finally(() => setLoading(false));
+  }, [open, workspaceSlug, onCountChange]);
+
+  if (!open) return null;
 
   return (
     <>
@@ -37,28 +68,33 @@ export function NotificationsPanel({ workspace, open, onClose, onSelect }: Notif
           </button>
         </header>
 
-        <ul className="flex-1 overflow-y-auto divide-y divide-white/5">
-          {notifications.map((notification) => (
-            <li key={notification.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  onSelect(notification.prompt, notification.category);
-                  onClose();
-                }}
-                className="w-full px-6 py-4 text-left transition hover:bg-white/[0.03]"
-              >
-                <p className="text-sm">
-                  {categoryIcon[notification.category] ?? "🔔"}{" "}
-                  <span className="text-slate-500">{notification.category}</span>
-                </p>
-                <p className="mt-1 text-base text-slate-200">{notification.message}</p>
-              </button>
-            </li>
-          ))}
-        </ul>
+        {loading ? (
+          <p className="px-6 py-8 text-center text-slate-500">Loading...</p>
+        ) : (
+          <ul className="flex-1 overflow-y-auto divide-y divide-white/5">
+            {notifications.map((notification) => (
+              <li key={notification.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelect(notification.prompt, notification.category);
+                    onClose();
+                  }}
+                  className="w-full px-6 py-4 text-left transition hover:bg-white/[0.03]"
+                >
+                  <p className="text-sm">
+                    {categoryIcon[notification.category] ?? "🔔"}{" "}
+                    <span className="text-slate-500">{notification.category}</span>
+                    <span className="ml-2 font-mono text-xs text-slate-600">{notification.time}</span>
+                  </p>
+                  <p className="mt-1 text-base text-slate-200">{notification.message}</p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
 
-        {notifications.length === 0 ? (
+        {!loading && notifications.length === 0 ? (
           <p className="px-6 py-8 text-center text-slate-500">No notifications.</p>
         ) : null}
       </aside>

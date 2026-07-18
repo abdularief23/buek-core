@@ -32,6 +32,7 @@ interface DynamicWorkspaceProps {
   onClose: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
   onWorkspaceChange: (next: DynamicWorkspaceState) => void;
+  onDataChange?: () => void;
 }
 
 export function DynamicWorkspace({
@@ -39,8 +40,11 @@ export function DynamicWorkspace({
   userName,
   onClose,
   onAskAi,
-  onWorkspaceChange
+  onWorkspaceChange,
+  onDataChange
 }: DynamicWorkspaceProps) {
+  const notifyChange = onDataChange ?? (() => {});
+
   if (workspace.kind === "approval-queue") {
     return (
       <ApprovalQueueWorkspace
@@ -62,6 +66,7 @@ export function DynamicWorkspace({
         onClose={onClose}
         onBack={() => onWorkspaceChange({ kind: "approval-queue", slug: workspace.slug })}
         onAskAi={onAskAi}
+        onDataChange={notifyChange}
       />
     );
   }
@@ -73,6 +78,7 @@ export function DynamicWorkspace({
         issueKey={workspace.issueKey}
         onClose={onClose}
         onAskAi={onAskAi}
+        onDataChange={notifyChange}
       />
     );
   }
@@ -98,6 +104,7 @@ export function DynamicWorkspace({
         onClose={onClose}
         onBack={() => onWorkspaceChange({ kind: "sop-revisions", slug: workspace.slug })}
         onAskAi={onAskAi}
+        onDataChange={notifyChange}
       />
     );
   }
@@ -122,6 +129,7 @@ export function DynamicWorkspace({
       onClose={onClose}
       onBack={() => onWorkspaceChange({ kind: "engineering-reports", slug: workspace.slug })}
       onAskAi={onAskAi}
+      onDataChange={notifyChange}
     />
   );
 }
@@ -194,7 +202,8 @@ function WorkOrderDetailWorkspace({
   userName,
   onClose,
   onBack,
-  onAskAi
+  onAskAi,
+  onDataChange
 }: {
   slug: string;
   workOrderId: string;
@@ -202,6 +211,7 @@ function WorkOrderDetailWorkspace({
   onClose: () => void;
   onBack: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
+  onDataChange?: () => void;
   }) {
   const [order, setOrder] = useState<WorkOrder | null>(null);
   const [acting, setActing] = useState(false);
@@ -216,6 +226,7 @@ function WorkOrderDetailWorkspace({
     try {
       const result = await approveWorkOrder(slug, order.id, userName);
       setOrder(result.workOrder);
+      onDataChange?.();
     } finally {
       setActing(false);
     }
@@ -227,6 +238,7 @@ function WorkOrderDetailWorkspace({
     try {
       const result = await rejectWorkOrder(slug, order.id, userName);
       setOrder(result.workOrder);
+      onDataChange?.();
     } finally {
       setActing(false);
     }
@@ -333,12 +345,14 @@ function InvestigationWorkspace({
   slug,
   issueKey,
   onClose,
-  onAskAi
+  onAskAi,
+  onDataChange
 }: {
   slug: string;
   issueKey: string;
   onClose: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
+  onDataChange?: () => void;
 }) {
   const [issue, setIssue] = useState<import("../lib/data-api.js").IssueRecord | null>(null);
   const [advancing, setAdvancing] = useState(false);
@@ -353,6 +367,7 @@ function InvestigationWorkspace({
     try {
       const result = await advanceInvestigation(slug, issue.id, stepKey);
       setIssue(result.issue);
+      onDataChange?.();
     } finally {
       setAdvancing(false);
     }
@@ -518,7 +533,8 @@ function SopRevisionDetailWorkspace({
   userName,
   onClose,
   onBack,
-  onAskAi
+  onAskAi,
+  onDataChange
 }: {
   slug: string;
   revisionId: string;
@@ -526,6 +542,7 @@ function SopRevisionDetailWorkspace({
   onClose: () => void;
   onBack: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
+  onDataChange?: () => void;
 }) {
   const [revision, setRevision] = useState<SopRevision | null>(null);
   const [acting, setActing] = useState(false);
@@ -540,6 +557,7 @@ function SopRevisionDetailWorkspace({
     try {
       const result = await approveSopRevision(slug, revision.id, userName);
       setRevision(result.revision);
+      onDataChange?.();
     } finally {
       setActing(false);
     }
@@ -697,7 +715,8 @@ function ReportDetailWorkspace({
   userName,
   onClose,
   onBack,
-  onAskAi
+  onAskAi,
+  onDataChange
 }: {
   slug: string;
   reportId: string;
@@ -705,6 +724,7 @@ function ReportDetailWorkspace({
   onClose: () => void;
   onBack: () => void;
   onAskAi: (prompt: string, contextLabel: string) => void;
+  onDataChange?: () => void;
 }) {
   const [report, setReport] = useState<EngineeringReport | null>(null);
   const [acting, setActing] = useState(false);
@@ -719,6 +739,7 @@ function ReportDetailWorkspace({
     try {
       const result = await approveReport(slug, report.id, userName);
       setReport(result.report);
+      onDataChange?.();
     } finally {
       setActing(false);
     }

@@ -20,6 +20,7 @@ import {
   handleLiveKpis,
   handleMachineTelemetry,
   handleMemory,
+  handleNotifications,
   handleOperatorChecklist,
   handlePendingReports,
   handlePendingSopRevisions,
@@ -41,6 +42,7 @@ import {
   demoRoles,
   demoWorkspaceOptions,
   launchDemoWorkspace,
+  refreshRoleHome,
   workspaces
 } from "./workspaces.js";
 
@@ -137,6 +139,27 @@ export async function createServer(env: ApiEnv): Promise<Express> {
     res.json(result);
   });
 
+  app.get("/api/auth/refresh-role-home", async (req, res) => {
+    const workspaceId = typeof req.query.workspaceId === "string" ? req.query.workspaceId : "";
+    const role = typeof req.query.role === "string" ? req.query.role : "";
+
+    if (!workspaceId || !role) {
+      res.status(400).json({
+        error: { code: "invalid_request", message: "workspaceId and role are required." }
+      });
+      return;
+    }
+
+    try {
+      const roleHome = await refreshRoleHome(workspaceId, role);
+      res.json({ roleHome });
+    } catch {
+      res.status(404).json({
+        error: { code: "workspace_not_found", message: "Workspace not found." }
+      });
+    }
+  });
+
   app.post("/api/auth/sign-in", async (req, res) => {
     const body = req.body as Partial<{
       email: string;
@@ -203,6 +226,7 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/data/:slug/operator/checklist", (req, res) => void handleOperatorChecklist(req, res));
   app.post("/api/data/:slug/operator/checklist/toggle", (req, res) => void handleToggleChecklistItem(req, res));
   app.get("/api/data/:slug/memory", (req, res) => void handleMemory(req, res));
+  app.get("/api/data/:slug/notifications", (req, res) => void handleNotifications(req, res));
   app.post("/api/data/:slug/ai/actions", (req, res) => void handleAiAction(req, res));
 
   app.get("/api/knowledge/search", (req, res) => {
