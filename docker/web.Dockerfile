@@ -9,7 +9,7 @@ COPY packages/ui/package.json packages/ui/package.json
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN pnpm --filter @buek/web build
+RUN pnpm --filter @buek/web... build
 
 FROM nginx:1.27-alpine AS runtime
 
