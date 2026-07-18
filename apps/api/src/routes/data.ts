@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { executeAiAction } from "../services/ai-actions.js";
 import {
   advanceInvestigationStep,
   approveWorkOrder,
@@ -13,6 +14,19 @@ import {
   getWorkOrderById,
   rejectWorkOrder
 } from "../services/data-engine.js";
+import { listActiveWorkflows } from "../services/workflow-engine.js";
+import {
+  approveReport,
+  approveSopRevision,
+  getMemories,
+  getOperatorChecklist,
+  getPendingReports,
+  getPendingSopRevisions,
+  getReportById,
+  getSopRevisionById,
+  rejectSopRevision,
+  toggleChecklistItem
+} from "../services/workflow-data.js";
 
 function getSlug(req: Request): string {
   return String(req.params.slug ?? req.query.workspaceId ?? "");
@@ -162,6 +176,139 @@ export async function handleMachineTelemetry(req: Request, res: Response) {
   try {
     const telemetry = await getMachineTelemetry(getSlug(req), String(req.params.machineCode));
     res.json({ telemetry });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleWorkflows(req: Request, res: Response) {
+  try {
+    const workflows = await listActiveWorkflows(getSlug(req));
+    res.json({ workflows });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handlePendingSopRevisions(req: Request, res: Response) {
+  try {
+    res.json({ revisions: await getPendingSopRevisions(getSlug(req)) });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleSopRevisionDetail(req: Request, res: Response) {
+  try {
+    const revision = await getSopRevisionById(getSlug(req), String(req.params.revisionId));
+    if (!revision) {
+      res.status(404).json({ error: { message: "SOP revision not found" } });
+      return;
+    }
+    res.json({ revision });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleApproveSopRevision(req: Request, res: Response) {
+  try {
+    const body = req.body as { supervisorName?: string };
+    const revision = await approveSopRevision(
+      getSlug(req),
+      String(req.params.revisionId),
+      body.supervisorName ?? "Supervisor"
+    );
+    res.json({ revision });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleRejectSopRevision(req: Request, res: Response) {
+  try {
+    const body = req.body as { supervisorName?: string };
+    const revision = await rejectSopRevision(
+      getSlug(req),
+      String(req.params.revisionId),
+      body.supervisorName ?? "Supervisor"
+    );
+    res.json({ revision });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handlePendingReports(req: Request, res: Response) {
+  try {
+    res.json({ reports: await getPendingReports(getSlug(req)) });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleReportDetail(req: Request, res: Response) {
+  try {
+    const report = await getReportById(getSlug(req), String(req.params.reportId));
+    if (!report) {
+      res.status(404).json({ error: { message: "Report not found" } });
+      return;
+    }
+    res.json({ report });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleApproveReport(req: Request, res: Response) {
+  try {
+    const body = req.body as { supervisorName?: string };
+    const report = await approveReport(
+      getSlug(req),
+      String(req.params.reportId),
+      body.supervisorName ?? "Supervisor"
+    );
+    res.json({ report });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleOperatorChecklist(req: Request, res: Response) {
+  try {
+    res.json({ checklist: await getOperatorChecklist(getSlug(req)) });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleToggleChecklistItem(req: Request, res: Response) {
+  try {
+    const body = req.body as { itemId: string };
+    res.json({ checklist: await toggleChecklistItem(getSlug(req), body.itemId) });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleMemory(req: Request, res: Response) {
+  try {
+    const scope = req.query.scope ? String(req.query.scope) : undefined;
+    res.json({ memories: await getMemories(getSlug(req), scope) });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleAiAction(req: Request, res: Response) {
+  try {
+    const body = req.body as { action: string; params?: Record<string, string> };
+    const result = await executeAiAction(
+      getSlug(req),
+      body.action as Parameters<typeof executeAiAction>[1],
+      body.params ?? {}
+    );
+    res.json({ result });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

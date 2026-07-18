@@ -53,6 +53,11 @@ model Workspace {
   timeline         ActivityEvent[]
   sops             SopDocument[]
   graphEdges       GraphEdge[]
+  sopRevisions     SopRevision[]
+  engineeringReports EngineeringReport[]
+  checklistRuns    OperatorChecklistRun[]
+  memoryRecords    MemoryRecord[]
+  agentActions     AgentAction[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -131,6 +136,8 @@ model Employee {
   ownedIssues    Issue[]     @relation("IssueOwner")
   workOrders     WorkOrder[] @relation("WorkOrderEngineer")
   approvals      Approval[]  @relation("ApprovalDecider")
+  sopRevisions   SopRevision[] @relation("SopSubmitter")
+  reports        EngineeringReport[] @relation("ReportAuthor")
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -169,6 +176,7 @@ model Issue {
   owner         Employee?      @relation("IssueOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   investigation Investigation?
   workOrders    WorkOrder[]
+  reports       EngineeringReport[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -341,4 +349,79 @@ model CompanyModule {
   @@unique([workspaceId, moduleName])
   @@index([companyId])
   @@index([workspaceId])
+}
+
+model SopRevision {
+  id          String    @id @default(cuid())
+  workspaceId String
+  referenceId String
+  title       String
+  revision    String
+  summary     String
+  status      String    @default("pending_approval")
+  submitterId String?
+  aiReview    Json?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  submitter   Employee? @relation("SopSubmitter", fields: [submitterId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, status])
+}
+
+model EngineeringReport {
+  id          String    @id @default(cuid())
+  workspaceId String
+  issueId     String?
+  title       String
+  content     String
+  status      String    @default("pending_approval")
+  authorId    String?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  issue       Issue?    @relation(fields: [issueId], references: [id], onDelete: SetNull)
+  author      Employee? @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, status])
+}
+
+model OperatorChecklistRun {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  line         String
+  shift        String
+  targetOutput Int
+  progress     Int       @default(0)
+  items        Json
+  runDate      DateTime  @default(now())
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  updatedAt    DateTime  @updatedAt
+
+  @@index([workspaceId, runDate])
+}
+
+model MemoryRecord {
+  id          String    @id @default(cuid())
+  workspaceId String
+  scope       String
+  content     String
+  tags        String[]  @default([])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId, scope])
+}
+
+model AgentAction {
+  id          String    @id @default(cuid())
+  workspaceId String
+  toolName    String
+  input       Json
+  output      Json
+  status      String    @default("completed")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId, createdAt])
 }

@@ -100,3 +100,116 @@ export function advanceInvestigation(slug: string, issueId: string, stepKey: str
 export function fetchLiveKpis(slug: string) {
   return fetchJson<{ kpis: LiveKpi[] }>(`/api/data/${slug}/kpis/live`);
 }
+
+export interface SopRevision {
+  id: string;
+  referenceId: string;
+  title: string;
+  revision: string;
+  summary: string;
+  status: string;
+  submitter?: { name: string };
+  aiReview?: WorkOrder["aiReview"];
+}
+
+export interface EngineeringReport {
+  id: string;
+  title: string;
+  content: string;
+  status: string;
+  author?: { name: string };
+  issueTitle?: string;
+}
+
+export interface WorkflowItem {
+  id: string;
+  type: string;
+  title: string;
+  status: string;
+  progress: number;
+  owner?: string;
+  entityId: string;
+  issueKey?: string;
+}
+
+export interface OperatorChecklist {
+  id: string;
+  line: string;
+  shift: string;
+  targetOutput: number;
+  progress: number;
+  items: Array<{ id: string; label: string; done: boolean }>;
+}
+
+export interface AiActionResult {
+  success: boolean;
+  toolName: string;
+  message: string;
+  entityType?: string;
+  entityId?: string;
+}
+
+export function fetchWorkflows(slug: string) {
+  return fetchJson<{ workflows: WorkflowItem[] }>(`/api/data/${slug}/workflows`);
+}
+
+export function fetchPendingSopRevisions(slug: string) {
+  return fetchJson<{ revisions: SopRevision[] }>(`/api/data/${slug}/sop-revisions/pending`);
+}
+
+export function fetchSopRevision(slug: string, revisionId: string) {
+  return fetchJson<{ revision: SopRevision }>(`/api/data/${slug}/sop-revisions/${revisionId}`);
+}
+
+export function approveSopRevision(slug: string, revisionId: string, supervisorName: string) {
+  return fetchJson<{ revision: SopRevision }>(`/api/data/${slug}/sop-revisions/${revisionId}/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ supervisorName })
+  });
+}
+
+export function fetchPendingReports(slug: string) {
+  return fetchJson<{ reports: EngineeringReport[] }>(`/api/data/${slug}/reports/pending`);
+}
+
+export function fetchReport(slug: string, reportId: string) {
+  return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}`);
+}
+
+export function approveReport(slug: string, reportId: string, supervisorName: string) {
+  return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ supervisorName })
+  });
+}
+
+export function fetchOperatorChecklist(slug: string) {
+  return fetchJson<{ checklist: OperatorChecklist | null }>(`/api/data/${slug}/operator/checklist`);
+}
+
+export function toggleChecklistItem(slug: string, itemId: string) {
+  return fetchJson<{ checklist: OperatorChecklist | null }>(`/api/data/${slug}/operator/checklist/toggle`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ itemId })
+  });
+}
+
+export function executeAiAction(slug: string, action: string, params: Record<string, string> = {}) {
+  return fetchJson<{ result: AiActionResult }>(`/api/data/${slug}/ai/actions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, params })
+  });
+}
+
+export function isAiActionResult(data: unknown): data is AiActionResult {
+  return Boolean(
+    data &&
+      typeof data === "object" &&
+      typeof (data as AiActionResult).toolName === "string" &&
+      typeof (data as AiActionResult).message === "string"
+  );
+}

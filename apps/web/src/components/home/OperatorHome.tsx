@@ -1,4 +1,5 @@
-import type { RoleHomeData, Workspace } from "../../types.js";
+import { useEffect, useState } from "react";
+import { fetchOperatorChecklist, toggleChecklistItem, type OperatorChecklist } from "../../lib/data-api.js";
 import { AskBuekSection } from "./AskBuekSection.js";
 import type { RoleHomeProps } from "./shared.js";
 
@@ -12,16 +13,43 @@ export function OperatorHome({
   onAsk
 }: RoleHomeProps) {
   const op = roleHome.operator!;
-  const progressPct = Math.round((op.progress / op.targetOutput) * 100);
+  const [checklist, setChecklist] = useState<OperatorChecklist | null>(null);
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchOperatorChecklist(workspace.id)
+      .then((data) => setChecklist(data.checklist))
+      .catch(() => setChecklist(null));
+  }, [workspace.id]);
+
+  const line = checklist?.line ?? op.line;
+  const shift = checklist?.shift ?? op.shift;
+  const targetOutput = checklist?.targetOutput ?? op.targetOutput;
+  const progress = checklist?.progress ?? op.progress;
+  const items = checklist?.items ?? op.checklist;
+  const progressPct = Math.round((progress / targetOutput) * 100);
+
+  async function handleToggle(itemId: string) {
+    if (toggling) return;
+    setToggling(itemId);
+    try {
+      const result = await toggleChecklistItem(workspace.id, itemId);
+      if (result.checklist) setChecklist(result.checklist);
+    } finally {
+      setToggling(null);
+    }
+  }
 
   return (
     <div className="space-y-12 pb-16">
       <header className="space-y-3 border-b border-white/10 pb-8">
         <h1 className="buek-heading text-white">Good Morning, {user.name} 👋</h1>
         <p className="buek-body text-slate-400">
-          Operator <span className="text-slate-600">•</span> {op.line}
+          Operator <span className="text-slate-600">•</span> {line}
         </p>
-        <p className="buek-subtitle text-slate-500">{workspace.organization} · {op.shift}</p>
+        <p className="buek-subtitle text-slate-500">
+          {workspace.organization} · {shift}
+        </p>
       </header>
 
       <section className="buek-section space-y-6">
@@ -30,12 +58,12 @@ export function OperatorHome({
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="buek-small text-slate-500">✔ Target Output</p>
-              <p className="mt-2 text-4xl font-bold text-white">{op.targetOutput} pcs</p>
+              <p className="mt-2 text-4xl font-bold text-white">{targetOutput} pcs</p>
             </div>
             <div className="text-right">
               <p className="buek-small text-slate-500">Progress</p>
               <p className="mt-2 text-4xl font-bold text-cyan-400">
-                {op.progress} / {op.targetOutput}
+                {progress} / {targetOutput}
               </p>
             </div>
           </div>
@@ -51,15 +79,19 @@ export function OperatorHome({
       <section className="buek-section space-y-4">
         <h2 className="buek-card-title text-slate-400">Today&apos;s Checklist</h2>
         <ul className="space-y-3">
-          {op.checklist.map((item) => (
-            <li
-              key={item.id}
-              className="buek-card flex items-center gap-4 rounded-xl border border-white/10"
-            >
-              <span className="text-xl">{item.done ? "✔" : "□"}</span>
-              <span className={item.done ? "text-slate-500 line-through" : "text-slate-200"}>
-                {item.label}
-              </span>
+          {items.map((item) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                disabled={toggling === item.id}
+                onClick={() => void handleToggle(item.id)}
+                className="buek-card flex w-full items-center gap-4 rounded-xl border border-white/10 text-left hover:border-cyan-400/30 disabled:opacity-50"
+              >
+                <span className="text-xl">{item.done ? "✔" : "□"}</span>
+                <span className={item.done ? "text-slate-500 line-through" : "text-slate-200"}>
+                  {item.label}
+                </span>
+              </button>
             </li>
           ))}
         </ul>

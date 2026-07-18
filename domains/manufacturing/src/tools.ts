@@ -31,5 +31,42 @@ export const manufacturingTools: ToolDefinition[] = [
         }
       }
     }
+  },
+  {
+    id: "manufacturing.create-work-order",
+    name: "Create work order",
+    description: "Creates a maintenance work order for a machine, pending supervisor approval.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        machineCode: { type: "string" },
+        title: { type: "string" },
+        reason: { type: "string" },
+        engineerName: { type: "string" }
+      }
+    }
+  },
+  {
+    id: "manufacturing.assign-engineer",
+    name: "Assign engineer",
+    description: "Assigns an engineer to an open investigation or issue.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        engineerName: { type: "string" },
+        issueKey: { type: "string" }
+      }
+    }
+  },
+  {
+    id: "manufacturing.draft-report",
+    name: "Draft investigation report",
+    description: "Drafts an engineering investigation report for supervisor approval.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        issueKey: { type: "string" }
+      }
+    }
   }
 ];

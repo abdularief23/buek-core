@@ -18,6 +18,7 @@ import {
   parseServerSentEvents
 } from "./lib/chat.js";
 import { contextForView, withContextPrompt, type AiContext } from "./lib/context.js";
+import { isAiActionResult } from "./lib/data-api.js";
 import type { ChatMessage, DemoUser, ModuleSummary, RoleHomeData, Workspace } from "./types.js";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
@@ -214,6 +215,37 @@ export function App() {
               )
             );
           }
+
+          if (streamEvent.event === "action" && isAiActionResult(streamEvent.data)) {
+            const action = streamEvent.data;
+            const prefix = action.success ? `✓ ${action.message}\n\n` : `⚠ ${action.message}\n\n`;
+
+            setMessages((currentMessages) =>
+              currentMessages.map((message) =>
+                message.id === assistantMessage.id
+                  ? { ...message, content: `${prefix}${message.content}` }
+                  : message
+              )
+            );
+
+            if (action.success && currentWorkspace) {
+              const slug = currentWorkspace.id;
+              if (action.toolName === "create_work_order") {
+                setDynamicWorkspace({ kind: "approval-queue", slug });
+                setActiveView("home");
+              } else if (action.toolName === "draft_report") {
+                setDynamicWorkspace({ kind: "engineering-reports", slug });
+                setActiveView("home");
+              } else if (action.toolName === "start_investigation") {
+                setDynamicWorkspace({
+                  kind: "investigation",
+                  slug,
+                  issueKey: "white-streak"
+                });
+                setActiveView("home");
+              }
+            }
+          }
         }
       }
     } catch (error) {
@@ -374,7 +406,14 @@ export function App() {
         ) : null}
 
         {activeView === "workflow" ? (
-          <WorkflowView onAsk={(prompt) => handleContextualAsk(prompt, "Workflow")} />
+          <WorkflowView
+            workspaceSlug={currentWorkspace.id}
+            onAsk={(prompt) => handleContextualAsk(prompt, "Workflow")}
+            onOpenWorkspace={(ws) => {
+              setDynamicWorkspace(ws);
+              setActiveView("home");
+            }}
+          />
         ) : null}
 
         {activeView === "profile" ? (

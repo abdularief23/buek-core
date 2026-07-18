@@ -205,8 +205,12 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     });
   }
 
-  const flagshipMachineCode = config.slug === "toyota-plant" ? "EA-04" : "M-312";
-  const flagshipMachineId = `machine-${config.slug}-${flagshipMachineCode}`;
+  const flagshipMachineCode =
+    config.slug === "toyota-plant" ? "EA-04" : config.slug === "epson-factory" ? "M-312" : "M-310";
+  const flagshipMachine = await prisma.machine.findFirst({
+    where: { id: `machine-${config.slug}-${flagshipMachineCode}` }
+  });
+  const flagshipMachineId = flagshipMachine?.id ?? `machine-${config.slug}-${machineCodes[0] ?? "M-101"}`;
 
   const whiteStreakIssue = await prisma.issue.upsert({
     where: { id: `issue-${config.slug}-white-streak` },
@@ -499,6 +503,99 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
         toType: "employee",
         toId: engineer.id,
         label: engineer.name
+      }
+    ]
+  });
+
+  await prisma.sopRevision.upsert({
+    where: { id: `sop-rev-${config.slug}-014` },
+    update: { status: "pending_approval" },
+    create: {
+      id: `sop-rev-${config.slug}-014`,
+      workspaceId: workspace.id,
+      referenceId: "SOP-014",
+      title: "Nozzle Calibration Procedure",
+      revision: "Rev.6",
+      summary: "Updated torque values and calibration interval after white streak analysis.",
+      status: "pending_approval",
+      submitterId: engineer.id,
+      aiReview: {
+        checks: [
+          { label: "Safety review", status: "pass", detail: "No new hazards identified" },
+          { label: "Impact assessment", status: "pass", detail: "Affects Line 3 nozzle setup" },
+          { label: "Training required", status: "warning", detail: "Operators need briefing" }
+        ],
+        summary: "SOP revision ready for supervisor approval."
+      }
+    }
+  });
+
+  await prisma.engineeringReport.upsert({
+    where: { id: `report-${config.slug}-001` },
+    update: {},
+    create: {
+      id: `report-${config.slug}-001`,
+      workspaceId: workspace.id,
+      issueId: whiteStreakIssue.id,
+      title: "White Streak Root Cause Analysis",
+      content:
+        "Preliminary analysis indicates nozzle pressure drift during shift changeover. Recommend recalibration per SOP-014.",
+      status: "pending_approval",
+      authorId: engineer.id
+    }
+  });
+
+  await prisma.engineeringReport.upsert({
+    where: { id: `report-${config.slug}-002` },
+    update: {},
+    create: {
+      id: `report-${config.slug}-002`,
+      workspaceId: workspace.id,
+      issueId: vibrationIssue.id,
+      title: "M-12 Vibration Investigation Draft",
+      content: "Bearing wear suspected. Historical data shows similar pattern 3 weeks ago — alignment may be root cause.",
+      status: "pending_approval",
+      authorId: engineer.id
+    }
+  });
+
+  const lineName = config.slug === "toyota-plant" ? "EA Line" : "Line 3";
+  await prisma.operatorChecklistRun.upsert({
+    where: { id: `checklist-${config.slug}-today` },
+    update: {},
+    create: {
+      id: `checklist-${config.slug}-today`,
+      workspaceId: workspace.id,
+      line: lineName,
+      shift: "Shift A",
+      targetOutput: 420,
+      progress: 165,
+      items: [
+        { id: "c1", label: "First Article Inspection", done: true },
+        { id: "c2", label: "Torque Check", done: false },
+        { id: "c3", label: "Material Verification", done: false },
+        { id: "c4", label: "Final Cleaning", done: false }
+      ]
+    }
+  });
+
+  await prisma.memoryRecord.deleteMany({
+    where: { workspaceId: workspace.id, scope: { startsWith: "machine:" } }
+  });
+  await prisma.memoryRecord.createMany({
+    data: [
+      {
+        workspaceId: workspace.id,
+        scope: `machine:${flagshipMachineCode}`,
+        content:
+          "Bearing was replaced 3 weeks ago on this machine. If vibration returns, check alignment before replacing bearing again.",
+        tags: ["bearing", "history", "root_cause"]
+      },
+      {
+        workspaceId: workspace.id,
+        scope: `issue:white-streak`,
+        content: "Similar white streak defect occurred in Issue #202 — resolved by nozzle recalibration.",
+        tags: ["quality", "similar_case"]
       }
     ]
   });

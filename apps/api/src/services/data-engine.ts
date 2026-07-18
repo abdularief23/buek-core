@@ -1,4 +1,5 @@
 import { prisma } from "../db.js";
+import { countPendingReports, countPendingSopRevisions } from "./workflow-data.js";
 
 export interface TimelineEventDto {
   id: string;
@@ -145,7 +146,7 @@ export async function getSupervisorStats(slug: string): Promise<SupervisorStatsD
     return { pendingWorkOrders: 0, pendingSopRevisions: 0, pendingReports: 0, openIssues: 0 };
   }
 
-  const [pendingWorkOrders, openIssues] = await Promise.all([
+  const [pendingWorkOrders, openIssues, pendingSopRevisions, pendingReports] = await Promise.all([
     prisma.workOrder.count({
       where: { workspaceId: workspace.id, status: "pending_approval" }
     }),
@@ -154,13 +155,15 @@ export async function getSupervisorStats(slug: string): Promise<SupervisorStatsD
         workspaceId: workspace.id,
         status: { in: ["open", "investigating"] }
       }
-    })
+    }),
+    countPendingSopRevisions(slug),
+    countPendingReports(slug)
   ]);
 
   return {
     pendingWorkOrders,
-    pendingSopRevisions: 1,
-    pendingReports: 3,
+    pendingSopRevisions,
+    pendingReports,
     openIssues
   };
 }
