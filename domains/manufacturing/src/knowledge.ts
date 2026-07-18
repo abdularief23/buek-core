@@ -131,5 +131,28 @@ export const manufacturingKnowledge: KnowledgeSource[] = [
     tags: ["escalation", "operator", "quality", "defect"],
     content:
       "Escalate to quality engineer when the same defect appears in two consecutive checks, when safety or barcode readability is impacted, or when the first countermeasure fails. Include sample images, machine ID, material batch, operator, and timestamp."
+  },
+  {
+    id: "toyota-engine-torque-standard",
+    title: "Engine bolt torque standard",
+    type: "runbook",
+    referenceId: "ASM-022",
+    summary:
+      "Assembly troubleshooting standard for bolt torque out of specification in engine assembly.",
+    tags: ["assembly", "torque", "engine", "quality", "inspection", "automotive"],
+    contentPath: "domains/manufacturing/knowledge/assembly/torque-standard-engine.md",
+    content:
+      "When torque is out of specification, hold affected unit, check torque trace, verify tool calibration, inspect bolt thread and lubrication, repeat approved tightening sequence, and escalate if repeated."
+  },
+  {
+    id: "nestle-packaging-contamination",
+    title: "Packaging contamination response",
+    type: "policy",
+    referenceId: "HACCP-011",
+    summary: "Food safety response for packaging contamination findings on packaging lines.",
+    tags: ["food-safety", "packaging", "contamination", "haccp", "cleaning", "quality"],
+    contentPath: "domains/manufacturing/knowledge/food-safety/packaging-contamination.md",
+    content:
+      "For packaging contamination, stop the affected line, segregate product, hold supplier packaging lot, inspect packaging roll and contact surfaces, review sanitation records, clean, replace suspected material, and release only after QA approval."
   }
 ];
