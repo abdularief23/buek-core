@@ -22,16 +22,20 @@ if ! grep -q 'WEB_PORT=127.0.0.1:8080' .env 2>/dev/null; then
 fi
 
 echo "==> Stopping old containers..."
-docker compose down --remove-orphans 2>/dev/null || true
+DOCKER="docker"
+if ! docker info >/dev/null 2>&1; then
+  DOCKER="sudo docker"
+fi
+$DOCKER compose down --remove-orphans 2>/dev/null || true
 
 echo "==> Rebuilding (host Nginx mode — web on 127.0.0.1:8080)..."
-docker compose up -d --build
+$DOCKER compose up -d --build
 
 echo "==> Waiting for services..."
 sleep 5
 
 echo "==> Container status:"
-docker compose ps
+$DOCKER compose ps
 
 echo "==> Health check:"
 if curl -sf http://127.0.0.1:8080/health; then
@@ -40,8 +44,8 @@ if curl -sf http://127.0.0.1:8080/health; then
 else
   echo ""
   echo "FAILED: cannot reach http://127.0.0.1:8080/health"
-  echo "Check logs: docker compose logs web --tail 50"
-  echo "            docker compose logs api --tail 50"
+  echo "Check logs: $DOCKER compose logs web --tail 50"
+  echo "            $DOCKER compose logs api --tail 50"
   exit 1
 fi
 

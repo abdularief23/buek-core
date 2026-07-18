@@ -50,16 +50,20 @@ git checkout main
 git pull origin main
 
 echo "==> Stopping old containers..."
-docker compose down --remove-orphans 2>/dev/null || true
+DOCKER="docker"
+if ! docker info >/dev/null 2>&1; then
+  DOCKER="sudo docker"
+fi
+$DOCKER compose down --remove-orphans 2>/dev/null || true
 
 echo "==> Building and starting (host Nginx mode)..."
-docker compose up -d --build
+$DOCKER compose up -d --build
 
 echo "==> Waiting..."
 sleep 8
 
 echo "==> Status:"
-docker compose ps
+$DOCKER compose ps
 
 echo "==> Health check:"
 if curl -sf http://127.0.0.1:8080/health; then
@@ -69,7 +73,7 @@ if curl -sf http://127.0.0.1:8080/health; then
 else
   echo ""
   echo "FAILED. Check logs:"
-  echo "  docker compose logs web --tail 30"
-  echo "  docker compose logs api --tail 30"
+  echo "  $DOCKER compose logs web --tail 30"
+  echo "  $DOCKER compose logs api --tail 30"
   exit 1
 fi
