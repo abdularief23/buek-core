@@ -3,7 +3,7 @@ import type { ChatMetadata, Workspace } from "../types.js";
 export interface ContextPanel {
   id: string;
   label: string;
-  kind: "sop" | "machine" | "factory" | "kpi";
+  kind: "sop" | "machine" | "factory" | "kpi" | "similar";
   excerpt?: string;
   machineItem?: {
     label: string;
@@ -11,10 +11,12 @@ export interface ContextPanel {
     history?: string[];
   };
   metrics?: Array<{ label: string; value: string }>;
+  similarCases?: Array<{ id: string; title: string; summary: string }>;
 }
 
-const factoryKeywords = /\b(oee|ppm|kpi|production|output|reject|delivery|factory|shift)\b/i;
-const machineKeywords = /\b(machine|mesin|alarm|bearing|temperature|vibration|pm|downtime)\b/i;
+const factoryKeywords = /\b(oee|ppm|kpi|production|output|reject|delivery|factory|shift|line)\b/i;
+const machineKeywords = /\b(machine|mesin|alarm|bearing|temperature|vibration|downtime)\b/i;
+const qualityKeywords = /\b(reject|defect|quality|streak|contamination|ppm)\b/i;
 
 function combinedText(...parts: Array<string | undefined>) {
   return parts.filter(Boolean).join(" ").toLowerCase();
@@ -47,7 +49,7 @@ export function deriveContextPanels(
       panels.push({
         id: `sop-${reference.id}`,
         kind: "sop",
-        label: `View ${reference.referenceId ?? reference.title}`,
+        label: `Open ${reference.referenceId ?? reference.title}`,
         ...(reference.excerpt ? { excerpt: reference.excerpt } : {})
       });
     }
@@ -57,7 +59,7 @@ export function deriveContextPanels(
     panels.push({
       id: `machine-${item.id}`,
       kind: "machine",
-      label: `View ${item.label}`,
+      label: `View ${item.label} Detail`,
       machineItem: item
     });
 
@@ -71,13 +73,29 @@ export function deriveContextPanels(
     }
   }
 
+  if (qualityKeywords.test(haystack) || machineKeywords.test(haystack)) {
+    const relevantCases = workspace.similarCases.filter((item) => {
+      const text = `${item.title} ${item.summary}`.toLowerCase();
+      return haystack.split(/\s+/).some((token) => token.length > 3 && text.includes(token));
+    });
+
+    const cases = relevantCases.length ? relevantCases : workspace.similarCases.slice(0, 2);
+
+    if (cases.length) {
+      panels.push({
+        id: "similar-cases",
+        kind: "similar",
+        label: "View Similar Cases",
+        similarCases: cases
+      });
+    }
+  }
+
   if (factoryKeywords.test(haystack)) {
-    const productionArea = workspace.factoryAreas.find((area) => area.id === "production");
     panels.push({
-      id: "factory-kpi",
+      id: "factory-detail",
       kind: "factory",
-      label: "View Today's Factory",
-      ...(productionArea?.metrics ? { metrics: productionArea.metrics } : {})
+      label: "View Today's Factory"
     });
 
     if (/\b(oee|ppm|kpi)\b/i.test(haystack)) {

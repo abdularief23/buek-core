@@ -1,8 +1,7 @@
 import type { AppNavItem } from "@buek/ui";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { AiWorkspaceView } from "./components/AiWorkspaceView.js";
 import { AppShell } from "./components/AppShell.js";
-import { ChatView } from "./components/ChatView.js";
-import { HomeView } from "./components/HomeView.js";
 import { LoginScreen } from "./components/LoginScreen.js";
 import { SettingsView } from "./components/SettingsView.js";
 import { WorkspaceView } from "./components/WorkspaceView.js";
@@ -41,7 +40,6 @@ export function App() {
   const [modules, setModules] = useState<ModuleSummary[]>([]);
   const [activeView, setActiveView] = useState<AppNavItem>("home");
   const [status, setStatus] = useState("Loading installed modules...");
-  const [homePrompt, setHomePrompt] = useState("");
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -78,6 +76,8 @@ export function App() {
   }, [isSignedIn]);
 
   async function streamChat(trimmedInput: string) {
+    setActiveView("home");
+
     const userMessage: ChatMessage = { id: createMessageId(), role: "user", content: trimmedInput };
     const assistantMessage: ChatMessage = { id: createMessageId(), role: "assistant", content: "" };
 
@@ -162,14 +162,6 @@ export function App() {
     }
   }
 
-  async function startChatFromPrompt(prompt: string) {
-    const trimmedInput = prompt.trim();
-    if (!trimmedInput || isStreaming) return;
-    setInput("");
-    setActiveView("chat");
-    await streamChat(trimmedInput);
-  }
-
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -189,14 +181,7 @@ export function App() {
       setCurrentWorkspace(data.workspace);
       setIsSignedIn(true);
       setActiveView("home");
-      setMessages([
-        {
-          id: createMessageId(),
-          role: "assistant",
-          content:
-            "Hi, I am Buek Core. Tell me what you want to solve today, and I will open the right knowledge when needed."
-        }
-      ]);
+      setMessages([]);
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "Unable to sign in.");
     }
@@ -208,6 +193,7 @@ export function App() {
     setCurrentWorkspace(null);
     setActiveView("home");
     setMessages([]);
+    setInput("");
   }
 
   if (!isSignedIn) {
@@ -233,37 +219,27 @@ export function App() {
     <main className="min-h-screen bg-slate-950 text-white">
       <AppShell activeView={activeView} onNavigate={setActiveView} onLogout={handleLogout}>
         {activeView === "home" ? (
-          <HomeView
+          <AiWorkspaceView
             user={currentUser}
-            workspace={currentWorkspace}
-            homePrompt={homePrompt}
-            isStreaming={isStreaming}
-            onHomePromptChange={setHomePrompt}
-            onHomePromptSubmit={() => startChatFromPrompt(homePrompt)}
-            onContinueItem={startChatFromPrompt}
-          />
-        ) : null}
-
-        {activeView === "chat" ? (
-          <ChatView
             workspace={currentWorkspace}
             messages={messages}
             input={input}
             isStreaming={isStreaming}
             onInputChange={setInput}
-            onSubmit={async (trimmedInput) => {
-              await streamChat(trimmedInput);
+            onSubmit={streamChat}
+            onContinueItem={(prompt) => {
+              setInput(prompt);
+              void streamChat(prompt);
             }}
           />
         ) : null}
 
-        {activeView === "workspace" ? <WorkspaceView workspace={currentWorkspace} /> : null}
+        {activeView === "workspace" ? (
+          <WorkspaceView workspace={currentWorkspace} user={currentUser} />
+        ) : null}
 
         {activeView === "settings" ? (
-          <SettingsView
-            status={status}
-            installedModule={installedModule ?? undefined}
-          />
+          <SettingsView status={status} installedModule={installedModule ?? undefined} />
         ) : null}
       </AppShell>
     </main>

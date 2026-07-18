@@ -23,56 +23,46 @@ export function LoginScreen({
   onSubmit
 }: LoginScreenProps) {
   return (
-    <section className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <form
-        onSubmit={onSubmit}
-        className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-cyan-950/30"
-      >
-        <div className="flex flex-col items-center text-center">
-          <img
-            src="/logo-mark.svg"
-            alt="Buek Core logo"
-            className="h-20 w-20 rounded-3xl bg-white p-3"
-          />
-          <p className="mt-5 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-            Buek Core
-          </p>
-          <h1 className="mt-3 text-3xl font-bold">Enterprise AI Operating System</h1>
-          <p className="mt-3 text-sm text-slate-400">Sign in to your workspace. No company selection.</p>
+    <section className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
+      <form onSubmit={onSubmit} className="space-y-6">
+        <div className="text-center">
+          <img src="/logo-mark.svg" alt="" className="mx-auto h-14 w-14 rounded-2xl bg-white p-2" />
+          <h1 className="mt-6 text-2xl font-semibold">Buek Core</h1>
+          <p className="mt-2 text-sm text-slate-500">Enterprise AI Operating System</p>
         </div>
 
-        <label className="mt-8 block text-sm text-slate-300">
+        <label className="block text-sm text-slate-400">
           Company ID
           <input
             value={companyId}
             onChange={(event) => onCompanyIdChange(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2"
+            className="mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10 focus:ring-cyan-400/50"
           />
         </label>
-        <label className="mt-4 block text-sm text-slate-300">
+        <label className="block text-sm text-slate-400">
           Username
           <input
             value={username}
             onChange={(event) => onUsernameChange(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2"
+            className="mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10 focus:ring-cyan-400/50"
           />
         </label>
-        <label className="mt-4 block text-sm text-slate-300">
+        <label className="block text-sm text-slate-400">
           Password
           <input
             value={password}
             onChange={(event) => onPasswordChange(event.target.value)}
             type="password"
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-white outline-none ring-cyan-300 focus:ring-2"
+            className="mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10 focus:ring-cyan-400/50"
           />
         </label>
 
-        {loginError ? <p className="mt-4 text-center text-sm text-red-400">{loginError}</p> : null}
+        {loginError ? <p className="text-center text-sm text-red-400">{loginError}</p> : null}
 
-        <Button className="mt-6 w-full bg-cyan-400 text-slate-950 hover:bg-cyan-300">Sign In</Button>
+        <Button className="w-full bg-white text-slate-950 hover:bg-slate-200">Sign In</Button>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
-          Epson Demo / demo / demo123 → Epson Indonesia
+        <p className="text-center text-xs text-slate-600">
+          Your company is determined by your account — no company selection needed.
         </p>
       </form>
     </section>

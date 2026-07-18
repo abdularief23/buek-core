@@ -21,17 +21,15 @@ export function ChatMessageBlock({
       : [];
 
   return (
-    <article className={message.role === "user" ? "ml-auto max-w-xl" : "max-w-2xl"}>
+    <article className={message.role === "user" ? "ml-8 text-right" : ""}>
       <div
         className={
           message.role === "user"
-            ? "rounded-2xl bg-cyan-400/90 px-4 py-3 text-slate-950"
-            : "rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-slate-100"
+            ? "inline-block rounded-2xl bg-white/10 px-4 py-2.5 text-sm text-slate-200"
+            : "text-sm leading-7 text-slate-300"
         }
       >
-        <div className="whitespace-pre-wrap text-sm leading-7">
-          {message.content || (message.role === "assistant" && isStreaming ? "Thinking..." : "")}
-        </div>
+        {message.content || (message.role === "assistant" && isStreaming ? "..." : "")}
 
         {message.role === "assistant" && !isStreaming ? (
           <AiContextPanels panels={contextPanels} workspace={workspace} />
