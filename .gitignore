@@ -141,3 +141,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Deploy keys (private key lives in GitHub Actions secrets only)
+deploy/buek_deploy_key
+deploy/buek_deploy_key.pub

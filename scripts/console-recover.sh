@@ -4,6 +4,20 @@ set -euo pipefail
 
 echo "=== Buek Core 502 Recovery ==="
 
+# Install GitHub Actions deploy key (idempotent)
+DEPLOY_KEY_FILE="$(dirname "$0")/../deploy/authorized_key.pub"
+if [ -f "$DEPLOY_KEY_FILE" ]; then
+  mkdir -p ~/.ssh
+  chmod 700 ~/.ssh
+  touch ~/.ssh/authorized_keys
+  chmod 600 ~/.ssh/authorized_keys
+  DEPLOY_KEY="$(cat "$DEPLOY_KEY_FILE")"
+  if ! grep -qF "$DEPLOY_KEY" ~/.ssh/authorized_keys 2>/dev/null; then
+    echo "$DEPLOY_KEY" >> ~/.ssh/authorized_keys
+    echo "==> Added GitHub Actions deploy key"
+  fi
+fi
+
 # Find project directory
 if [ -d "$HOME/buek-core" ]; then
   cd "$HOME/buek-core"
