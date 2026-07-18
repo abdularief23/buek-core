@@ -1,0 +1,16 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wordGradient" x1="462" y1="425" x2="1060" y2="425" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D4FF0"/>
+      <stop offset="1" stop-color="#7A2AF7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" rx="48" fill="#FFFFFF"/>
+  <image href="/logo-mark.svg" x="442" y="58" width="316" height="316"/>
+  <text x="140" y="456" fill="#071341" font-family="Inter, Arial, sans-serif" font-size="104" font-weight="900" letter-spacing="4">BUEK</text>
+  <text x="535" y="456" fill="url(#wordGradient)" font-family="Inter, Arial, sans-serif" font-size="104" font-weight="900" letter-spacing="4">CORE</text>
+  <line x1="206" y1="508" x2="520" y2="508" stroke="#0E5BFF" stroke-width="6" stroke-linecap="round"/>
+  <rect x="586" y="496" width="24" height="24" rx="5" transform="rotate(45 586 496)" fill="#075DFF"/>
+  <line x1="660" y1="508" x2="994" y2="508" stroke="#6D2BF4" stroke-width="6" stroke-linecap="round"/>
+  <text x="207" y="572" fill="#162044" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="16">BUILD AI WORKERS FOR ANY INDUSTRY</text>
+</svg>
