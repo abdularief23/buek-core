@@ -58,6 +58,7 @@ model Workspace {
   checklistRuns    OperatorChecklistRun[]
   memoryRecords    MemoryRecord[]
   agentActions     AgentAction[]
+  businessRules    BusinessRule[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -424,4 +425,22 @@ model AgentAction {
   createdAt   DateTime  @default(now())
 
   @@index([workspaceId, createdAt])
+}
+
+model BusinessRule {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  category    String
+  metric      String
+  operator    String
+  threshold   Float?
+  severity    String    @default("critical")
+  enabled     Boolean   @default(true)
+  description String?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, enabled])
 }

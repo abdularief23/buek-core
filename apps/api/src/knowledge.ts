@@ -3,6 +3,8 @@ import type { DomainModule, KnowledgeSource } from "@buek/shared-types";
 import type { Request, Response } from "express";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { searchUploadedKnowledge } from "./services/knowledge-upload.js";
+import { findWorkspace } from "./workspaces.js";
 
 function readKnowledgeSourceContent(source: KnowledgeSource): string {
   if (!source.contentPath) {
@@ -30,22 +32,23 @@ function readKnowledgeSourceContent(source: KnowledgeSource): string {
   }
 }
 
-function buildKnowledgeEngine(module: DomainModule): KnowledgeEngine {
+function buildKnowledgeEngine(module: DomainModule, knowledge: KnowledgeSource[]): KnowledgeEngine {
   return new KnowledgeEngine(
-    module.knowledge.map((source) => ({
+    knowledge.map((source) => ({
       source,
       content: readKnowledgeSourceContent(source)
     }))
   );
 }
 
-export function handleKnowledgeSearchRequest(
+export async function handleKnowledgeSearchRequest(
   req: Request,
   res: Response,
   modules: DomainModule[]
-): void {
+): Promise<void> {
   const query = typeof req.query.q === "string" ? req.query.q : "";
   const moduleId = typeof req.query.module === "string" ? req.query.module : modules[0]?.id;
+  const workspaceId = typeof req.query.workspace === "string" ? req.query.workspace : undefined;
   const module = modules.find((candidate) => candidate.id === moduleId);
 
   if (!module) {
@@ -58,23 +61,50 @@ export function handleKnowledgeSearchRequest(
     return;
   }
 
-  const engine = buildKnowledgeEngine(module);
-  const results = query ? engine.search(query, 10) : [];
+  let knowledge = module.knowledge;
+  if (workspaceId) {
+    const workspace = findWorkspace(workspaceId);
+    if (workspace.knowledgeSourceIds.length) {
+      knowledge = knowledge.filter((source) => workspace.knowledgeSourceIds.includes(source.id));
+    }
+  }
+
+  const engine = buildKnowledgeEngine(module, knowledge);
+  const moduleResults = query ? engine.search(query, 8) : [];
+
+  const uploadedResults = workspaceId && query ? await searchUploadedKnowledge(workspaceId, query, 5) : [];
+
+  const results = [
+    ...moduleResults.map(({ chunk, score }) => ({
+      id: chunk.id,
+      score,
+      title: chunk.source.title,
+      referenceId: chunk.source.referenceId,
+      sourceId: chunk.source.id,
+      source: "module" as const,
+      excerpt: chunk.content.replace(/\s+/g, " ").slice(0, 300)
+    })),
+    ...uploadedResults.map((hit) => ({
+      id: hit.id,
+      score: hit.score,
+      title: hit.title,
+      referenceId: hit.referenceId,
+      sourceId: hit.id,
+      source: "uploaded" as const,
+      excerpt: hit.excerpt
+    }))
+  ].sort((a, b) => b.score - a.score);
 
   res.json({
     module: {
       id: module.id,
       name: module.name
     },
+    workspaceId: workspaceId ?? null,
     query,
     totalChunks: engine.listChunks().length,
-    results: results.map(({ chunk, score }) => ({
-      id: chunk.id,
-      score,
-      title: chunk.source.title,
-      referenceId: chunk.source.referenceId,
-      sourceId: chunk.source.id,
-      excerpt: chunk.content.replace(/\s+/g, " ").slice(0, 300)
-    }))
+    layer: "knowledge",
+    readOnly: true,
+    results
   });
 }

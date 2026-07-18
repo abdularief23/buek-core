@@ -600,6 +600,75 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     ]
   });
 
+  if (config.slug !== "custom-company") {
+    const defaultRules = [
+      {
+        name: "PPM Critical Threshold",
+        category: "quality",
+        metric: "ppm",
+        operator: "gt",
+        threshold: 3000,
+        severity: "critical",
+        description: "IF PPM > 3000 THEN Critical"
+      },
+      {
+        name: "Extended Downtime",
+        category: "production",
+        metric: "downtime_minutes",
+        operator: "gt",
+        threshold: 60,
+        severity: "critical",
+        description: "IF Downtime > 60 min AND Line Running THEN Critical"
+      },
+      {
+        name: "Machine Down Alert",
+        category: "maintenance",
+        metric: "machines_down",
+        operator: "gte",
+        threshold: 1,
+        severity: "high",
+        description: "IF Machine Down > 30 min THEN Critical"
+      },
+      {
+        name: "Customer Complaint",
+        category: "quality",
+        metric: "customer_complaints",
+        operator: "gte",
+        threshold: 1,
+        severity: "critical",
+        description: "IF Customer Complaint THEN Critical"
+      },
+      {
+        name: "Safety Incident",
+        category: "safety",
+        metric: "safety_incidents",
+        operator: "gte",
+        threshold: 1,
+        severity: "critical",
+        description: "IF Safety Incident THEN Always Critical"
+      }
+    ];
+
+    for (const rule of defaultRules) {
+      await prisma.businessRule.upsert({
+        where: { id: `rule-${config.slug}-${rule.metric}` },
+        update: { enabled: true, threshold: rule.threshold },
+        create: {
+          id: `rule-${config.slug}-${rule.metric}`,
+          workspaceId: workspace.id,
+          name: rule.name,
+          category: rule.category,
+          metric: rule.metric,
+          operator: rule.operator,
+          threshold: rule.threshold,
+          severity: rule.severity,
+          description: rule.description,
+          enabled: true
+        }
+      });
+    }
+  }
+
   console.log(`Seeded ${config.slug}: ${machineCodes.length} machines, 120 SOPs, issues & work orders`);
 }
 
