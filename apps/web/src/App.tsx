@@ -386,7 +386,7 @@ export function App() {
   if (!currentUser || !currentWorkspace || !roleHome) return null;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="app-shell min-h-screen">
       <AppShell
         activeView={activeView}
         user={currentUser}

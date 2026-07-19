@@ -46,7 +46,7 @@ const LOGIN_COPY = {
     metricsApi: "API Metrics Engineer",
     ready: "Siap",
     missing: "Belum tersedia",
-    deployHint: "Jika panel Tampilan/Bahasa tidak muncul, VPS masih menjalankan build lama. Merge PR #21 lalu jalankan ./scripts/deploy.sh"
+    deployHint: "Jika panel Tampilan/Bahasa tidak muncul, jalankan ulang deploy: ./scripts/deploy.sh lalu hard-refresh browser (Ctrl+Shift+R)"
   },
   en: {
     tagline: "One AI Core. Unlimited Industry Knowledge.",
@@ -70,7 +70,7 @@ const LOGIN_COPY = {
     metricsApi: "Engineer Metrics API",
     ready: "Ready",
     missing: "Not available",
-    deployHint: "If Appearance/Language panels are missing, the VPS is still on an old build. Merge PR #21 then run ./scripts/deploy.sh"
+    deployHint: "If Appearance/Language panels are missing, redeploy with ./scripts/deploy.sh then hard-refresh (Ctrl+Shift+R)"
   },
   ja: {
     tagline: "ひとつのAIコア。無限の産業知識。",
@@ -94,7 +94,7 @@ const LOGIN_COPY = {
     metricsApi: "エンジニア指標API",
     ready: "準備完了",
     missing: "未対応",
-    deployHint: "表示/言語パネルがない場合、VPSは古いビルドです。PR #21をマージして ./scripts/deploy.sh を実行してください"
+    deployHint: "表示/言語パネルがない場合は ./scripts/deploy.sh で再デプロイし、ブラウザをハードリフレッシュしてください"
   }
 } as const;
 

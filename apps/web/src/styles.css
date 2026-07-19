@@ -23,14 +23,28 @@ body {
   color: #f8fafc;
 }
 
+.app-shell {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
+.app-shell-sidebar {
+  background-color: #020617;
+}
+
 :root[data-appearance="light"] body {
   background-color: #f8fafc;
   color: #0f172a;
 }
 
-:root[data-appearance="light"] .login-shell {
+:root[data-appearance="light"] .login-shell,
+:root[data-appearance="light"] .app-shell {
   background-color: #f8fafc;
   color: #0f172a;
+}
+
+:root[data-appearance="light"] .app-shell-sidebar {
+  background-color: #f1f5f9;
 }
 
 :root[data-appearance="light"] .login-preferences,
