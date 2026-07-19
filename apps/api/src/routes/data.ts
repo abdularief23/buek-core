@@ -46,6 +46,10 @@ function getSlug(req: Request): string {
   return String(req.params.slug ?? req.query.workspaceId ?? "");
 }
 
+function permissionStatus(message: string): number {
+  return /only |cannot |not allowed/i.test(message) ? 403 : 500;
+}
+
 export async function handleTimeline(req: Request, res: Response) {
   try {
     const timeline = await getTimeline(getSlug(req));
@@ -171,11 +175,12 @@ export async function handleIssueByKey(req: Request, res: Response) {
 
 export async function handleAdvanceInvestigation(req: Request, res: Response) {
   try {
-    const body = req.body as { stepKey: string };
+    const body = req.body as { stepKey: string; role?: string };
     const issue = await advanceInvestigationStep(
       getSlug(req),
       String(req.params.issueId),
-      body.stepKey
+      body.stepKey,
+      body.role
     );
     if (!issue) {
       res.status(404).json({ error: { message: "Issue not found" } });
@@ -183,7 +188,8 @@ export async function handleAdvanceInvestigation(req: Request, res: Response) {
     }
     res.json({ issue });
   } catch (error) {
-    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
@@ -238,7 +244,7 @@ export async function handleApproveSopRevision(req: Request, res: Response) {
     res.json({ revision });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed";
-    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
@@ -254,7 +260,7 @@ export async function handleRejectSopRevision(req: Request, res: Response) {
     res.json({ revision });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed";
-    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
@@ -305,7 +311,7 @@ export async function handleApproveReport(req: Request, res: Response) {
     res.json({ report });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed";
-    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
@@ -321,7 +327,7 @@ export async function handleRejectReport(req: Request, res: Response) {
     res.json({ report });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed";
-    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
@@ -338,7 +344,7 @@ export async function handleRequestReportRevision(req: Request, res: Response) {
     res.json({ report });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed";
-    res.status(message.includes("cannot approve") ? 403 : 500).json({ error: { message } });
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
@@ -352,23 +358,26 @@ export async function handleOperatorReport(req: Request, res: Response) {
       rejectCount: number;
       notes?: string;
       reporterName: string;
+      role?: string;
     };
-    const result = await submitOperatorReport(getSlug(req), body);
+    const result = await submitOperatorReport(getSlug(req), body, body.role);
     res.json(result);
   } catch (error) {
-    res.status(400).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
 export async function handleCreateDraftReport(req: Request, res: Response) {
   try {
-    const body = req.body as { issueKey: string; engineerName: string };
+    const body = req.body as { issueKey: string; engineerName: string; role?: string };
     const suggestion = await getAiSuggestionForIssue(getSlug(req), body.issueKey);
     const report = await createDraftReport(
       getSlug(req),
       body.issueKey,
       body.engineerName,
-      suggestion
+      suggestion,
+      body.role
     );
     if (!report) {
       res.status(404).json({ error: { message: "Issue not found" } });
@@ -376,7 +385,8 @@ export async function handleCreateDraftReport(req: Request, res: Response) {
     }
     res.json({ report, aiSuggestion: suggestion });
   } catch (error) {
-    res.status(400).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
@@ -385,12 +395,14 @@ export async function handleUpdateReportSections(req: Request, res: Response) {
     const body = req.body as {
       sections: Record<string, string | string[]>;
       engineerName: string;
+      role?: string;
     };
     const report = await updateReportSections(
       getSlug(req),
       String(req.params.reportId),
       body.sections as unknown as Parameters<typeof updateReportSections>[2],
-      body.engineerName
+      body.engineerName,
+      body.role
     );
     if (!report) {
       res.status(404).json({ error: { message: "Report not found" } });
@@ -398,17 +410,19 @@ export async function handleUpdateReportSections(req: Request, res: Response) {
     }
     res.json({ report });
   } catch (error) {
-    res.status(400).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
 export async function handleSubmitReport(req: Request, res: Response) {
   try {
-    const body = req.body as { engineerName: string };
+    const body = req.body as { engineerName: string; role?: string };
     const report = await submitReportForApproval(
       getSlug(req),
       String(req.params.reportId),
-      body.engineerName
+      body.engineerName,
+      body.role
     );
     if (!report) {
       res.status(404).json({ error: { message: "Report not found" } });
@@ -416,7 +430,8 @@ export async function handleSubmitReport(req: Request, res: Response) {
     }
     res.json({ report });
   } catch (error) {
-    res.status(400).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
@@ -448,10 +463,11 @@ export async function handleOperatorChecklist(req: Request, res: Response) {
 
 export async function handleToggleChecklistItem(req: Request, res: Response) {
   try {
-    const body = req.body as { itemId: string };
-    res.json({ checklist: await toggleChecklistItem(getSlug(req), body.itemId) });
+    const body = req.body as { itemId: string; role?: string };
+    res.json({ checklist: await toggleChecklistItem(getSlug(req), body.itemId, body.role) });
   } catch (error) {
-    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 

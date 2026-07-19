@@ -5,6 +5,7 @@ export interface AppNavProps {
   onChange: (item: AppNavItem) => void;
   onOpenInbox?: () => void;
   inboxCount?: number | undefined;
+  visibleItems?: AppNavItem[];
 }
 
 const items: Array<{ id: AppNavItem | "inbox"; icon: string; label: string }> = [
@@ -16,10 +17,14 @@ const items: Array<{ id: AppNavItem | "inbox"; icon: string; label: string }> = 
   { id: "profile", icon: "👤", label: "Me" }
 ];
 
-export function AppNav({ active, onChange, onOpenInbox, inboxCount = 0 }: AppNavProps) {
+export function AppNav({ active, onChange, onOpenInbox, inboxCount = 0, visibleItems }: AppNavProps) {
+  const navItems = visibleItems
+    ? items.filter((item) => item.id === "inbox" || visibleItems.includes(item.id as AppNavItem))
+    : items;
+
   return (
     <nav aria-label="Main navigation" className="flex h-full w-full flex-col gap-1 px-4 py-8">
-      {items.map((item) => {
+      {navItems.map((item) => {
         const isInbox = item.id === "inbox";
         const isActive = !isInbox && active === item.id;
 

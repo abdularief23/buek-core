@@ -40,7 +40,7 @@ export function OperatorHome({
     if (toggling) return;
     setToggling(itemId);
     try {
-      const result = await toggleChecklistItem(workspace.id, itemId);
+      const result = await toggleChecklistItem(workspace.id, itemId, user.role);
       if (result.checklist) setChecklist(result.checklist);
     } finally {
       setToggling(null);
@@ -61,7 +61,7 @@ export function OperatorHome({
         rejectCount,
         reporterName: user.name,
         ...(notes.trim() ? { notes: notes.trim() } : {})
-      });
+      }, user.role);
       setReportMessage(result.message);
       setProblem("");
       setNotes("");

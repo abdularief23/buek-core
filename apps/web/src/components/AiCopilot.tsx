@@ -2,6 +2,7 @@ import { AiPromptInput } from "@buek/ui";
 import { useEffect, useRef, useState } from "react";
 import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
 import { buildProactiveBriefing } from "../lib/proactive-briefing.js";
+import { copilotModesForRole } from "../lib/roles.js";
 import type { ChatMessage, DemoUser, RoleHomeData, Workspace } from "../types.js";
 import { ChatMessageBlock } from "./ChatMessageBlock.js";
 
@@ -55,6 +56,7 @@ export function AiCopilot({
   const endRef = useRef<HTMLDivElement | null>(null);
   const briefing = buildProactiveBriefing(user.name, workspace, roleHome);
   const showChat = mode !== null || messages.length > 0;
+  const visibleModes = modes.filter((item) => copilotModesForRole(user.role).includes(item.id));
 
   useEffect(() => {
     if (open) {
@@ -133,7 +135,7 @@ export function AiCopilot({
               <div className="border-b border-white/10 px-6 py-5">
                 <p className="text-sm text-slate-500">Apa yang ingin Anda lakukan?</p>
                 <div className="mt-4 grid gap-2">
-                  {modes.map((item) => (
+                  {visibleModes.map((item) => (
                     <button
                       key={item.id}
                       type="button"

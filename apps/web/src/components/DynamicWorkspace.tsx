@@ -32,7 +32,7 @@ import {
   type SopRevision,
   type WorkOrder
 } from "../lib/data-api.js";
-import { canApprove, isEngineer } from "../lib/roles.js";
+import { canApprove, canAccessWorkspace, isEngineer, isPlantManager, isSupervisor, roleKey } from "../lib/roles.js";
 
 export type DynamicWorkspaceState =
   | { kind: "approval-queue"; slug: string }
@@ -67,6 +67,16 @@ export function DynamicWorkspace({
   onDataChange
 }: DynamicWorkspaceProps) {
   const notifyChange = onDataChange ?? (() => {});
+
+  if (!canAccessWorkspace(workspace.kind, userRole)) {
+    return (
+      <RoleAccessDenied
+        role={userRole}
+        workspaceKind={workspace.kind}
+        onClose={onClose}
+      />
+    );
+  }
 
   if (workspace.kind === "customer-complaints") {
     return (
@@ -462,7 +472,7 @@ function InvestigationWorkspace({
     if (!issue || advancing) return;
     setAdvancing(true);
     try {
-      const result = await advanceInvestigation(slug, issue.id, stepKey);
+      const result = await advanceInvestigation(slug, issue.id, stepKey, userRole);
       setIssue(result.issue);
       onDataChange?.();
     } finally {
@@ -474,7 +484,7 @@ function InvestigationWorkspace({
     if (!issue || creatingDraft) return;
     setCreatingDraft(true);
     try {
-      const result = await createDraftReport(slug, issueKey, userName);
+      const result = await createDraftReport(slug, issueKey, userName, userRole);
       onWorkspaceChange({ kind: "engineering-report", slug, reportId: result.report.id });
       onDataChange?.();
     } finally {
@@ -493,6 +503,8 @@ function InvestigationWorkspace({
   }
 
   const engineerView = isEngineer(userRole);
+  const supervisorView = isSupervisor(userRole);
+  const managerView = isPlantManager(userRole);
 
   return (
     <div className="space-y-8 pb-16">
@@ -508,6 +520,21 @@ function InvestigationWorkspace({
           ← Back
         </button>
       </header>
+
+      {supervisorView ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+          <p className="buek-small text-amber-200">
+            Supervisor view — pantau progress tim. Approval dilakukan pada laporan yang sudah disubmit engineer.
+          </p>
+        </div>
+      ) : null}
+      {managerView ? (
+        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3">
+          <p className="buek-small text-cyan-200">
+            Plant Manager view — read-only. Lacak isu kritis tanpa mengedit investigasi.
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
@@ -1044,7 +1071,7 @@ function ReportDetailWorkspace({
     if (!report || !sections || acting) return;
     setActing(true);
     try {
-      const result = await updateReportSections(slug, report.id, sections, userName);
+      const result = await updateReportSections(slug, report.id, sections, userName, userRole);
       setReport(result.report);
       onDataChange?.();
     } finally {
@@ -1056,7 +1083,7 @@ function ReportDetailWorkspace({
     if (!report || acting) return;
     setActing(true);
     try {
-      const result = await submitReportForApproval(slug, report.id, userName);
+      const result = await submitReportForApproval(slug, report.id, userName, userRole);
       setReport(result.report);
       onDataChange?.();
     } finally {
@@ -1200,7 +1227,12 @@ function ReportDetailWorkspace({
             </button>
           </>
         ) : null}
-        {!mayApprove && report.status === "pending_approval" && !isDecided ? (
+        {!mayApprove && isPlantManager(userRole) && report.status === "pending_approval" && !isDecided ? (
+          <p className="buek-small text-slate-500">
+            Plant Manager — read-only. Supervisor line menangani approval laporan investigasi.
+          </p>
+        ) : null}
+        {!mayApprove && !isPlantManager(userRole) && report.status === "pending_approval" && !isDecided ? (
           <p className="buek-small text-slate-500">
             Laporan menunggu persetujuan Supervisor. Engineer tidak dapat approve.
           </p>
@@ -1562,6 +1594,45 @@ function KpiDetailWorkspace({
       >
         ✨ Jelaskan
       </button>
+    </div>
+  );
+}
+
+function RoleAccessDenied({
+  role,
+  workspaceKind,
+  onClose
+}: {
+  role: string;
+  workspaceKind: DynamicWorkspaceState["kind"];
+  onClose: () => void;
+}) {
+  const key = roleKey(role);
+  const messages: Record<string, string> = {
+    operator:
+      "Operator fokus pada laporan masalah dan checklist produksi di Home. Workspace investigasi dan approval tidak tersedia untuk role ini.",
+    engineer: "Workspace ini tidak tersedia untuk Engineer.",
+    supervisor: "Workspace ini tidak tersedia untuk Supervisor.",
+    manager:
+      "Plant Manager memiliki akses eksekutif read-only. Approval line ditangani Supervisor — gunakan Today's Focus dan KPI dashboard."
+  };
+
+  return (
+    <div className="space-y-6 pb-16">
+      <header className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <h1 className="buek-heading text-white">Akses Dibatasi</h1>
+          <p className="mt-2 buek-body text-slate-400">
+            {role} · {workspaceKind.replace("-", " ")}
+          </p>
+        </div>
+        <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
+          Close
+        </button>
+      </header>
+      <div className="buek-card rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
+        <p className="buek-body text-amber-100">{messages[key] ?? "Workspace tidak tersedia untuk role ini."}</p>
+      </div>
     </div>
   );
 }

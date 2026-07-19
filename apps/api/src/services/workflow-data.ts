@@ -1,5 +1,5 @@
 import { prisma } from "../db.js";
-import { canApprove } from "../lib/roles.js";
+import { canApprove, canDraftReport, canUseOperatorChecklist, assertRole } from "../lib/roles.js";
 import {
   buildDraftSectionsFromIssue,
   generateReportNumber,
@@ -132,9 +132,18 @@ function mapReportRow(row: {
 }
 
 function assertCanApprove(role: string) {
-  if (!canApprove(role)) {
-    throw new Error("Only Supervisor or Plant Manager can approve. Engineers cannot approve their own work.");
-  }
+  assertRole(
+    canApprove(role),
+    "Only Supervisor can approve at line level. Plant Manager has executive read-only access."
+  );
+}
+
+function assertCanDraftReport(role: string) {
+  assertRole(canDraftReport(role), "Only Engineers can create or edit investigation reports.");
+}
+
+function assertCanUseOperatorChecklist(role: string) {
+  assertRole(canUseOperatorChecklist(role), "Only Operators can update production checklists.");
 }
 
 export async function countPendingSopRevisions(slug: string): Promise<number> {
@@ -328,8 +337,10 @@ export async function createDraftReport(
   slug: string,
   issueKey: string,
   engineerName: string,
-  aiSuggestion?: AiSuggestionDto
+  aiSuggestion?: AiSuggestionDto,
+  role?: string
 ) {
+  assertCanDraftReport(role ?? "");
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) return null;
 
@@ -398,8 +409,10 @@ export async function updateReportSections(
   slug: string,
   reportId: string,
   sections: ReportSections,
-  engineerName: string
+  engineerName: string,
+  role?: string
 ) {
+  assertCanDraftReport(role ?? "");
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) return null;
 
@@ -433,7 +446,13 @@ export async function updateReportSections(
   return mapReportRow(updated);
 }
 
-export async function submitReportForApproval(slug: string, reportId: string, engineerName: string) {
+export async function submitReportForApproval(
+  slug: string,
+  reportId: string,
+  engineerName: string,
+  role?: string
+) {
+  assertCanDraftReport(role ?? "");
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) return null;
 
@@ -633,7 +652,8 @@ export async function getOperatorChecklist(slug: string): Promise<OperatorCheckl
   };
 }
 
-export async function toggleChecklistItem(slug: string, itemId: string) {
+export async function toggleChecklistItem(slug: string, itemId: string, role?: string) {
+  assertCanUseOperatorChecklist(role ?? "");
   const checklist = await getOperatorChecklist(slug);
   if (!checklist) return null;
 

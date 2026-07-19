@@ -20,6 +20,7 @@ import {
 } from "./lib/chat.js";
 import { contextForView, withContextPrompt, type AiContext } from "./lib/context.js";
 import { isAiActionResult, fetchNotifications, refreshRoleHome } from "./lib/data-api.js";
+import { navItemsForRole } from "./lib/roles.js";
 import type { ChatMessage, DemoUser, ModuleSummary, RoleHomeData, Workspace } from "./types.js";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
@@ -59,6 +60,18 @@ export function App() {
   const [aiMode, setAiMode] = useState<AiAssistantMode>(null);
 
   const installedModule = modules[0];
+  const allowedNavItems = useMemo(
+    () => (currentUser ? navItemsForRole(currentUser.role) : (["home", "profile"] as AppNavItem[])),
+    [currentUser]
+  );
+
+  function handleNavigate(view: AppNavItem) {
+    if (!allowedNavItems.includes(view)) return;
+    setActiveView(view);
+    if (view !== "home") {
+      setDynamicWorkspace(null);
+    }
+  }
 
   const refreshLiveData = useCallback(async () => {
     if (!currentWorkspace || !currentUser) return;
@@ -380,11 +393,12 @@ export function App() {
         activeView={activeView}
         user={currentUser}
         organization={currentWorkspace.organization}
-        onNavigate={setActiveView}
+        onNavigate={handleNavigate}
         onOpenInbox={() => setInboxOpen(true)}
         onLogout={handleLogout}
         onSearch={handleGlobalSearch}
         inboxCount={inboxCount}
+        visibleNavItems={allowedNavItems}
         copilot={
           <AiCopilot
             user={currentUser}
@@ -446,6 +460,7 @@ export function App() {
         {activeView === "workflow" ? (
           <WorkflowView
             workspaceSlug={currentWorkspace.id}
+            userRole={currentUser.role}
             onAsk={(prompt) => handleContextualAsk(prompt, "Workflow")}
             onOpenWorkspace={(ws) => {
               setDynamicWorkspace(ws);

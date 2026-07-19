@@ -89,11 +89,11 @@ export function fetchIssueByKey(slug: string, issueKey: string) {
   return fetchJson<{ issue: IssueRecord }>(`/api/data/${slug}/issues/key/${issueKey}`);
 }
 
-export function advanceInvestigation(slug: string, issueId: string, stepKey: string) {
+export function advanceInvestigation(slug: string, issueId: string, stepKey: string, role: string) {
   return fetchJson<{ issue: IssueRecord }>(`/api/data/${slug}/issues/${issueId}/advance`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ stepKey })
+    body: JSON.stringify({ stepKey, role })
   });
 }
 
@@ -248,25 +248,26 @@ export function submitOperatorReport(
     rejectCount: number;
     notes?: string;
     reporterName: string;
-  }
+  },
+  role: string
 ) {
   return fetchJson<{ issueId: string; issueKey: string; title: string; message: string }>(
     `/api/data/${slug}/operator/report`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
+      body: JSON.stringify({ ...input, role })
     }
   );
 }
 
-export function createDraftReport(slug: string, issueKey: string, engineerName: string) {
+export function createDraftReport(slug: string, issueKey: string, engineerName: string, role: string) {
   return fetchJson<{ report: EngineeringReport; aiSuggestion: AiSuggestion }>(
     `/api/data/${slug}/reports/draft`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ issueKey, engineerName })
+      body: JSON.stringify({ issueKey, engineerName, role })
     }
   );
 }
@@ -275,20 +276,26 @@ export function updateReportSections(
   slug: string,
   reportId: string,
   sections: ReportSections,
-  engineerName: string
+  engineerName: string,
+  role: string
 ) {
   return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}/sections`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sections, engineerName })
+    body: JSON.stringify({ sections, engineerName, role })
   });
 }
 
-export function submitReportForApproval(slug: string, reportId: string, engineerName: string) {
+export function submitReportForApproval(
+  slug: string,
+  reportId: string,
+  engineerName: string,
+  role: string
+) {
   return fetchJson<{ report: EngineeringReport }>(`/api/data/${slug}/reports/${reportId}/submit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ engineerName })
+    body: JSON.stringify({ engineerName, role })
   });
 }
 
@@ -333,11 +340,11 @@ export function fetchOperatorChecklist(slug: string) {
   return fetchJson<{ checklist: OperatorChecklist | null }>(`/api/data/${slug}/operator/checklist`);
 }
 
-export function toggleChecklistItem(slug: string, itemId: string) {
+export function toggleChecklistItem(slug: string, itemId: string, role: string) {
   return fetchJson<{ checklist: OperatorChecklist | null }>(`/api/data/${slug}/operator/checklist/toggle`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ itemId })
+    body: JSON.stringify({ itemId, role })
   });
 }
 
