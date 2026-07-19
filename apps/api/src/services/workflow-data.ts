@@ -70,14 +70,31 @@ async function syncInvestigationProgress(issueId: string, reportStatus: string) 
   if (!investigation) return;
 
   const steps = (investigation.steps as InvestigationStep[]).map((step) => {
-    if (["reported", "evidence"].includes(step.key)) return { ...step, done: true };
-    if (["root_cause", "countermeasure", "verification"].includes(step.key)) {
+    if (reportStatus === "approved") {
+      return { ...step, done: true };
+    }
+    if (reportStatus === "pending_approval") {
+      if (step.key === "lessons_learned") return { ...step, done: false };
+      return { ...step, done: true };
+    }
+    if (["reported", "evidence", "similar_cases", "sop_review"].includes(step.key)) return { ...step, done: true };
+    if (
+      [
+        "possible_cause",
+        "ai_analysis",
+        "engineer_decision",
+        "countermeasure",
+        "execution_plan",
+        "verification",
+        "technical_report"
+      ].includes(step.key)
+    ) {
       return { ...step, done: reportStatus !== "draft" };
     }
     if (step.key === "approval") {
-      return { ...step, done: reportStatus === "pending_approval" || reportStatus === "approved" };
+      return { ...step, done: reportStatus === "pending_approval" };
     }
-    if (step.key === "closed") {
+    if (step.key === "lessons_learned") {
       return { ...step, done: reportStatus === "approved" };
     }
     return step;
@@ -334,12 +351,33 @@ export async function getAiSuggestionForIssue(slug: string, issueKey: string): P
   return { candidate: "Bearing Wear", confidence: "81%", basis: "Machine history + telemetry trend" };
 }
 
+export interface InvestigationDraftInput {
+  evidence?: string;
+  analysis?: string;
+  decision?: string;
+  rootCause?: string;
+  countermeasure?: string;
+  executionPlan?: string;
+  verification?: string;
+  verificationResult?: string;
+  lessonsLearned?: string;
+  selectedCauseLabel?: string;
+  executionPlanFields?: {
+    pic: string;
+    dueDate: string;
+    machineStop: boolean;
+    materialNeeded: string;
+    estimatedDowntime: string;
+  };
+}
+
 export async function createDraftReport(
   slug: string,
   issueKey: string,
   engineerName: string,
   aiSuggestion?: AiSuggestionDto,
-  role?: string
+  role?: string,
+  investigationDraft?: InvestigationDraftInput
 ) {
   assertCanDraftReport(role ?? "");
   const workspaceId = await getWorkspaceId(slug);
@@ -358,11 +396,21 @@ export async function createDraftReport(
     ...(issue.machine?.code ? { machineCode: issue.machine.code } : {})
   });
 
-  if (aiSuggestion) {
-    sections.rootCause = `[AI Suggestion — ${aiSuggestion.confidence}] ${aiSuggestion.candidate}\n${aiSuggestion.basis}\n\nEngineer review required.`;
+  if (investigationDraft) {
+    if (investigationDraft.evidence) sections.evidence = investigationDraft.evidence;
+    if (investigationDraft.analysis) sections.analysis = investigationDraft.analysis;
+    if (investigationDraft.decision) sections.decision = investigationDraft.decision;
+    if (investigationDraft.rootCause) sections.rootCause = investigationDraft.rootCause;
+    if (investigationDraft.countermeasure) sections.countermeasure = investigationDraft.countermeasure;
+    if (investigationDraft.executionPlan) sections.executionPlan = investigationDraft.executionPlan;
+    if (investigationDraft.verification) sections.verification = investigationDraft.verification;
+    if (investigationDraft.verificationResult) sections.verificationResult = investigationDraft.verificationResult;
+  } else if (aiSuggestion) {
+    sections.analysis = `[AI ranked hypothesis — engineer must select]\n${aiSuggestion.candidate} (${aiSuggestion.confidence})\n${aiSuggestion.basis}`;
   }
 
   const reportNumber = generateReportNumber(slug);
+  const tenant = getTenantThemeOrDefault(slug);
   const content = renderReportDocument(
     {
       reportNumber,
@@ -370,6 +418,8 @@ export async function createDraftReport(
       date: new Date().toISOString().slice(0, 10),
       engineer: engineerName,
       status: "draft",
+      organization: tenant.label,
+      version: 1,
       ...(issue.machine?.code ? { machine: issue.machine.code } : {})
     },
     sections
@@ -433,6 +483,7 @@ export async function updateReportSections(
       date: new Date().toISOString().slice(0, 10),
       engineer: engineerName,
       status: existing.status,
+      version: existing.version,
       ...(existing.machineCode ? { machine: existing.machineCode } : {})
     },
     sections
@@ -474,6 +525,7 @@ export async function submitReportForApproval(
       date: new Date().toISOString().slice(0, 10),
       engineer: engineerName,
       status: "pending_approval",
+      version: existing.version,
       ...(existing.machineCode ? { machine: existing.machineCode } : {})
     },
     sections

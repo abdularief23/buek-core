@@ -1,4 +1,5 @@
 import type { DomainModule } from "@buek/shared-types";
+import { isClearlyOffTopic, matchesManufacturingCapability } from "./manufacturing-capabilities.js";
 
 export type GuardErrorCode =
   | "prompt_injection_detected"
@@ -157,7 +158,7 @@ function detectBestModule(
 }
 
 function createScopeMessage(_modules: DomainModule[]): string {
-  return "Saya belum dapat membantu topik ini berdasarkan data yang tersedia di workspace Anda. Coba tanyakan tentang isu produksi, laporan engineering, work order, atau customer complaint yang ada di sistem.";
+  return "Topik ini di luar domain Manufacturing Module. Saya dapat membantu SOP, KPI, PPM, OEE, quality, maintenance, work order, engineering report, customer complaint, dan proses produksi lainnya.";
 }
 
 export function guardInput(options: GuardInputOptions): GuardInputResult {
@@ -207,6 +208,28 @@ export function guardInput(options: GuardInputOptions): GuardInputResult {
   }
 
   const bestModule = detectBestModule(options.modules, text, options.domainContext);
+  const hasManufacturingModule = options.modules.some((m) => m.id === "manufacturing");
+
+  if (isClearlyOffTopic(text)) {
+    return {
+      allowed: false,
+      statusCode: 400,
+      error: {
+        code: "domain_not_supported",
+        message: createScopeMessage(options.modules),
+        details: { reason: "off_topic" }
+      }
+    };
+  }
+
+  if (hasManufacturingModule && matchesManufacturingCapability(text)) {
+    const manufacturingModule = options.modules.find((m) => m.id === "manufacturing") ?? options.modules[0]!;
+    return {
+      allowed: true,
+      detectedModule: manufacturingModule,
+      warnings: []
+    };
+  }
 
   if (!bestModule || bestModule.score < minimumDomainScore) {
     return {

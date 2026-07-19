@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
 import {
-  advanceInvestigation,
   approveReport,
   approveSopRevision,
   approveWorkOrder,
-  createDraftReport,
-  fetchAiSuggestion,
-  fetchIssueByKey,
   fetchKpiDetail,
   fetchPendingReports,
   fetchPendingSopRevisions,
@@ -24,7 +20,6 @@ import {
   requestReportRevision,
   submitReportForApproval,
   updateReportSections,
-  type AiSuggestion,
   type CustomerComplaint,
   type EngineeringReport,
   type ReportSections,
@@ -33,6 +28,7 @@ import {
   type SopRevision,
   type WorkOrder
 } from "../lib/data-api.js";
+import { InvestigationCopilotWorkspace } from "./InvestigationCopilotWorkspace.js";
 import { canApprove, canAccessWorkspace, isEngineer, isPlantManager, isSupervisor, roleKey } from "../lib/roles.js";
 
 export type DynamicWorkspaceState =
@@ -153,13 +149,12 @@ export function DynamicWorkspace({
 
   if (workspace.kind === "investigation") {
     return (
-      <InvestigationWorkspace
+      <InvestigationCopilotWorkspace
         slug={workspace.slug}
         issueKey={workspace.issueKey}
         userName={userName}
         userRole={userRole}
         onClose={onClose}
-        onAskAi={onAskAi}
         onDataChange={notifyChange}
         onWorkspaceChange={onWorkspaceChange}
       />
@@ -429,272 +424,6 @@ function WorkOrderDetailWorkspace({
         >
           ✨ Jelaskan
         </button>
-      </div>
-    </div>
-  );
-}
-
-function InvestigationWorkspace({
-  slug,
-  issueKey,
-  userName,
-  userRole,
-  onClose,
-  onAskAi,
-  onDataChange,
-  onWorkspaceChange
-}: {
-  slug: string;
-  issueKey: string;
-  userName: string;
-  userRole: string;
-  onClose: () => void;
-  onAskAi: (prompt: string, contextLabel: string) => void;
-  onDataChange?: () => void;
-  onWorkspaceChange: (next: DynamicWorkspaceState) => void;
-}) {
-  const [issue, setIssue] = useState<import("../lib/data-api.js").IssueRecord | null>(null);
-  const [advancing, setAdvancing] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null);
-  const [rootCause, setRootCause] = useState("");
-  const [countermeasure, setCountermeasure] = useState("");
-  const [verification, setVerification] = useState("");
-  const [creatingDraft, setCreatingDraft] = useState(false);
-  const [suggestionStatus, setSuggestionStatus] = useState<"pending" | "accepted" | "rejected">("pending");
-
-  useEffect(() => {
-    fetchIssueByKey(slug, issueKey).then((data) => setIssue(data.issue));
-    fetchAiSuggestion(slug, issueKey)
-      .then((data) => setAiSuggestion(data.suggestion))
-      .catch(() => setAiSuggestion(null));
-  }, [slug, issueKey]);
-
-  async function completeStep(stepKey: string) {
-    if (!issue || advancing) return;
-    setAdvancing(true);
-    try {
-      const result = await advanceInvestigation(slug, issue.id, stepKey, userRole);
-      setIssue(result.issue);
-      onDataChange?.();
-    } finally {
-      setAdvancing(false);
-    }
-  }
-
-  async function handleCreateDraft() {
-    if (!issue || creatingDraft) return;
-    setCreatingDraft(true);
-    try {
-      const result = await createDraftReport(slug, issueKey, userName, userRole);
-      onWorkspaceChange({ kind: "engineering-report", slug, reportId: result.report.id });
-      onDataChange?.();
-    } finally {
-      setCreatingDraft(false);
-    }
-  }
-
-  function acceptSuggestion() {
-    if (!aiSuggestion) return;
-    setRootCause(`${aiSuggestion.candidate} (${aiSuggestion.confidence})\n${aiSuggestion.basis}`);
-    setSuggestionStatus("accepted");
-  }
-
-  if (!issue) {
-    return <p className="buek-body text-slate-500">Loading investigation...</p>;
-  }
-
-  const engineerView = isEngineer(userRole);
-  const supervisorView = isSupervisor(userRole);
-  const managerView = isPlantManager(userRole);
-
-  return (
-    <div className="space-y-8 pb-16">
-      <header className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
-        <div>
-          <p className="buek-small text-slate-500">Investigation Workspace</p>
-          <h1 className="buek-heading text-white">{issue.title}</h1>
-          <p className="mt-2 buek-body text-slate-400">
-            {issue.machine?.code} · Issue #{issue.id.slice(-3)}
-          </p>
-        </div>
-        <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
-          ← Back
-        </button>
-      </header>
-
-      {supervisorView ? (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-          <p className="buek-small text-amber-200">
-            Supervisor view — pantau progress tim. Approval dilakukan pada laporan yang sudah disubmit engineer.
-          </p>
-        </div>
-      ) : null}
-      {managerView ? (
-        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3">
-          <p className="buek-small text-cyan-200">
-            Plant Manager view — read-only. Lacak isu kritis tanpa mengedit investigasi.
-          </p>
-        </div>
-      ) : null}
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-          <h2 className="buek-card-title text-slate-400">Issue & Evidence</h2>
-          <p className="buek-body text-slate-300">{issue.description ?? issue.title}</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <p className="buek-small text-slate-500">Machine</p>
-              <p className="buek-body text-white">{issue.machine?.code ?? "—"}</p>
-            </div>
-            <div>
-              <p className="buek-small text-slate-500">Severity</p>
-              <p className="buek-body capitalize text-amber-300">{issue.severity}</p>
-            </div>
-            <div>
-              <p className="buek-small text-slate-500">Owner</p>
-              <p className="buek-body text-white">{issue.owner?.name ?? "Unassigned"}</p>
-            </div>
-            <div>
-              <p className="buek-small text-slate-500">Progress</p>
-              <p className="buek-body text-cyan-300">{issue.progress}%</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="buek-card space-y-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
-          <h2 className="buek-card-title text-cyan-300">AI Suggestion — Root Cause</h2>
-          {aiSuggestion ? (
-            <>
-              <p className="text-lg font-semibold text-white">{aiSuggestion.candidate}</p>
-              <p className="buek-body text-slate-400">
-                Confidence: <span className="text-cyan-300">{aiSuggestion.confidence}</span>
-              </p>
-              <p className="buek-small text-slate-500">{aiSuggestion.basis}</p>
-              {engineerView && suggestionStatus === "pending" ? (
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={acceptSuggestion}
-                    className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-300"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSuggestionStatus("rejected")}
-                    className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300"
-                  >
-                    Reject
-                  </button>
-                </div>
-              ) : null}
-              {suggestionStatus === "accepted" ? (
-                <p className="buek-small text-emerald-400">✓ Accepted — engineer decides final root cause</p>
-              ) : null}
-            </>
-          ) : (
-            <p className="buek-body text-slate-500">AI sedang menganalisis histori...</p>
-          )}
-        </section>
-      </div>
-
-      {issue.graph?.length ? (
-        <section className="space-y-3">
-          <h2 className="buek-card-title text-slate-400">Company Brain — Related Knowledge</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {issue.graph.map((edge) => (
-              <div key={`${edge.relation}-${edge.toId}`} className="buek-card rounded-xl border border-white/10 px-4 py-3">
-                <p className="buek-small text-slate-500">{edge.relation.replace("_", " ")}</p>
-                <p className="buek-body text-white">{edge.label}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {engineerView ? (
-        <section className="space-y-4">
-          <h2 className="buek-card-title text-slate-400">Engineer Investigation</h2>
-          <label className="block space-y-2">
-            <span className="buek-small text-slate-500">Root Cause</span>
-            <textarea
-              value={rootCause}
-              onChange={(e) => setRootCause(e.target.value)}
-              rows={3}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-              placeholder="Engineer menentukan root cause..."
-            />
-          </label>
-          <label className="block space-y-2">
-            <span className="buek-small text-slate-500">Countermeasure</span>
-            <textarea
-              value={countermeasure}
-              onChange={(e) => setCountermeasure(e.target.value)}
-              rows={3}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-              placeholder="Tindakan perbaikan..."
-            />
-          </label>
-          <label className="block space-y-2">
-            <span className="buek-small text-slate-500">Verification Plan</span>
-            <textarea
-              value={verification}
-              onChange={(e) => setVerification(e.target.value)}
-              rows={2}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-              placeholder="Cara verifikasi setelah perbaikan..."
-            />
-          </label>
-          <button
-            type="button"
-            disabled={creatingDraft}
-            onClick={() => void handleCreateDraft()}
-            className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
-          >
-            {creatingDraft ? "Creating Draft..." : "Create Draft Report (AI)"}
-          </button>
-          <p className="buek-small text-slate-500">
-            AI membuat draft — engineer mengedit dan submit untuk approval supervisor.
-          </p>
-        </section>
-      ) : null}
-
-      {issue.investigation ? (
-        <section className="space-y-4">
-          <h2 className="buek-card-title text-slate-400">Workflow Steps</h2>
-          <ul className="space-y-2">
-            {issue.investigation.steps.map((step) => (
-              <li key={step.key}>
-                <button
-                  type="button"
-                  disabled={step.done || advancing || !engineerView}
-                  onClick={() => void completeStep(step.key)}
-                  className={`flex w-full items-center justify-between rounded-xl border px-5 py-4 text-left ${
-                    step.done
-                      ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
-                      : "border-white/10 hover:border-cyan-400/30"
-                  }`}
-                >
-                  <span className="buek-body">{step.label}</span>
-                  <span>{step.done ? "✓" : "□"}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <div className="flex flex-wrap gap-3">
-        {["Find Similar Case", "Search SOP", "Machine History"].map((action) => (
-          <button
-            key={action}
-            type="button"
-            onClick={() => onAskAi(`${action} for ${issue.title}`, issue.title)}
-            className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 hover:border-cyan-400/30 hover:text-white"
-          >
-            {action}
-          </button>
-        ))}
       </div>
     </div>
   );
@@ -1028,7 +757,20 @@ function ReportDetailWorkspace({
   useEffect(() => {
     fetchReport(slug, reportId).then((data) => {
       setReport(data.report);
-      if (data.report.sections) setSections(data.report.sections);
+      if (data.report.sections) {
+        setSections({
+          background: data.report.sections.background ?? "",
+          evidence: data.report.sections.evidence ?? "",
+          analysis: data.report.sections.analysis ?? "",
+          decision: data.report.sections.decision ?? "",
+          rootCause: data.report.sections.rootCause ?? "",
+          countermeasure: data.report.sections.countermeasure ?? "",
+          executionPlan: data.report.sections.executionPlan ?? "",
+          verification: data.report.sections.verification ?? "",
+          verificationResult: data.report.sections.verificationResult ?? "",
+          attachments: data.report.sections.attachments ?? []
+        });
+      }
     });
   }, [slug, reportId]);
 
@@ -1139,11 +881,15 @@ function ReportDetailWorkspace({
           <>
             {(
               [
-                ["1. Background", "background"],
-                ["2. Evidence", "evidence"],
-                ["3. Root Cause", "rootCause"],
-                ["4. Countermeasure", "countermeasure"],
-                ["5. Verification", "verification"]
+                ["Problem / Background", "background"],
+                ["Evidence", "evidence"],
+                ["Analysis", "analysis"],
+                ["Decision", "decision"],
+                ["Working Hypothesis", "rootCause"],
+                ["Countermeasure", "countermeasure"],
+                ["Execution Plan", "executionPlan"],
+                ["Verification", "verification"],
+                ["Verification Result", "verificationResult"]
               ] as const
             ).map(([label, key]) => (
               <div key={key} className="mb-6">

@@ -14,7 +14,13 @@ export const domainModule: DomainModule = {
     "production-operations",
     "quality-control",
     "work-order-support",
-    "shop-floor-assistance"
+    "shop-floor-assistance",
+    "kpi-ppm-oee",
+    "sop-wi-qc",
+    "maintenance-downtime",
+    "customer-complaint-capa-ncr",
+    "engineering-report-investigation",
+    "production-planning"
   ],
   knowledge: manufacturingKnowledge,
   tools: manufacturingTools,
