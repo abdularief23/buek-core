@@ -1,4 +1,5 @@
 import { AppNav, type AppNavItem } from "@buek/ui";
+import { useEffect, useState } from "react";
 import type { TenantThemePayload } from "../lib/tenant-theme.js";
 import type { DemoUser } from "../types.js";
 import { PreferencesMenu } from "./PreferencesMenu.js";
@@ -32,6 +33,21 @@ export function AppShell({
   children,
   copilot
 }: AppShellProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [activeView]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [mobileMenuOpen]);
+
   function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -41,6 +57,11 @@ export function AppShell({
       onSearch(query);
       input.value = "";
     }
+  }
+
+  function handleNavigate(view: AppNavItem) {
+    onNavigate(view);
+    setMobileMenuOpen(false);
   }
 
   return (
@@ -69,10 +90,26 @@ export function AppShell({
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-4 border-b border-white/5 px-4 lg:px-8">
-          <img src="/logo-mark.svg" alt="Buek Core" className="h-7 w-7 rounded bg-white p-0.5 lg:hidden" />
+        <header className="mobile-app-header flex h-14 shrink-0 items-center gap-3 border-b border-white/5 px-4 lg:h-16 lg:gap-4 lg:px-8">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-lg text-white lg:hidden"
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
 
-          <form onSubmit={handleSearchSubmit} className="hidden flex-1 md:block md:max-w-xl">
+          <div className="min-w-0 flex-1 lg:hidden">
+            <p className="truncate text-base font-semibold text-white">Buek Core</p>
+            {tenantTheme ? (
+              <p className="truncate text-xs text-slate-500">
+                {tenantTheme.emoji} {tenantTheme.label}
+              </p>
+            ) : null}
+          </div>
+
+          <form onSubmit={handleSearchSubmit} className="hidden flex-1 md:block md:max-w-xl lg:flex">
             <input
               name="global-search"
               type="search"
@@ -81,12 +118,12 @@ export function AppShell({
             />
           </form>
 
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 lg:gap-3">
             <PreferencesMenu compact />
             <button
               type="button"
               onClick={onOpenInbox}
-              className="relative rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white lg:hidden"
+              className="relative hidden rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white md:inline-flex"
               aria-label="Inbox"
             >
               🔔
@@ -111,26 +148,80 @@ export function AppShell({
             <button
               type="button"
               onClick={onLogout}
-              className="text-sm text-slate-500 hover:text-slate-300"
+              className="hidden text-sm text-slate-500 hover:text-slate-300 sm:inline"
             >
               Sign out
             </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
-          <div key={activeView} className="buek-view-enter mx-auto w-full max-w-[1600px]">{children}</div>
+        <main className="mobile-app-main flex-1 overflow-y-auto px-4 py-5 pb-24 lg:px-8 lg:py-8 lg:pb-8">
+          <div key={activeView} className="buek-view-enter mx-auto w-full max-w-[1600px]">
+            {children}
+          </div>
         </main>
 
-        <aside className="app-shell-sidebar fixed inset-x-0 bottom-0 z-30 border-t border-white/5 lg:hidden">
+        <nav className="mobile-bottom-nav app-shell-sidebar fixed inset-x-0 bottom-0 z-30 border-t border-white/10 lg:hidden">
           <AppNav
             active={activeView}
-            onChange={onNavigate}
-            onOpenInbox={onOpenInbox}
+            onChange={handleNavigate}
+            onOpenInbox={() => {
+              onOpenInbox();
+              setMobileMenuOpen(false);
+            }}
             inboxCount={inboxCount}
+            variant="bottom"
+            {...(visibleNavItems ? { visibleItems: visibleNavItems } : {})}
           />
-        </aside>
+        </nav>
       </div>
+
+      {mobileMenuOpen ? (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/50"
+            aria-label="Close menu"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <aside className="mobile-nav-drawer app-shell-sidebar absolute inset-y-0 left-0 flex w-[min(88vw,320px)] flex-col border-r border-white/10 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-lg font-semibold text-white">Menu</p>
+                <p className="text-sm text-slate-500">{organization}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-white"
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+            </div>
+            <AppNav
+              active={activeView}
+              onChange={handleNavigate}
+              onOpenInbox={() => {
+                onOpenInbox();
+                setMobileMenuOpen(false);
+              }}
+              inboxCount={inboxCount}
+              variant="drawer"
+              {...(visibleNavItems ? { visibleItems: visibleNavItems } : {})}
+            />
+            <div className="mt-auto border-t border-white/10 p-4">
+              <button
+                type="button"
+                onClick={onLogout}
+                className="w-full rounded-xl border border-white/10 px-4 py-3 text-base text-slate-400"
+              >
+                Sign out
+              </button>
+            </div>
+          </aside>
+        </div>
+      ) : null}
 
       {copilot}
     </div>

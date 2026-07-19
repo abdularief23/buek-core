@@ -1,5 +1,5 @@
 import { AiPromptInput } from "@buek/ui";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
 import { buildProactiveBriefing } from "../lib/proactive-briefing.js";
 import { copilotModesForRole } from "../lib/roles.js";
@@ -37,32 +37,34 @@ const modes: Array<{
   { id: "draft", icon: "✨", label: "Buat Draft", description: "Susun draft laporan investigasi" }
 ];
 
-export function AiCopilot({
+function CopilotPanel({
   user,
   workspace,
   roleHome,
-  open,
   messages,
   input,
   isStreaming,
   mode,
+  showChat,
+  visibleModes,
   onToggle,
   onModeChange,
   onInputChange,
   onSubmit,
   onOpenWorkspace,
-  onExplain
-}: AiCopilotProps) {
+  onExplain,
+  fullscreen
+}: AiCopilotProps & {
+  showChat: boolean;
+  visibleModes: typeof modes;
+  fullscreen?: boolean;
+}) {
   const endRef = useRef<HTMLDivElement | null>(null);
   const briefing = buildProactiveBriefing(user.name, workspace, roleHome);
-  const showChat = mode !== null || messages.length > 0;
-  const visibleModes = modes.filter((item) => copilotModesForRole(user.role).includes(item.id));
 
   useEffect(() => {
-    if (open) {
-      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  }, [messages, open]);
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages]);
 
   async function handleSubmit() {
     const trimmedInput = input.trim();
@@ -83,139 +85,156 @@ export function AiCopilot({
   }
 
   return (
-    <>
-      {open ? (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]"
+    <div
+      className={`ai-copilot-panel flex flex-col overflow-hidden bg-slate-900 ${
+        fullscreen
+          ? "fixed inset-0 z-[60] h-full w-full rounded-none border-0"
+          : "max-h-[min(88vh,780px)] w-[min(100vw-1.5rem,42rem)] rounded-2xl border border-white/10 shadow-2xl shadow-black/50"
+      }`}
+    >
+      <header className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4">
+        <div>
+          <p className="mobile-title text-lg font-semibold text-white">AI Assistant</p>
+          <p className="mobile-body text-sm text-slate-500">Hai {user.name} 👋</p>
+        </div>
+        <button
+          type="button"
           onClick={onToggle}
-          aria-hidden="true"
-        />
-      ) : null}
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-white"
+          aria-label="Tutup AI Assistant"
+        >
+          ✕
+        </button>
+      </header>
 
-      <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-3 lg:bottom-8 lg:right-8">
-        {open ? (
-          <div className="ai-copilot-panel flex max-h-[min(88vh,780px)] w-[min(100vw-1.5rem,42rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50">
-            <header className="border-b border-white/10 px-6 py-5">
-              <p className="text-lg font-semibold text-white">Hai {user.name} 👋</p>
-              <p className="mt-1 buek-subtitle text-slate-500">AI Assistant</p>
-            </header>
-
-            {messages.length === 0 ? (
-              <div className="border-b border-white/10 px-6 py-5">
-                <p className="buek-body text-slate-300">{briefing.greeting}</p>
-                {briefing.items.length ? (
-                  <ul className="mt-4 space-y-3">
-                    {briefing.items.map((item, idx) => (
-                      <li
-                        key={item.id}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3"
-                      >
-                        <span className="buek-small text-slate-400">{idx + 1}.</span>
-                        <span className="flex-1 buek-body text-slate-200">{item.text}</span>
-                        <button
-                          type="button"
-                        onClick={() => {
-                          if (item.workspace && onOpenWorkspace) {
-                            onOpenWorkspace(item.workspace);
-                            onToggle();
-                          }
-                        }}
-                          className="shrink-0 rounded-lg bg-cyan-500/20 px-3 py-1.5 text-sm font-medium text-cyan-300 hover:bg-cyan-500/30"
-                        >
-                          {item.actionLabel} ↓
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ) : null}
-
-            {!showChat ? (
-              <div className="border-b border-white/10 px-6 py-5">
-                <p className="text-sm text-slate-500">Apa yang ingin Anda lakukan?</p>
-                <div className="mt-4 grid gap-2">
-                  {visibleModes.map((item) => (
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {messages.length === 0 ? (
+          <div className="shrink-0 border-b border-white/10 px-5 py-4">
+            <p className="mobile-body text-slate-300">{briefing.greeting}</p>
+            {briefing.items.length ? (
+              <ul className="mt-4 space-y-3">
+                {briefing.items.map((item, idx) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3"
+                  >
+                    <span className="mobile-small text-slate-400">{idx + 1}.</span>
+                    <span className="mobile-body flex-1 text-slate-200">{item.text}</span>
                     <button
-                      key={item.id}
                       type="button"
-                      onClick={() => handleModeSelect(item.id)}
-                      className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 text-left hover:border-cyan-400/30 hover:bg-white/[0.03]"
+                      onClick={() => {
+                        if (item.workspace && onOpenWorkspace) {
+                          onOpenWorkspace(item.workspace);
+                          onToggle();
+                        }
+                      }}
+                      className="shrink-0 rounded-lg bg-cyan-500/20 px-3 py-2 text-sm font-medium text-cyan-300"
                     >
-                      <span className="text-xl">{item.icon}</span>
-                      <div>
-                        <p className="text-sm font-medium text-white">{item.label}</p>
-                        <p className="text-xs text-slate-500">{item.description}</p>
-                      </div>
+                      {item.actionLabel}
                     </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {showChat ? (
-              <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
-                {messages.map((message, index) => {
-                  const previousUserMessage = [...messages]
-                    .slice(0, index)
-                    .reverse()
-                    .find((candidate) => candidate.role === "user")?.content;
-
-                  return (
-                    <ChatMessageBlock
-                      key={message.id}
-                      message={message}
-                      workspace={workspace}
-                      previousUserMessage={previousUserMessage}
-                      isStreaming={
-                        isStreaming &&
-                        index === messages.length - 1 &&
-                        message.role === "assistant"
-                      }
-                    />
-                  );
-                })}
-                <div ref={endRef} />
-              </div>
-            ) : null}
-
-            {showChat ? (
-              <div className="border-t border-white/10 p-5">
-                <AiPromptInput
-                  value={input}
-                  onChange={onInputChange}
-                  onSubmit={handleSubmit}
-                  disabled={isStreaming}
-                  placeholder={
-                    mode === "search"
-                      ? "Cari informasi..."
-                      : mode === "summarize"
-                        ? "Data apa yang ingin diringkas?"
-                        : "Jelaskan masalah atau tanyakan analisis..."
-                  }
-                  id="copilot-prompt"
-                />
-              </div>
+                  </li>
+                ))}
+              </ul>
             ) : null}
           </div>
         ) : null}
 
-        <div className="ai-copilot-panel flex flex-col items-center gap-1">
-          {!open ? (
-            <span className="rounded-full bg-slate-800 px-3 py-1.5 text-sm text-slate-200 shadow">
-              AI Assistant
-            </span>
-          ) : null}
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label={open ? "Tutup AI Assistant" : "Buka AI Assistant"}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-cyan-500 text-lg font-bold text-slate-950 shadow-lg shadow-cyan-500/25 transition hover:bg-cyan-400"
-          >
-            {open ? "✕" : "✨"}
-          </button>
-        </div>
+        {!showChat ? (
+          <div className="shrink-0 border-b border-white/10 px-5 py-4">
+            <p className="mobile-body text-slate-500">Apa yang bisa saya bantu?</p>
+            <div className="mt-4 grid gap-2">
+              {visibleModes.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleModeSelect(item.id)}
+                  className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-4 text-left active:bg-white/[0.03]"
+                >
+                  <span className="text-xl">{item.icon}</span>
+                  <div>
+                    <p className="mobile-body font-medium text-white">{item.label}</p>
+                    <p className="mobile-small text-slate-500">{item.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {showChat ? (
+          <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+            {messages.map((message, index) => {
+              const previousUserMessage = [...messages]
+                .slice(0, index)
+                .reverse()
+                .find((candidate) => candidate.role === "user")?.content;
+
+              return (
+                <ChatMessageBlock
+                  key={message.id}
+                  message={message}
+                  workspace={workspace}
+                  previousUserMessage={previousUserMessage}
+                  isStreaming={
+                    isStreaming && index === messages.length - 1 && message.role === "assistant"
+                  }
+                />
+              );
+            })}
+            <div ref={endRef} />
+          </div>
+        ) : null}
+
+        {showChat ? (
+          <div className="shrink-0 border-t border-white/10 p-4">
+            <AiPromptInput
+              value={input}
+              onChange={onInputChange}
+              onSubmit={() => void handleSubmit()}
+              disabled={isStreaming}
+              placeholder="Jelaskan masalah atau tanyakan analisis..."
+              id="copilot-prompt"
+            />
+          </div>
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+export function AiCopilot(props: AiCopilotProps) {
+  const { open, onToggle, user, mode, messages } = props;
+  const showChat = mode !== null || messages.length > 0;
+  const visibleModes = modes.filter((item) => copilotModesForRole(user.role).includes(item.id));
+
+  return (
+    <>
+      {open ? (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] lg:bg-transparent lg:backdrop-blur-none"
+            onClick={onToggle}
+            aria-hidden="true"
+          />
+          <div className="fixed inset-0 z-[60] lg:hidden">
+            <CopilotPanel {...props} showChat={showChat} visibleModes={visibleModes} />
+          </div>
+          <div className="pointer-events-none fixed bottom-8 right-8 z-50 hidden lg:block">
+            <div className="pointer-events-auto">
+              <CopilotPanel {...props} showChat={showChat} visibleModes={visibleModes} />
+            </div>
+          </div>
+        </>
+      ) : (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label="Buka AI Assistant"
+          className="ai-copilot-fab fixed bottom-[5.5rem] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-lg shadow-lg shadow-cyan-500/30 transition hover:bg-cyan-400 lg:bottom-8 lg:h-14 lg:w-14"
+        >
+          ✨
+        </button>
+      )}
     </>
   );
 }

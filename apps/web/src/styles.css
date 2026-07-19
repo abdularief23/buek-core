@@ -322,3 +322,81 @@ body {
 .buek-card-hover:hover {
   transform: translateY(-2px);
 }
+
+/* Mobile enterprise UX */
+@media (max-width: 1023px) {
+  :root {
+    font-size: 17px;
+  }
+
+  .mobile-title {
+    font-size: 1.75rem;
+    line-height: 1.25;
+  }
+
+  .mobile-subtitle {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+
+  .mobile-body {
+    font-size: 1.0625rem;
+    line-height: 1.55;
+  }
+
+  .mobile-small {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
+  .mobile-btn {
+    font-size: 1.0625rem;
+    min-height: 3rem;
+  }
+
+  .buek-heading {
+    font-size: 1.75rem;
+  }
+
+  .buek-card-title {
+    font-size: 1.25rem;
+  }
+
+  .buek-body {
+    font-size: 1.0625rem;
+  }
+
+  .buek-card {
+    padding: 1.25rem;
+  }
+
+  .mobile-touch-card {
+    min-height: 3.5rem;
+  }
+
+  .mobile-nav-drawer {
+    animation: slide-in-left 0.22s ease-out;
+  }
+
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-bottom-nav {
+    backdrop-filter: blur(12px);
+    background-color: rgba(2, 6, 23, 0.92);
+  }
+
+  :root[data-appearance="light"] .mobile-bottom-nav {
+    background-color: rgba(241, 245, 249, 0.95) !important;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
