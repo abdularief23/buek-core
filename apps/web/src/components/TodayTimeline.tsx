@@ -22,7 +22,7 @@ export function TodayTimeline({ workspaceSlug }: TodayTimelineProps) {
       <ol className="relative space-y-0 border-l border-white/10 pl-8">
         {events.map((event, index) => (
           <li key={event.id} className="relative pb-8 last:pb-0">
-            <span className="absolute -left-[1.65rem] top-1.5 h-3 w-3 rounded-full bg-cyan-400 ring-4 ring-slate-950" />
+            <span className="absolute -left-[1.65rem] top-1.5 h-3 w-3 rounded-full bg-tenant-primary ring-4 ring-slate-950" />
             <p className="font-mono text-sm text-slate-500">{event.time}</p>
             <p className="buek-body text-white">{event.title}</p>
             {event.detail ? <p className="buek-small text-slate-500">{event.detail}</p> : null}

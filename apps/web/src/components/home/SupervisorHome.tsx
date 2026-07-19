@@ -1,3 +1,4 @@
+import { tenantPrimaryIssueKey } from "../../lib/tenant-theme.js";
 import { TodayTimeline } from "../TodayTimeline.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
@@ -84,7 +85,7 @@ export function SupervisorHome({ user, workspace, roleHome, onOpenWorkspace }: R
               onOpenWorkspace({
                 kind: "investigation",
                 slug: workspace.id,
-                issueKey: issue.issueKey ?? "white-streak"
+                issueKey: issue.issueKey ?? tenantPrimaryIssueKey(workspace.theme)
               })
             }
             className="buek-card w-full rounded-2xl border border-white/10 text-left hover:border-cyan-400/30"

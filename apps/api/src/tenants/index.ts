@@ -31,6 +31,8 @@ export interface TenantTheme {
   primaryIssueKey: string;
   machineCode: string;
   lineLabel: string;
+  productionTarget: number;
+  reportTitle: string;
   primaryIssue: TenantIssueSeed;
   secondaryIssue: TenantIssueSeed;
 }
@@ -52,6 +54,7 @@ export type TenantThemePayload = Pick<
   | "modules"
   | "knowledgeTopics"
   | "defaultUserName"
+  | "primaryIssueKey"
 >;
 
 export function toTenantThemePayload(theme: TenantTheme): TenantThemePayload {
@@ -70,7 +73,8 @@ export function toTenantThemePayload(theme: TenantTheme): TenantThemePayload {
     sopCount: theme.sopCount,
     modules: theme.modules,
     knowledgeTopics: theme.knowledgeTopics,
-    defaultUserName: theme.defaultUserName
+    defaultUserName: theme.defaultUserName,
+    primaryIssueKey: theme.primaryIssueKey
   };
 }
 
@@ -100,6 +104,8 @@ export const tenantThemes: Record<string, TenantTheme> = {
     primaryIssueKey: "white-streak",
     machineCode: "M-312",
     lineLabel: "Line 2",
+    productionTarget: 12000,
+    reportTitle: "INVESTIGATION REPORT — PRINTER MANUFACTURING",
     primaryIssue: {
       key: "white-streak",
       title: "White Streak Defect",
@@ -142,6 +148,8 @@ export const tenantThemes: Record<string, TenantTheme> = {
     primaryIssueKey: "torque-drift",
     machineCode: "EA-04",
     lineLabel: "EA Line",
+    productionTarget: 8900,
+    reportTitle: "QUALITY INVESTIGATION REPORT — AUTOMOTIVE",
     primaryIssue: {
       key: "torque-drift",
       title: "Torque Station EA-04 Failed",
@@ -184,6 +192,8 @@ export const tenantThemes: Record<string, TenantTheme> = {
     primaryIssueKey: "metal-detector",
     machineCode: "P-03",
     lineLabel: "Line P-03",
+    productionTarget: 21000,
+    reportTitle: "HACCP INCIDENT REPORT — FOOD MANUFACTURING",
     primaryIssue: {
       key: "metal-detector",
       title: "Metal Detector Alarm",
@@ -238,6 +248,8 @@ export function getTenantThemeOrDefault(workspaceId: string): TenantTheme {
       primaryIssueKey: "vibration",
       machineCode: "M-101",
       lineLabel: "Line 1",
+      productionTarget: 8400,
+      reportTitle: "INVESTIGATION REPORT",
       primaryIssue: {
         key: "vibration",
         title: "Machine Vibration Alarm",

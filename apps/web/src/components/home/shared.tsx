@@ -24,9 +24,22 @@ export function RoleHomeHeader({
 }) {
   return (
     <header className="space-y-3 border-b border-white/10 pb-8">
-      <h1 className="buek-heading text-white">Selamat Pagi, {user.name} 👋</h1>
+      <h1 className="buek-heading text-white">
+        Selamat Pagi, {user.name} 👋
+        {workspace.theme ? (
+          <span className="ml-2 text-2xl" aria-hidden="true">
+            {workspace.theme.emoji}
+          </span>
+        ) : null}
+      </h1>
       <p className="buek-body text-slate-400">
         {user.role} <span className="text-slate-600">•</span> {workspace.organization}
+        {workspace.theme ? (
+          <>
+            <span className="text-slate-600"> • </span>
+            <span className="text-tenant">{workspace.theme.industryLabel}</span>
+          </>
+        ) : null}
       </p>
       <p className="buek-subtitle text-slate-500">{subtitle}</p>
     </header>

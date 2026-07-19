@@ -10,7 +10,7 @@ import { LoginScreen } from "./components/LoginScreen.js";
 import { NotificationsPanel } from "./components/NotificationsPanel.js";
 import { ProfileView } from "./components/ProfileView.js";
 import { WorkflowView } from "./components/WorkflowView.js";
-import { applyTenantTheme } from "./lib/tenant-theme.js";
+import { applyTenantTheme, tenantPrimaryIssueKey } from "./lib/tenant-theme.js";
 import {
   createMessageId,
   hasErrorMessage,
@@ -286,12 +286,7 @@ export function App() {
                 setDynamicWorkspace({ kind: "engineering-reports", slug });
                 setActiveView("home");
               } else if (action.toolName === "start_investigation") {
-                const issueKey =
-                  currentWorkspace.id === "toyota-plant"
-                    ? "torque-drift"
-                    : currentWorkspace.id === "nestle-factory"
-                      ? "metal-detector"
-                      : "white-streak";
+                const issueKey = tenantPrimaryIssueKey(currentWorkspace.theme);
                 setDynamicWorkspace({
                   kind: "investigation",
                   slug,
@@ -361,6 +356,7 @@ export function App() {
   }
 
   function handleLogout() {
+    applyTenantTheme(null);
     setIsSignedIn(false);
     setCurrentUser(null);
     setCurrentWorkspace(null);
@@ -393,6 +389,7 @@ export function App() {
         activeView={activeView}
         user={currentUser}
         organization={currentWorkspace.organization}
+        tenantTheme={currentWorkspace.theme ?? null}
         onNavigate={handleNavigate}
         onOpenInbox={() => setInboxOpen(true)}
         onLogout={handleLogout}

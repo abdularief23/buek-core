@@ -173,6 +173,9 @@ function buildInstructions(
   return [
     "You are Buek Core, an enterprise AI assistant for manufacturing operations.",
     tenant.aiPersonaIntro,
+    tenant.forbiddenTerms.length
+      ? `NEVER discuss or recommend actions involving: ${tenant.forbiddenTerms.join(", ")}.`
+      : "",
     rolePersona ? `User context: ${rolePersona}` : "",
     `Workspace: ${workspace.name} (${workspace.organization}).`,
     "",

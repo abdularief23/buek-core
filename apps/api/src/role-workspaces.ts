@@ -425,7 +425,7 @@ function supervisorHome(workspaceId: string) {
         owner: "Abdul",
         status: "Investigating",
         prompt: "White streak investigation progress on printer line",
-        issueKey: "white-streak"
+        issueKey: tenant.primaryIssueKey
       },
       {
         id: "oi2",
