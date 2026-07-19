@@ -13,6 +13,26 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Check required secrets
+        run: |
+          missing=0
+          for key in VPS_HOST VPS_USER SSH_PRIVATE_KEY; do
+            if [ -z "${!key:-}" ]; then
+              echo "::error::Missing GitHub secret: ${key}"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo ""
+            echo "Auto-deploy cannot run without SSH secrets."
+            echo "Deploy manually on VPS: ./scripts/console-recover.sh"
+            exit 1
+          fi
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -21,6 +41,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script_stop: true
+          command_timeout: 30m
           script: |
             set -euo pipefail
             if [ -d "$HOME/buek-core" ]; then
@@ -34,4 +55,16 @@ jobs:
               git clone https://github.com/abdularief23/buek-core.git
               cd buek-core
             fi
+            chmod +x scripts/*.sh
             ./scripts/console-recover.sh
+
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify live deployment
+        run: |
+          chmod +x scripts/verify-deploy.sh
+          ./scripts/verify-deploy.sh https://core.buekwebsite.com

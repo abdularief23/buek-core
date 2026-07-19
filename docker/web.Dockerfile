@@ -12,6 +12,9 @@ COPY . .
 ARG VITE_APP_BUILD=dev
 ENV VITE_APP_BUILD=$VITE_APP_BUILD
 RUN pnpm --filter @buek/web... build
+RUN printf '{"build":"%s","featureSet":"engineering-copilot-v2","deployedAt":"%s"}\n' \
+  "$VITE_APP_BUILD" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  > /app/apps/web/dist/version.json
 
 FROM nginx:1.27-alpine AS runtime
 
