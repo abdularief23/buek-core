@@ -11,6 +11,7 @@ import { NotificationsPanel } from "./components/NotificationsPanel.js";
 import { ProfileView } from "./components/ProfileView.js";
 import { WorkflowView } from "./components/WorkflowView.js";
 import { applyTenantTheme, tenantPrimaryIssueKey } from "./lib/tenant-theme.js";
+import { getAppLanguage } from "./lib/user-preferences.js";
 import {
   createMessageId,
   hasErrorMessage,
@@ -209,6 +210,7 @@ export function App() {
           workspaceId: currentWorkspace?.id,
           role: currentUser?.role,
           chatPersona: roleHome?.chatPersona,
+          language: getAppLanguage(),
           messages: [...chatPayload, { role: "user", content: contextualPrompt }]
         })
       });

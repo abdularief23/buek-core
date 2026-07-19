@@ -130,10 +130,61 @@ export interface EngineeringReport {
 export interface ReportSections {
   background: string;
   evidence: string;
+  analysis: string;
+  decision: string;
   rootCause: string;
   countermeasure: string;
+  executionPlan: string;
   verification: string;
+  verificationResult: string;
   attachments: string[];
+}
+
+export interface PossibleCause {
+  id: string;
+  label: string;
+  confidence: number;
+  evidence: string[];
+}
+
+export interface CountermeasureOption {
+  id: string;
+  label: string;
+  category: string;
+}
+
+export interface ExecutionPlanDto {
+  pic: string;
+  dueDate: string;
+  machineStop: boolean;
+  materialNeeded: string;
+  estimatedDowntime: string;
+}
+
+export interface InvestigationCopilot {
+  issueKey: string;
+  issueTitle: string;
+  machineCode?: string;
+  autoLoadedContext: string[];
+  similarCases: Array<{ id: string; title: string; reference?: string }>;
+  sopReferences: Array<{ id: string; title: string; referenceId?: string }>;
+  possibleCauses: PossibleCause[];
+  countermeasureOptions: CountermeasureOption[];
+  defaultExecutionPlan: ExecutionPlanDto;
+}
+
+export interface InvestigationDraftInput {
+  evidence?: string;
+  analysis?: string;
+  decision?: string;
+  rootCause?: string;
+  countermeasure?: string;
+  executionPlan?: string;
+  verification?: string;
+  verificationResult?: string;
+  lessonsLearned?: string;
+  selectedCauseLabel?: string;
+  executionPlanFields?: ExecutionPlanDto;
 }
 
 export interface AiSuggestion {
@@ -261,15 +312,25 @@ export function submitOperatorReport(
   );
 }
 
-export function createDraftReport(slug: string, issueKey: string, engineerName: string, role: string) {
+export function createDraftReport(
+  slug: string,
+  issueKey: string,
+  engineerName: string,
+  role: string,
+  investigationDraft?: InvestigationDraftInput
+) {
   return fetchJson<{ report: EngineeringReport; aiSuggestion: AiSuggestion }>(
     `/api/data/${slug}/reports/draft`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ issueKey, engineerName, role })
+      body: JSON.stringify({ issueKey, engineerName, role, investigationDraft })
     }
   );
+}
+
+export function fetchInvestigationCopilot(slug: string, issueKey: string) {
+  return fetchJson<{ copilot: InvestigationCopilot }>(`/api/data/${slug}/issues/${issueKey}/copilot`);
 }
 
 export function updateReportSections(

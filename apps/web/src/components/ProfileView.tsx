@@ -1,4 +1,14 @@
+import { useState } from "react";
 import type { DemoUser, ModuleSummary, Workspace } from "../types.js";
+import {
+  type AppearanceMode,
+  type AppLanguage,
+  getAppearanceMode,
+  getAppLanguage,
+  LANGUAGE_LABELS,
+  setAppearanceMode,
+  setAppLanguage
+} from "../lib/user-preferences.js";
 
 interface ProfileViewProps {
   workspace: Workspace;
@@ -9,6 +19,8 @@ interface ProfileViewProps {
 
 export function ProfileView({ workspace, user, installedModule, status }: ProfileViewProps) {
   const totalDocuments = workspace.documentStats.reduce((sum, item) => sum + item.count, 0);
+  const [appearance, setAppearance] = useState<AppearanceMode>(getAppearanceMode());
+  const [language, setLanguage] = useState<AppLanguage>(getAppLanguage());
 
   const settings = [
     { label: "AI Provider", value: workspace.aiProvider },
@@ -54,6 +66,61 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
             </div>
           ))}
         </dl>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="buek-card-title text-slate-400">Appearance</h2>
+        <div className="space-y-2 rounded-2xl border border-white/10 p-4">
+          {(
+            [
+              ["dark", "Dark"],
+              ["light", "Light"],
+              ["system", "System"]
+            ] as const
+          ).map(([value, label]) => (
+            <label key={value} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-white/5">
+              <input
+                type="radio"
+                name="appearance"
+                checked={appearance === value}
+                onChange={() => {
+                  setAppearance(value);
+                  setAppearanceMode(value);
+                }}
+              />
+              <span className="buek-body text-slate-200">{label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="buek-card-title text-slate-400">Language</h2>
+        <div className="space-y-2 rounded-2xl border border-white/10 p-4">
+          {(
+            [
+              ["id", "🇮🇩"],
+              ["en", "🇺🇸"],
+              ["ja", "🇯🇵"]
+            ] as const
+          ).map(([value, flag]) => (
+            <label key={value} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-white/5">
+              <input
+                type="radio"
+                name="language"
+                checked={language === value}
+                onChange={() => {
+                  setLanguage(value);
+                  setAppLanguage(value);
+                }}
+              />
+              <span className="buek-body text-slate-200">
+                {flag} {LANGUAGE_LABELS[value]}
+              </span>
+            </label>
+          ))}
+        </div>
+        <p className="buek-small text-slate-500">AI akan merespons dalam bahasa yang dipilih.</p>
       </section>
 
       <section className="space-y-4">

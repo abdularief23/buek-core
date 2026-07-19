@@ -31,6 +31,7 @@ interface ChatRequestBody {
   workspaceId?: string;
   role?: string;
   chatPersona?: string;
+  language?: "id" | "en" | "ja";
 }
 
 interface ChatMetadata {
@@ -158,7 +159,8 @@ function buildInstructions(
   memories: Array<{ scope: string; content: string }> = [],
   actionContext = "",
   rolePersona = "",
-  dataSnapshot = ""
+  dataSnapshot = "",
+  language: "id" | "en" | "ja" = "id"
 ): string {
   const knowledgeText = selectedKnowledge
     .map(({ chunk }) =>
@@ -170,12 +172,18 @@ function buildInstructions(
 
   const tenant = getTenantThemeOrDefault(workspace.id);
 
+  const languageRule =
+    language === "ja"
+      ? "- Respond in professional Japanese."
+      : language === "en"
+        ? "- Respond in professional English."
+        : "- Respond in natural Bahasa Indonesia.";
+
   return [
     "You are Buek Core, an enterprise AI assistant for manufacturing operations.",
     tenant.aiPersonaIntro,
-    tenant.forbiddenTerms.length
-      ? `NEVER discuss or recommend actions involving: ${tenant.forbiddenTerms.join(", ")}.`
-      : "",
+    `Focus on manufacturing capabilities: SOP, WI, QC, KPI, PPM, OEE, downtime, maintenance, quality, customer complaint, CAPA, NCR, engineering report, work order.`,
+    `Never present a single root cause as final — always offer ranked possible causes and let the engineer decide.`,
     rolePersona ? `User context: ${rolePersona}` : "",
     `Workspace: ${workspace.name} (${workspace.organization}).`,
     "",
@@ -183,7 +191,7 @@ function buildInstructions(
     "- Use ONLY the LIVE DATABASE SNAPSHOT below for factual answers (counts, statuses, names).",
     "- NEVER invent data. If snapshot is empty for a topic, say you cannot access that data.",
     "- Do NOT mention: detected module, reasoning, developer prompts, OpenAI, hackathon, internal systems.",
-    "- Respond in natural Bahasa Indonesia.",
+    languageRule,
     "- Use ## headings only when helpful. No 'Detected Module' or 'Reasoning' headings.",
     "",
     "LIVE DATABASE SNAPSHOT (authoritative):",
@@ -327,6 +335,9 @@ export async function handleChatRequest(
     // Metadata for internal debugging only — not rendered in user chat UI.
     sendEvent(res, "metadata", metadata);
 
+    const language =
+      requestBody.language === "en" || requestBody.language === "ja" ? requestBody.language : "id";
+
     const client = createResponsesClient({ apiKey: env.openAiApiKey });
     const stream = await client.responses.create({
       model: env.openAiModel,
@@ -337,7 +348,8 @@ export async function handleChatRequest(
         memories,
         actionContext,
         rolePersona,
-        dataContext.snapshot
+        dataContext.snapshot,
+        language
       ),
       input: buildInput(messages),
       stream: true,

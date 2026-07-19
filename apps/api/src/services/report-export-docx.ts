@@ -76,11 +76,13 @@ export async function renderReportDocx(report: ReportDocxInput): Promise<Buffer>
 
   if (report.sections) {
     children.push(
-      ...sectionParagraph("1. Background", report.sections.background),
-      ...sectionParagraph("2. Evidence", report.sections.evidence),
-      ...sectionParagraph("3. Root Cause", report.sections.rootCause),
-      ...sectionParagraph("4. Countermeasure", report.sections.countermeasure),
-      ...sectionParagraph("5. Verification", report.sections.verification),
+      ...sectionParagraph("Evidence", report.sections.evidence || report.sections.background),
+      ...sectionParagraph("Analysis", report.sections.analysis),
+      ...sectionParagraph("Decision", report.sections.decision || report.sections.rootCause),
+      ...sectionParagraph("Countermeasure", report.sections.countermeasure),
+      ...sectionParagraph("Execution Plan", report.sections.executionPlan),
+      ...sectionParagraph("Verification", report.sections.verification),
+      ...sectionParagraph("Verification Result", report.sections.verificationResult),
       new Paragraph({
         text: "Attachments",
         heading: HeadingLevel.HEADING_2,

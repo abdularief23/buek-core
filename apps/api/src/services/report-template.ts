@@ -1,9 +1,13 @@
 export interface ReportSections {
   background: string;
   evidence: string;
+  analysis: string;
+  decision: string;
   rootCause: string;
   countermeasure: string;
+  executionPlan: string;
   verification: string;
+  verificationResult: string;
   attachments: string[];
 }
 
@@ -14,15 +18,21 @@ export interface ReportMeta {
   date: string;
   engineer: string;
   status: string;
+  organization?: string;
+  version?: number;
 }
 
 export function emptyReportSections(): ReportSections {
   return {
     background: "",
     evidence: "",
+    analysis: "",
+    decision: "",
     rootCause: "",
     countermeasure: "",
+    executionPlan: "",
     verification: "",
+    verificationResult: "",
     attachments: []
   };
 }
@@ -34,34 +44,46 @@ export function renderReportDocument(meta: ReportMeta, sections: ReportSections)
       : "□ Photo\n□ SOP\n□ Trend";
 
   return [
-    "INVESTIGATION REPORT",
+    meta.organization ? meta.organization.toUpperCase() : "ENGINEERING INVESTIGATION REPORT",
+    "ENGINEERING INVESTIGATION REPORT",
     "--------------------------------",
-    `Problem     : ${meta.problem}`,
+    `Report No   : ${meta.reportNumber}`,
     `Machine     : ${meta.machine ?? "—"}`,
-    `Date        : ${meta.date}`,
     `Engineer    : ${meta.engineer}`,
-    `Document No : ${meta.reportNumber}`,
+    `Date        : ${meta.date}`,
+    `Document    : v${meta.version ?? 1} · ${meta.status.toUpperCase()}`,
     "--------------------------------",
     "",
-    "1. Background",
+    "PROBLEM",
     "--------------------------------",
-    sections.background || "____________________",
+    meta.problem,
     "",
-    "2. Evidence",
+    "EVIDENCE",
     "--------------------------------",
-    sections.evidence || "____________________",
+    sections.evidence || sections.background || "____________________",
     "",
-    "3. Root Cause",
+    "ANALYSIS",
     "--------------------------------",
-    sections.rootCause || "____________________",
+    sections.analysis || "____________________",
     "",
-    "4. Countermeasure",
+    "DECISION",
+    "--------------------------------",
+    sections.decision || sections.rootCause || "____________________",
+    "",
+    "COUNTERMEASURE",
     "--------------------------------",
     sections.countermeasure || "____________________",
     "",
-    "5. Verification",
+    "EXECUTION PLAN",
+    "--------------------------------",
+    sections.executionPlan || "____________________",
+    "",
+    "VERIFICATION",
     "--------------------------------",
     sections.verification || "____________________",
+    ...(sections.verificationResult
+      ? ["", "VERIFICATION RESULT", "--------------------------------", sections.verificationResult]
+      : []),
     "",
     "Attachments",
     "--------------------------------",
@@ -81,9 +103,13 @@ export function buildDraftSectionsFromIssue(issue: {
   return {
     background: issue.description ?? `Investigation opened for ${issue.title}.`,
     evidence: `Machine ${issue.machineCode ?? "—"} observed defect pattern during production run.`,
+    analysis: "",
+    decision: "",
     rootCause: "",
     countermeasure: "",
+    executionPlan: "",
     verification: "",
+    verificationResult: "",
     attachments: ["Photo", "SOP", "Trend"]
   };
 }

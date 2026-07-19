@@ -21,6 +21,7 @@ import { listConnectors, fetchOperationalSnapshot } from "../connectors/index.js
 import { getKpiDetail, getProductionDashboard } from "../services/production-dashboard.js";
 import { getComplaintById, getComplaints } from "../services/customer-complaints.js";
 import { submitOperatorReport } from "../services/operator-report.js";
+import { getInvestigationCopilot } from "../services/investigation-copilot.js";
 import {
   approveReport,
   approveSopRevision,
@@ -390,14 +391,20 @@ export async function handleOperatorReport(req: Request, res: Response) {
 
 export async function handleCreateDraftReport(req: Request, res: Response) {
   try {
-    const body = req.body as { issueKey: string; engineerName: string; role?: string };
+    const body = req.body as {
+      issueKey: string;
+      engineerName: string;
+      role?: string;
+      investigationDraft?: Record<string, unknown>;
+    };
     const suggestion = await getAiSuggestionForIssue(getSlug(req), body.issueKey);
     const report = await createDraftReport(
       getSlug(req),
       body.issueKey,
       body.engineerName,
       suggestion,
-      body.role
+      body.role,
+      body.investigationDraft
     );
     if (!report) {
       res.status(404).json({ error: { message: "Issue not found" } });
@@ -459,6 +466,19 @@ export async function handleAiSuggestion(req: Request, res: Response) {
   try {
     const suggestion = await getAiSuggestionForIssue(getSlug(req), String(req.params.issueKey));
     res.json({ suggestion });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleInvestigationCopilot(req: Request, res: Response) {
+  try {
+    const copilot = await getInvestigationCopilot(getSlug(req), String(req.params.issueKey));
+    if (!copilot) {
+      res.status(404).json({ error: { message: "Issue not found" } });
+      return;
+    }
+    res.json({ copilot });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

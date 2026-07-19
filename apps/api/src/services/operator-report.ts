@@ -1,4 +1,5 @@
 import { prisma } from "../db.js";
+import { defaultInvestigationSteps } from "./investigation-copilot.js";
 
 export interface OperatorReportInput {
   problem: string;
@@ -56,15 +57,7 @@ export async function submitOperatorReport(slug: string, input: OperatorReportIn
       issueId: issue.id,
       status: "in_progress",
       progress: 0,
-      steps: [
-        { key: "reported", label: "Operator Report", done: true },
-        { key: "evidence", label: "Evidence", done: false },
-        { key: "root_cause", label: "Root Cause", done: false },
-        { key: "countermeasure", label: "Countermeasure", done: false },
-        { key: "verification", label: "Verification", done: false },
-        { key: "approval", label: "Approval", done: false },
-        { key: "closed", label: "Closed", done: false }
-      ]
+      steps: defaultInvestigationSteps()
     }
   });
 
