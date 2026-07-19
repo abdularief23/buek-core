@@ -292,6 +292,11 @@ export function submitReportForApproval(slug: string, reportId: string, engineer
   });
 }
 
+export function reportExportUrl(slug: string, reportId: string, print = true) {
+  const printParam = print ? "?print=1" : "";
+  return `${apiUrl}/api/data/${slug}/reports/${reportId}/export${printParam}`;
+}
+
 export function fetchAiSuggestion(slug: string, issueKey: string) {
   return fetchJson<{ suggestion: AiSuggestion }>(`/api/data/${slug}/issues/${issueKey}/ai-suggestion`);
 }

@@ -19,6 +19,7 @@ import {
   fetchWorkOrder,
   rejectReport,
   rejectWorkOrder,
+  reportExportUrl,
   requestReportRevision,
   submitReportForApproval,
   updateReportSections,
@@ -919,6 +920,60 @@ function ReportQueueWorkspace({
   );
 }
 
+const REPORT_WORKFLOW_STEPS = ["Draft", "Submitted", "Pending Review", "Approved", "Closed"] as const;
+
+function reportWorkflowActiveStep(status: string): number {
+  switch (status) {
+    case "draft":
+    case "revision_requested":
+      return 0;
+    case "pending_approval":
+      return 2;
+    case "approved":
+      return 4;
+    default:
+      return 0;
+  }
+}
+
+function ReportWorkflowStepper({ status }: { status: string }) {
+  if (status === "rejected") {
+    return (
+      <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+        <p className="buek-small font-semibold text-red-300">Report Rejected — engineer must revise and resubmit</p>
+      </div>
+    );
+  }
+
+  const activeStep = reportWorkflowActiveStep(status);
+
+  return (
+    <ol className="flex flex-wrap items-center gap-2">
+      {REPORT_WORKFLOW_STEPS.map((step, index) => (
+        <li key={step} className="flex items-center gap-2">
+          <span
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+              index === activeStep
+                ? "bg-cyan-500 text-slate-950"
+                : index < activeStep
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : "border border-white/10 text-slate-600"
+            }`}
+          >
+            {index < activeStep ? "✓ " : ""}
+            {step}
+          </span>
+          {index < REPORT_WORKFLOW_STEPS.length - 1 ? (
+            <span className="text-slate-600" aria-hidden="true">
+              →
+            </span>
+          ) : null}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function ReportDetailWorkspace({
   slug,
   reportId,
@@ -1036,6 +1091,11 @@ function ReportDetailWorkspace({
         </button>
       </header>
 
+      <section className="space-y-3">
+        <h2 className="buek-small font-semibold uppercase tracking-wider text-slate-500">Workflow Progress</h2>
+        <ReportWorkflowStepper status={report.status} />
+      </section>
+
       <div className="buek-card rounded-2xl border border-white/10 bg-slate-900/50 p-8 font-mono text-sm leading-relaxed text-slate-200">
         <p className="text-center text-base font-bold tracking-widest text-white">INVESTIGATION REPORT</p>
         <p className="my-4 text-center text-slate-500">--------------------------------</p>
@@ -1145,6 +1205,13 @@ function ReportDetailWorkspace({
             Laporan menunggu persetujuan Supervisor. Engineer tidak dapat approve.
           </p>
         ) : null}
+        <button
+          type="button"
+          onClick={() => window.open(reportExportUrl(slug, report.id), "_blank", "noopener,noreferrer")}
+          className="rounded-xl border border-white/10 px-6 py-3 font-semibold text-white hover:bg-white/5"
+        >
+          Export PDF
+        </button>
         <button
           type="button"
           onClick={() => onAskAi(`Review engineering report: ${report.title}`, report.title)}

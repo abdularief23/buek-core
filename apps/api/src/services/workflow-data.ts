@@ -62,6 +62,47 @@ async function getEmployeeByName(workspaceId: string, name: string) {
   });
 }
 
+type InvestigationStep = { key: string; label: string; done: boolean };
+
+async function syncInvestigationProgress(issueId: string, reportStatus: string) {
+  const investigation = await prisma.investigation.findUnique({ where: { issueId } });
+  if (!investigation) return;
+
+  const steps = (investigation.steps as InvestigationStep[]).map((step) => {
+    if (["reported", "evidence"].includes(step.key)) return { ...step, done: true };
+    if (["root_cause", "countermeasure", "verification"].includes(step.key)) {
+      return { ...step, done: reportStatus !== "draft" };
+    }
+    if (step.key === "approval") {
+      return { ...step, done: reportStatus === "pending_approval" || reportStatus === "approved" };
+    }
+    if (step.key === "closed") {
+      return { ...step, done: reportStatus === "approved" };
+    }
+    return step;
+  });
+
+  const doneCount = steps.filter((s) => s.done).length;
+  const progress = Math.round((doneCount / steps.length) * 100);
+
+  await prisma.investigation.update({
+    where: { issueId },
+    data: {
+      steps,
+      progress,
+      status: reportStatus === "approved" ? "completed" : "in_progress"
+    }
+  });
+
+  await prisma.issue.update({
+    where: { id: issueId },
+    data: {
+      progress,
+      status: reportStatus === "approved" ? "closed" : "investigating"
+    }
+  });
+}
+
 function mapReportRow(row: {
   id: string;
   title: string;
@@ -436,6 +477,10 @@ export async function submitReportForApproval(slug: string, reportId: string, en
     }
   });
 
+  if (existing.issueId) {
+    await syncInvestigationProgress(existing.issueId, "pending_approval");
+  }
+
   return mapReportRow(updated);
 }
 
@@ -473,10 +518,7 @@ export async function approveReport(
   });
 
   if (report.issueId) {
-    await prisma.issue.update({
-      where: { id: report.issueId },
-      data: { status: "closed", progress: 100 }
-    });
+    await syncInvestigationProgress(report.issueId, "approved");
 
     const sections = (report.sections as ReportSections | null) ?? null;
     await createLessonLearned(
@@ -655,6 +697,26 @@ export async function saveMemory(slug: string, scope: string, content: string, t
 
   return prisma.memoryRecord.create({
     data: { workspaceId, scope, content, tags }
+  });
+}
+
+export async function getReportExportHtml(slug: string, reportId: string) {
+  const report = await getReportById(slug, reportId);
+  if (!report) return null;
+
+  const workspace = await prisma.workspace.findUnique({ where: { slug } });
+
+  const { renderPrintableHtml } = await import("./report-export.js");
+  return renderPrintableHtml({
+    reportNumber: report.reportNumber ?? reportId,
+    problem: report.issueTitle ?? report.title,
+    date: report.submittedAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+    engineer: report.author?.name ?? "—",
+    status: report.status,
+    version: report.version,
+    sections: report.sections ?? null,
+    content: report.content,
+    ...(workspace?.organization ? { organization: workspace.organization } : {})
   });
 }
 
