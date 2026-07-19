@@ -1,12 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/og-image.svg" alt="Buek Core" width="720" />
-</p>
-
-<h1 align="center">Buek Core</h1>
-
-<p align="center">
-  <strong>Build AI Workers for Any Industry</strong><br />
-  <em>One AI Core. Unlimited Industry Knowledge.</em>
+  <img src="docs/images/buek-core-hero.svg" alt="BUEK CORE — Build AI Workers for Any Industry" width="720" />
 </p>
 
 <p align="center">
