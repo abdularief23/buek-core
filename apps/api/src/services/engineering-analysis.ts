@@ -20,7 +20,9 @@ export interface EngineeringAnalysisData {
     trend: boolean;
     machineHistory: boolean;
     notes: string;
+    photos?: string[];
   };
+  analysisPhotos?: string[];
   selectedCause?: {
     label: string;
     confidence: number;
@@ -69,8 +71,10 @@ function emptyAnalysis(): EngineeringAnalysisData {
       photo: false,
       trend: false,
       machineHistory: false,
-      notes: ""
+      notes: "",
+      photos: []
     },
+    analysisPhotos: [],
     countermeasures: [],
     countermeasureNotes: "",
     executionPlan: {
@@ -92,7 +96,7 @@ async function getIssueWithInvestigation(slug: string, issueKey: string) {
 
   const issue = await prisma.issue.findFirst({
     where: { workspaceId, id: { endsWith: issueKey } },
-    include: { machine: true, investigation: true }
+    include: { machine: true, investigation: true, owner: true }
   });
   return issue;
 }
@@ -227,7 +231,13 @@ export async function getEngineeringAnalysis(slug: string, issueKey: string) {
 
   return {
     issueKey,
+    issueId: issue.id,
     issueTitle: issue.title,
+    issueMeta: {
+      createdAt: issue.createdAt.toISOString(),
+      createdBy: issue.owner?.name ?? "System",
+      reportedAt: issue.createdAt.toISOString()
+    },
     metrics,
     analysis,
     copilot,
@@ -461,7 +471,9 @@ export async function generateReportFromAnalysis(
     analysis.evidence.photo ? "✓ Photo" : null,
     analysis.evidence.trend ? "✓ Trend" : null,
     analysis.evidence.machineHistory ? "✓ Machine History" : null,
-    analysis.evidence.notes || null
+    analysis.evidence.notes || null,
+    analysis.evidence.photos?.length ? `✓ ${analysis.evidence.photos.length} foto evidence terlampir` : null,
+    analysis.analysisPhotos?.length ? `✓ ${analysis.analysisPhotos.length} foto analisa terlampir` : null
   ]
     .filter(Boolean)
     .join("\n");

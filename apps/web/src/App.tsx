@@ -427,6 +427,7 @@ export function App() {
               onAskAi={(prompt, contextLabel) => handleExplainAi(prompt, contextLabel)}
               onWorkspaceChange={setDynamicWorkspace}
               onDataChange={() => void refreshLiveData()}
+              onOpenKnowledge={() => setActiveView("knowledge")}
             />
           ) : (
             <HomeView

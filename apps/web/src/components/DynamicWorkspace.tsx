@@ -52,6 +52,7 @@ interface DynamicWorkspaceProps {
   onAskAi: (prompt: string, contextLabel: string) => void;
   onWorkspaceChange: (next: DynamicWorkspaceState) => void;
   onDataChange?: () => void;
+  onOpenKnowledge?: () => void;
 }
 
 export function DynamicWorkspace({
@@ -61,7 +62,8 @@ export function DynamicWorkspace({
   onClose,
   onAskAi,
   onWorkspaceChange,
-  onDataChange
+  onDataChange,
+  onOpenKnowledge
 }: DynamicWorkspaceProps) {
   const notifyChange = onDataChange ?? (() => {});
 
@@ -148,15 +150,19 @@ export function DynamicWorkspace({
   }
 
   if (workspace.kind === "investigation") {
+    const investigationProps = {
+      slug: workspace.slug,
+      issueKey: workspace.issueKey,
+      userName,
+      userRole,
+      onClose,
+      onDataChange: notifyChange,
+      onWorkspaceChange
+    };
     return (
       <InvestigationCopilotWorkspace
-        slug={workspace.slug}
-        issueKey={workspace.issueKey}
-        userName={userName}
-        userRole={userRole}
-        onClose={onClose}
-        onDataChange={notifyChange}
-        onWorkspaceChange={onWorkspaceChange}
+        {...investigationProps}
+        {...(onOpenKnowledge ? { onOpenKnowledge } : {})}
       />
     );
   }

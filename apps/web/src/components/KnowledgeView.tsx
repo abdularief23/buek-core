@@ -233,7 +233,9 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
                     {machine.issues.map((issue) => (
                       <div key={issue.id} className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
                         <p className="buek-body text-white">{issue.title}</p>
-                        <p className="buek-small text-slate-500">Issue #{issue.issueKey} · {issue.status}</p>
+                        <p className="buek-small text-slate-500">
+                          Issue #{issue.issueKey} · {issue.status} · {new Date(issue.createdAt).toLocaleString("id-ID")} · oleh {issue.createdBy}
+                        </p>
                         {issue.reports.length ? (
                           <div className="mt-2 space-y-1">
                             <p className="buek-small text-cyan-400">Technical Reports</p>
