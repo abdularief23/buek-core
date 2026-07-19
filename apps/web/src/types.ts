@@ -27,6 +27,16 @@ export interface RoleHomeData {
       contextLabel: string;
       action?: string;
       issueKey?: string;
+      metrics?: {
+        machineCode: string;
+        issueTitle: string;
+        currentPpm: number;
+        targetPpm: number;
+        increasePercent: number;
+        priority: string;
+        dueLabel: string;
+        analysisStatus?: string;
+      };
     }>;
     investigations: Array<{ id: string; label: string; prompt: string; issueKey?: string }>;
     aiSuggestions: Array<{

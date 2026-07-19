@@ -13,6 +13,14 @@ import {
   handleAiAction,
   handleAiSuggestion,
   handleInvestigationCopilot,
+  handleEngineerMetrics,
+  handleGetEngineeringAnalysis,
+  handleSaveEngineeringAnalysis,
+  handleSubmitEngineeringAnalysis,
+  handleApproveEngineeringAnalysis,
+  handleRejectEngineeringAnalysis,
+  handleSubmitVerification,
+  handleGenerateReportFromAnalysis,
   handleCompanyBrain,
   handleApproveReport,
   handleApproveSopRevision,
@@ -259,6 +267,14 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.post("/api/data/:slug/reports/:reportId/request-revision", (req, res) => void handleRequestReportRevision(req, res));
   app.post("/api/data/:slug/operator/report", (req, res) => void handleOperatorReport(req, res));
   app.get("/api/data/:slug/issues/:issueKey/ai-suggestion", (req, res) => void handleAiSuggestion(req, res));
+  app.get("/api/data/:slug/engineer/metrics", (req, res) => void handleEngineerMetrics(req, res));
+  app.get("/api/data/:slug/issues/:issueKey/analysis", (req, res) => void handleGetEngineeringAnalysis(req, res));
+  app.put("/api/data/:slug/issues/:issueKey/analysis", (req, res) => void handleSaveEngineeringAnalysis(req, res));
+  app.post("/api/data/:slug/issues/:issueKey/analysis/submit", (req, res) => void handleSubmitEngineeringAnalysis(req, res));
+  app.post("/api/data/:slug/issues/:issueKey/analysis/approve", (req, res) => void handleApproveEngineeringAnalysis(req, res));
+  app.post("/api/data/:slug/issues/:issueKey/analysis/reject", (req, res) => void handleRejectEngineeringAnalysis(req, res));
+  app.post("/api/data/:slug/issues/:issueKey/analysis/verification", (req, res) => void handleSubmitVerification(req, res));
+  app.post("/api/data/:slug/issues/:issueKey/analysis/generate-report", (req, res) => void handleGenerateReportFromAnalysis(req, res));
   app.get("/api/data/:slug/issues/:issueKey/copilot", (req, res) => void handleInvestigationCopilot(req, res));
   app.get("/api/data/:slug/company-brain", (req, res) => void handleCompanyBrain(req, res));
   app.get("/api/data/:slug/lessons-learned", (req, res) => void handleLessonsLearned(req, res));

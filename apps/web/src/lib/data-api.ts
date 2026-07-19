@@ -330,6 +330,135 @@ export function createDraftReport(
   );
 }
 
+export interface EngineeringAnalysisData {
+  status: string;
+  evidence: {
+    qcResult: boolean;
+    photo: boolean;
+    trend: boolean;
+    machineHistory: boolean;
+    notes: string;
+  };
+  selectedCause?: { label: string; confidence: number; isOther?: boolean };
+  useHistoricalCountermeasure?: boolean;
+  countermeasures: string[];
+  countermeasureNotes: string;
+  executionPlan: {
+    pic: string;
+    executionDate: string;
+    expectedFinish: string;
+    verificationDate: string;
+  };
+  verification?: {
+    countermeasureComplete: boolean;
+    currentPpm?: number;
+    targetPpm?: number;
+    status?: string;
+    lessonsLearned?: string;
+  };
+  submittedAt?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  revisionNotes?: string;
+}
+
+export interface EngineerIssueMetrics {
+  machineCode: string;
+  issueTitle: string;
+  currentPpm: number;
+  targetPpm: number;
+  increasePercent: number;
+  priority: string;
+  dueLabel: string;
+  issueKey: string;
+  analysisStatus?: string;
+}
+
+export function fetchEngineeringAnalysis(slug: string, issueKey: string) {
+  return fetchJson<{
+    issueKey: string;
+    issueTitle: string;
+    metrics: EngineerIssueMetrics;
+    analysis: EngineeringAnalysisData;
+    copilot: InvestigationCopilot;
+    investigationStatus: string;
+  }>(`/api/data/${slug}/issues/${issueKey}/analysis`);
+}
+
+export function saveEngineeringAnalysis(slug: string, issueKey: string, analysis: EngineeringAnalysisData, role: string) {
+  return fetchJson<{ analysis: EngineeringAnalysisData }>(`/api/data/${slug}/issues/${issueKey}/analysis`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ analysis, role })
+  });
+}
+
+export function submitEngineeringAnalysis(
+  slug: string,
+  issueKey: string,
+  analysis: EngineeringAnalysisData,
+  engineerName: string,
+  role: string
+) {
+  return fetchJson<{ analysis: EngineeringAnalysisData }>(`/api/data/${slug}/issues/${issueKey}/analysis/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ analysis, engineerName, role })
+  });
+}
+
+export function approveEngineeringAnalysis(slug: string, issueKey: string, supervisorName: string, role: string) {
+  return fetchJson<{ analysis: EngineeringAnalysisData }>(`/api/data/${slug}/issues/${issueKey}/analysis/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ supervisorName, role })
+  });
+}
+
+export function rejectEngineeringAnalysis(
+  slug: string,
+  issueKey: string,
+  supervisorName: string,
+  role: string,
+  notes?: string
+) {
+  return fetchJson<{ analysis: EngineeringAnalysisData }>(`/api/data/${slug}/issues/${issueKey}/analysis/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ supervisorName, role, notes })
+  });
+}
+
+export function submitVerificationResult(
+  slug: string,
+  issueKey: string,
+  input: {
+    countermeasureComplete: boolean;
+    currentPpm: number;
+    targetPpm: number;
+    lessonsLearned?: string;
+    engineerName: string;
+    role: string;
+  }
+) {
+  return fetchJson<{ analysis: EngineeringAnalysisData }>(`/api/data/${slug}/issues/${issueKey}/analysis/verification`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
+export function generateReportFromAnalysis(slug: string, issueKey: string, engineerName: string, role: string) {
+  return fetchJson<{ report: EngineeringReport; workOrder: WorkOrderSummary | null }>(
+    `/api/data/${slug}/issues/${issueKey}/analysis/generate-report`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ engineerName, role })
+    }
+  );
+}
+
 export function fetchInvestigationCopilot(slug: string, issueKey: string) {
   return fetchJson<{ copilot: InvestigationCopilot }>(`/api/data/${slug}/issues/${issueKey}/copilot`);
 }

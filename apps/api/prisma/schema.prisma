@@ -194,14 +194,15 @@ model Issue {
 }
 
 model Investigation {
-  id        String   @id @default(cuid())
-  issueId   String   @unique
-  status    String   @default("in_progress")
-  progress  Int      @default(0)
-  steps     Json
-  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  issueId      String   @unique
+  status       String   @default("in_progress")
+  progress     Int      @default(0)
+  steps        Json
+  analysisData Json?
+  issue        Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model WorkOrder {

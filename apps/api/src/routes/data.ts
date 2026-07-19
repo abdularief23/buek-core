@@ -24,6 +24,16 @@ import { submitOperatorReport } from "../services/operator-report.js";
 import { getInvestigationCopilot } from "../services/investigation-copilot.js";
 import { getCompanyBrainHierarchy } from "../services/company-brain.js";
 import {
+  approveEngineeringAnalysis,
+  generateReportFromAnalysis,
+  getEngineerIssueMetrics,
+  getEngineeringAnalysis,
+  rejectEngineeringAnalysis,
+  saveEngineeringAnalysis,
+  submitEngineeringAnalysis,
+  submitVerificationResult
+} from "../services/engineering-analysis.js";
+import {
   approveReport,
   approveSopRevision,
   createDraftReport,
@@ -482,6 +492,134 @@ export async function handleInvestigationCopilot(req: Request, res: Response) {
     res.json({ copilot });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleEngineerMetrics(req: Request, res: Response) {
+  try {
+    const metrics = await getEngineerIssueMetrics(getSlug(req));
+    res.json({ metrics });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleGetEngineeringAnalysis(req: Request, res: Response) {
+  try {
+    const data = await getEngineeringAnalysis(getSlug(req), String(req.params.issueKey));
+    if (!data) {
+      res.status(404).json({ error: { message: "Issue not found" } });
+      return;
+    }
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleSaveEngineeringAnalysis(req: Request, res: Response) {
+  try {
+    const body = req.body as { analysis: Record<string, unknown>; role?: string };
+    const analysis = await saveEngineeringAnalysis(
+      getSlug(req),
+      String(req.params.issueKey),
+      body.analysis as unknown as Parameters<typeof saveEngineeringAnalysis>[2],
+      body.role
+    );
+    res.json({ analysis });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
+  }
+}
+
+export async function handleSubmitEngineeringAnalysis(req: Request, res: Response) {
+  try {
+    const body = req.body as { analysis: Record<string, unknown>; engineerName: string; role?: string };
+    const analysis = await submitEngineeringAnalysis(
+      getSlug(req),
+      String(req.params.issueKey),
+      body.analysis as unknown as Parameters<typeof submitEngineeringAnalysis>[2],
+      body.engineerName,
+      body.role
+    );
+    res.json({ analysis });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
+  }
+}
+
+export async function handleApproveEngineeringAnalysis(req: Request, res: Response) {
+  try {
+    const body = req.body as { supervisorName: string; role: string };
+    const analysis = await approveEngineeringAnalysis(
+      getSlug(req),
+      String(req.params.issueKey),
+      body.supervisorName,
+      body.role
+    );
+    res.json({ analysis });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
+  }
+}
+
+export async function handleRejectEngineeringAnalysis(req: Request, res: Response) {
+  try {
+    const body = req.body as { supervisorName: string; role: string; notes?: string };
+    const analysis = await rejectEngineeringAnalysis(
+      getSlug(req),
+      String(req.params.issueKey),
+      body.supervisorName,
+      body.role,
+      body.notes
+    );
+    res.json({ analysis });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
+  }
+}
+
+export async function handleSubmitVerification(req: Request, res: Response) {
+  try {
+    const body = req.body as {
+      countermeasureComplete: boolean;
+      currentPpm: number;
+      targetPpm: number;
+      lessonsLearned?: string;
+      engineerName: string;
+      role?: string;
+    };
+    const analysis = await submitVerificationResult(
+      getSlug(req),
+      String(req.params.issueKey),
+      body,
+      body.engineerName,
+      body.role
+    );
+    res.json({ analysis });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
+  }
+}
+
+export async function handleGenerateReportFromAnalysis(req: Request, res: Response) {
+  try {
+    const body = req.body as { engineerName: string; role?: string };
+    const result = await generateReportFromAnalysis(
+      getSlug(req),
+      String(req.params.issueKey),
+      body.engineerName,
+      body.role
+    );
+    res.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 

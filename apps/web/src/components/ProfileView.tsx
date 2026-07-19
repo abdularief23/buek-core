@@ -5,7 +5,6 @@ import {
   type AppLanguage,
   getAppearanceMode,
   getAppLanguage,
-  LANGUAGE_LABELS,
   setAppearanceMode,
   setAppLanguage
 } from "../lib/user-preferences.js";
@@ -73,9 +72,9 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
         <div className="space-y-2 rounded-2xl border border-white/10 p-4">
           {(
             [
-              ["dark", "Dark"],
-              ["light", "Light"],
-              ["system", "System"]
+              ["light", "Light Mode"],
+              ["dark", "Dark Mode"],
+              ["system", "Auto (System)"]
             ] as const
           ).map(([value, label]) => (
             <label key={value} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-white/5">
@@ -99,11 +98,10 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
         <div className="space-y-2 rounded-2xl border border-white/10 p-4">
           {(
             [
-              ["id", "🇮🇩"],
-              ["en", "🇺🇸"],
-              ["ja", "🇯🇵"]
+              ["id", "Indonesia"],
+              ["en", "English"]
             ] as const
-          ).map(([value, flag]) => (
+          ).map(([value, label]) => (
             <label key={value} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-white/5">
               <input
                 type="radio"
@@ -114,9 +112,7 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
                   setAppLanguage(value);
                 }}
               />
-              <span className="buek-body text-slate-200">
-                {flag} {LANGUAGE_LABELS[value]}
-              </span>
+              <span className="buek-body text-slate-200">{label}</span>
             </label>
           ))}
         </div>
