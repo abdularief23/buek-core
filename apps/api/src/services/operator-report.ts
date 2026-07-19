@@ -14,7 +14,9 @@ async function getWorkspaceId(slug: string) {
   return (await prisma.workspace.findUnique({ where: { slug } }))?.id;
 }
 
-export async function submitOperatorReport(slug: string, input: OperatorReportInput) {
+export async function submitOperatorReport(slug: string, input: OperatorReportInput, role?: string) {
+  const { canSubmitOperatorReport, assertRole } = await import("../lib/roles.js");
+  assertRole(canSubmitOperatorReport(role ?? ""), "Only Operators can submit production problem reports.");
   const workspaceId = await getWorkspaceId(slug);
   if (!workspaceId) throw new Error("Workspace not found.");
 

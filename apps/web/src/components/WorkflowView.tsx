@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchWorkflows, type WorkflowItem } from "../lib/data-api.js";
+import { roleKey } from "../lib/roles.js";
 import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
 
 interface WorkflowViewProps {
   workspaceSlug: string;
+  userRole: string;
   onAsk: (prompt: string) => void;
   onOpenWorkspace?: (workspace: DynamicWorkspaceState) => void;
 }
@@ -21,9 +23,28 @@ function workflowTypeLabel(type: string) {
   return type;
 }
 
-export function WorkflowView({ workspaceSlug, onAsk, onOpenWorkspace }: WorkflowViewProps) {
+function workflowsForRole(workflows: WorkflowItem[], role: string): WorkflowItem[] {
+  switch (roleKey(role)) {
+    case "engineer":
+      return workflows.filter((workflow) =>
+        ["investigation", "engineering_report"].includes(workflow.type)
+      );
+    case "supervisor":
+      return workflows.filter((workflow) =>
+        ["work_order", "sop_revision", "engineering_report", "investigation"].includes(workflow.type)
+      );
+    default:
+      return workflows;
+  }
+}
+
+export function WorkflowView({ workspaceSlug, userRole, onAsk, onOpenWorkspace }: WorkflowViewProps) {
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const filteredWorkflows = useMemo(
+    () => workflowsForRole(workflows, userRole),
+    [workflows, userRole]
+  );
 
   useEffect(() => {
     fetchWorkflows(workspaceSlug)
@@ -57,20 +78,30 @@ export function WorkflowView({ workspaceSlug, onAsk, onOpenWorkspace }: Workflow
     onAsk(`Continue ${workflow.title} workflow`);
   }
 
+  const roleDescriptions: Record<string, string> = {
+    engineer: "Investigasi dan laporan engineering — tugas engineer hari ini.",
+    supervisor: "Approval queue, investigasi tim, dan SOP revision — tugas supervisor.",
+    operator: "",
+    manager: ""
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <header>
         <h1 className="text-2xl font-semibold text-white">Workflow</h1>
         <p className="mt-2 text-base text-slate-400">
-          Live workflows from the operating graph — investigations, approvals, and checklists.
+          {roleDescriptions[roleKey(userRole)] ??
+            "Live workflows from the operating graph — investigations, approvals, and checklists."}
         </p>
       </header>
 
       {loading ? (
         <p className="text-slate-500">Loading workflows...</p>
+      ) : filteredWorkflows.length === 0 ? (
+        <p className="text-slate-500">Tidak ada workflow aktif untuk role Anda saat ini.</p>
       ) : (
         <ul className="space-y-3">
-          {workflows.map((workflow) => (
+          {filteredWorkflows.map((workflow) => (
             <li key={`${workflow.type}-${workflow.id}`}>
               <button
                 type="button"
@@ -78,26 +109,20 @@ export function WorkflowView({ workspaceSlug, onAsk, onOpenWorkspace }: Workflow
                 className="flex w-full items-center justify-between rounded-2xl border border-white/10 px-6 py-5 text-left transition hover:border-cyan-400/30"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-base font-medium text-white">{workflow.title}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                    <span>{workflowTypeLabel(workflow.type)}</span>
-                    <span>·</span>
-                    <span className="capitalize">{workflowStatusLabel(workflow.status)}</span>
-                    {workflow.owner ? (
-                      <>
-                        <span>·</span>
-                        <span>{workflow.owner}</span>
-                      </>
-                    ) : null}
-                  </div>
-                  <div className="mt-3 h-1.5 max-w-xs overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full bg-cyan-500 transition-all"
-                      style={{ width: `${workflow.progress}%` }}
-                    />
-                  </div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    {workflowTypeLabel(workflow.type)}
+                  </p>
+                  <p className="mt-1 text-lg font-medium text-white">{workflow.title}</p>
+                  {workflow.owner ? (
+                    <p className="mt-1 text-sm text-slate-500">{workflow.owner}</p>
+                  ) : null}
                 </div>
-                <span className="ml-4 shrink-0 text-cyan-400">→</span>
+                <div className="ml-4 text-right">
+                  <p className="text-sm capitalize text-cyan-300">
+                    {workflowStatusLabel(workflow.status)}
+                  </p>
+                  <p className="text-xs text-slate-500">{workflow.progress}%</p>
+                </div>
               </button>
             </li>
           ))}

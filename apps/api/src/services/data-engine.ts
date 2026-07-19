@@ -256,7 +256,7 @@ export async function approveWorkOrder(
 ): Promise<WorkOrderDto | null> {
   const { canApprove } = await import("../lib/roles.js");
   if (!canApprove(role ?? "")) {
-    throw new Error("Only supervisors and managers can approve work orders.");
+    throw new Error("Only Supervisor can approve work orders at line level.");
   }
 
   const workspace = await getWorkspaceBySlug(slug);
@@ -382,8 +382,12 @@ export async function getIssueByKey(slug: string, key: string): Promise<IssueDto
 export async function advanceInvestigationStep(
   slug: string,
   issueId: string,
-  stepKey: string
+  stepKey: string,
+  role?: string
 ): Promise<IssueDto | null> {
+  const { canInvestigate, assertRole } = await import("../lib/roles.js");
+  assertRole(canInvestigate(role ?? ""), "Only Engineers can advance investigation steps.");
+
   const issue = await prisma.issue.findFirst({
     where: { id: issueId },
     include: { investigation: true, owner: true, machine: true }

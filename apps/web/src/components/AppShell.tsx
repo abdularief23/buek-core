@@ -10,6 +10,7 @@ interface AppShellProps {
   onLogout: () => void;
   onSearch: (query: string) => void;
   inboxCount?: number;
+  visibleNavItems?: AppNavItem[];
   children: React.ReactNode;
   copilot?: React.ReactNode;
 }
@@ -23,6 +24,7 @@ export function AppShell({
   onLogout,
   onSearch,
   inboxCount,
+  visibleNavItems,
   children,
   copilot
 }: AppShellProps) {
@@ -52,6 +54,7 @@ export function AppShell({
           onChange={onNavigate}
           onOpenInbox={onOpenInbox}
           inboxCount={inboxCount}
+          {...(visibleNavItems ? { visibleItems: visibleNavItems } : {})}
         />
       </aside>
 
