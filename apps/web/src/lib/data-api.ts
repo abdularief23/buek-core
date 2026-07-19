@@ -300,6 +300,30 @@ export function fetchLessonsLearned(slug: string) {
   return fetchJson<{ lessons: LessonLearned[] }>(`/api/data/${slug}/lessons-learned`);
 }
 
+export interface CustomerComplaint {
+  id: string;
+  complaintNumber: string;
+  customerName: string;
+  product: string;
+  priority: string;
+  status: string;
+  description?: string;
+  reportedAt: string;
+  dueAt?: string;
+  engineer?: { name: string };
+  timeline: Array<{ time: string; title: string }>;
+  attachments: string[];
+}
+
+export function fetchComplaints(slug: string, status?: string) {
+  const params = status ? `?status=${encodeURIComponent(status)}` : "";
+  return fetchJson<{ complaints: CustomerComplaint[] }>(`/api/data/${slug}/complaints${params}`);
+}
+
+export function fetchComplaint(slug: string, complaintId: string) {
+  return fetchJson<{ complaint: CustomerComplaint }>(`/api/data/${slug}/complaints/${complaintId}`);
+}
+
 export function fetchOperatorChecklist(slug: string) {
   return fetchJson<{ checklist: OperatorChecklist | null }>(`/api/data/${slug}/operator/checklist`);
 }

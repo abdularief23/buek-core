@@ -745,6 +745,36 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     }
   });
 
+  const complaintCustomer =
+    config.slug === "toyota-plant"
+      ? { customer: "Toyota Motor Asia", product: "Camry Door Panel", number: "CC-2026-021" }
+      : config.slug === "nestle-factory"
+        ? { customer: "Nestlé Regional", product: "KitKat 4-Finger", number: "CC-2026-018" }
+        : { customer: "ABC Indonesia", product: "Printer X200", number: "CC-2026-021" };
+
+  await prisma.customerComplaint.upsert({
+    where: { id: `complaint-${config.slug}-001` },
+    update: {},
+    create: {
+      id: `complaint-${config.slug}-001`,
+      workspaceId: workspace.id,
+      complaintNumber: complaintCustomer.number,
+      customerName: complaintCustomer.customer,
+      product: complaintCustomer.product,
+      priority: "critical",
+      status: "investigating",
+      description: "Customer reported quality defect on delivered batch. Immediate containment required.",
+      engineerId: engineer.id,
+      dueAt: new Date(),
+      timeline: [
+        { time: "08:30", title: "Complaint Created" },
+        { time: "09:10", title: "Engineer Assigned" },
+        { time: "10:20", title: "Root Cause Analysis Started" }
+      ],
+      attachments: ["Photo", "QC Report", "Trend"]
+    }
+  });
+
   const lineName = tenant.lineLabel;
   const checklistItems =
     config.slug === "toyota-plant"

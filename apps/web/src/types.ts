@@ -28,13 +28,14 @@ export interface RoleHomeData {
       action?: string;
       issueKey?: string;
     }>;
-    investigations: Array<{ id: string; label: string; prompt: string }>;
+    investigations: Array<{ id: string; label: string; prompt: string; issueKey?: string }>;
     aiSuggestions: Array<{
       id: string;
       title: string;
       candidate: string;
       confidence: string;
       prompt: string;
+      issueKey?: string;
     }>;
     workflowSteps: string[];
   };
@@ -53,7 +54,22 @@ export interface RoleHomeData {
   };
   manager?: {
     factoryOverview: Array<{ label: string; value: string; status: "green" | "yellow" | "red" }>;
-    criticalIssues: Array<{ id: string; title: string; prompt: string }>;
+    todayFocus?: Array<{
+      id: string;
+      label: string;
+      count?: number;
+      badge?: string;
+      route: "customer-complaints" | "production-dashboard" | "kpi-detail";
+      kpiLabel?: string;
+    }>;
+    criticalIssues: Array<{
+      id: string;
+      title: string;
+      prompt?: string;
+      route?: "customer-complaint" | "investigation" | "production-dashboard";
+      complaintId?: string;
+      issueKey?: string;
+    }>;
     weeklyTrend: Array<{ label: string; trend: "up" | "down" | "flat" }>;
     executiveSummary: string[];
   };

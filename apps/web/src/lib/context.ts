@@ -40,11 +40,7 @@ export function contextForView(
   }
 }
 
-export function withContextPrompt(context: AiContext, prompt: string): string {
-  // Context is used server-side via workspace knowledge; keep user message clean.
-  if (context.chatPersona) {
-    return `[Mode: ${context.label}] ${prompt}`;
-  }
+export function withContextPrompt(_context: AiContext, prompt: string): string {
   return prompt;
 }
 

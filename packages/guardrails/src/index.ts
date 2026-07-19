@@ -156,14 +156,8 @@ function detectBestModule(
     .sort((left, right) => right.score - left.score)[0];
 }
 
-function createScopeMessage(modules: DomainModule[]): string {
-  const moduleNames = modules.map((module) => module.name).join(", ");
-  const scopes = modules
-    .map((module) => moduleScope(module))
-    .filter(Boolean)
-    .join(", ");
-
-  return `Buek Core ${moduleNames} can only assist with ${scopes || "installed domain"} workflows.`;
+function createScopeMessage(_modules: DomainModule[]): string {
+  return "Saya belum dapat membantu topik ini berdasarkan data yang tersedia di workspace Anda. Coba tanyakan tentang isu produksi, laporan engineering, work order, atau customer complaint yang ada di sistem.";
 }
 
 export function guardInput(options: GuardInputOptions): GuardInputResult {

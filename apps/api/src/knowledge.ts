@@ -5,7 +5,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { searchUploadedKnowledge } from "./services/knowledge-upload.js";
 import { findWorkspace } from "./workspaces.js";
-import { findWorkspace as resolveWorkspace } from "./workspaces.js";
 
 function readKnowledgeSourceContent(source: KnowledgeSource): string {
   if (!source.contentPath) {
@@ -64,24 +63,18 @@ export async function handleKnowledgeSearchRequest(
 
   let knowledge = module.knowledge;
   if (workspaceId) {
-    const workspace = resolveWorkspace(workspaceId);
+    const workspace = findWorkspace(workspaceId);
     if (workspace.knowledgeSourceIds.length) {
       knowledge = knowledge.filter((source) => workspace.knowledgeSourceIds.includes(source.id));
     }
   }
 
   const engine = buildKnowledgeEngine(module, knowledge);
-  const results = query ? engine.search(query, 10) : [];
+  const moduleResults = query ? engine.search(query, 10) : [];
+  const uploadedResults = workspaceId && query ? await searchUploadedKnowledge(workspaceId, query) : [];
 
-  res.json({
-    module: {
-      id: module.id,
-      name: module.name
-    },
-    workspaceId: workspaceId ?? null,
-    query,
-    totalChunks: engine.listChunks().length,
-    results: results.map(({ chunk, score }) => ({
+  const results = [
+    ...moduleResults.map(({ chunk, score }) => ({
       id: chunk.id,
       score,
       title: chunk.source.title,
