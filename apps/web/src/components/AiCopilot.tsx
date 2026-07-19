@@ -94,7 +94,7 @@ export function AiCopilot({
 
       <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-3 lg:bottom-8 lg:right-8">
         {open ? (
-          <div className="flex max-h-[min(88vh,780px)] w-[min(100vw-1.5rem,42rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50">
+          <div className="ai-copilot-panel flex max-h-[min(88vh,780px)] w-[min(100vw-1.5rem,42rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50">
             <header className="border-b border-white/10 px-6 py-5">
               <p className="text-lg font-semibold text-white">Hai {user.name} 👋</p>
               <p className="mt-1 buek-subtitle text-slate-500">AI Assistant</p>
@@ -200,9 +200,9 @@ export function AiCopilot({
           </div>
         ) : null}
 
-        <div className="flex flex-col items-center gap-1">
+        <div className="ai-copilot-panel flex flex-col items-center gap-1">
           {!open ? (
-            <span className="rounded-full bg-slate-800 px-3 py-1.5 text-sm text-slate-400 shadow">
+            <span className="rounded-full bg-slate-800 px-3 py-1.5 text-sm text-slate-200 shadow">
               AI Assistant
             </span>
           ) : null}

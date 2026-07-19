@@ -42,9 +42,16 @@ export interface OperatorChecklistDto {
   id: string;
   line: string;
   shift: string;
+  machineCode?: string;
   targetOutput: number;
   progress: number;
   items: Array<{ id: string; label: string; done: boolean }>;
+}
+
+export interface OperatorOptionsDto {
+  lines: Array<{ id: string; name: string }>;
+  shifts: string[];
+  machines: Array<{ code: string; name: string; line: string }>;
 }
 
 export interface AiSuggestionDto {
@@ -761,14 +768,110 @@ export async function getOperatorChecklist(slug: string): Promise<OperatorCheckl
 
   if (!row) return null;
 
+  const meta = row.items as { machineCode?: string; checklist?: Array<{ id: string; label: string; done: boolean }> };
+  const storedItems = Array.isArray(row.items)
+    ? (row.items as Array<{ id: string; label: string; done: boolean }>)
+    : (meta.checklist ?? []);
+
   return {
     id: row.id,
     line: row.line,
     shift: row.shift,
+    ...(meta.machineCode ? { machineCode: meta.machineCode } : {}),
     targetOutput: row.targetOutput,
     progress: row.progress,
-    items: row.items as Array<{ id: string; label: string; done: boolean }>
+    items: storedItems
   };
+}
+
+export async function getOperatorOptions(slug: string): Promise<OperatorOptionsDto> {
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) {
+    return { lines: [], shifts: ["Shift A", "Shift B", "Shift C"], machines: [] };
+  }
+
+  const plants = await prisma.plant.findMany({
+    where: { workspaceId },
+    include: { lines: { include: { machines: { orderBy: { code: "asc" } } } } }
+  });
+
+  const lines = plants.flatMap((plant) =>
+    plant.lines.map((line) => ({ id: line.id, name: line.name }))
+  );
+  const machines = plants.flatMap((plant) =>
+    plant.lines.flatMap((line) =>
+      line.machines.map((machine) => ({
+        code: machine.code,
+        name: machine.name,
+        line: line.name
+      }))
+    )
+  );
+
+  return {
+    lines,
+    shifts: ["Shift A", "Shift B", "Shift C"],
+    machines
+  };
+}
+
+export async function updateOperatorContext(
+  slug: string,
+  input: { line?: string; shift?: string; machineCode?: string },
+  role?: string
+) {
+  assertCanUseOperatorChecklist(role ?? "");
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) throw new Error("Workspace not found.");
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let row = await prisma.operatorChecklistRun.findFirst({
+    where: { workspaceId, runDate: { gte: today } },
+    orderBy: { runDate: "desc" }
+  });
+
+  if (!row) {
+    const options = await getOperatorOptions(slug);
+    const defaultLine = options.lines[0]?.name ?? "Line 1";
+    const defaultMachine = options.machines[0]?.code;
+    row = await prisma.operatorChecklistRun.create({
+      data: {
+        workspaceId,
+        line: input.line ?? defaultLine,
+        shift: input.shift ?? "Shift A",
+        targetOutput: 420,
+        progress: 0,
+        items: defaultMachine
+          ? ({ machineCode: defaultMachine, checklist: [] } as object)
+          : ([] as object),
+        runDate: new Date()
+      }
+    });
+  }
+
+  const currentMeta = row.items as {
+    machineCode?: string;
+    checklist?: Array<{ id: string; label: string; done: boolean }>;
+  };
+  const checklistItems = Array.isArray(row.items)
+    ? (row.items as Array<{ id: string; label: string; done: boolean }>)
+    : (currentMeta.checklist ?? []);
+  const nextMachineCode = input.machineCode ?? currentMeta.machineCode;
+
+  await prisma.operatorChecklistRun.update({
+    where: { id: row.id },
+    data: {
+      ...(input.line ? { line: input.line } : {}),
+      ...(input.shift ? { shift: input.shift } : {}),
+      items: nextMachineCode
+        ? ({ machineCode: nextMachineCode, checklist: checklistItems } as object)
+        : (checklistItems as object)
+    }
+  });
+
+  return getOperatorChecklist(slug);
 }
 
 export async function toggleChecklistItem(slug: string, itemId: string, role?: string) {
@@ -783,9 +886,17 @@ export async function toggleChecklistItem(slug: string, itemId: string, role?: s
   const progress = Math.round((doneCount / items.length) * 100);
   const outputProgress = Math.round((progress / 100) * checklist.targetOutput);
 
+  const row = await prisma.operatorChecklistRun.findUnique({ where: { id: checklist.id } });
+  const currentMeta = row?.items as { machineCode?: string } | undefined;
+
   await prisma.operatorChecklistRun.update({
     where: { id: checklist.id },
-    data: { items, progress: outputProgress }
+    data: {
+      items: currentMeta?.machineCode
+        ? ({ machineCode: currentMeta.machineCode, checklist: items } as object)
+        : (items as object),
+      progress: outputProgress
+    }
   });
 
   const workspaceId = await getWorkspaceId(slug);
