@@ -12,48 +12,45 @@ export function EngineerHome({ user, workspace, roleHome, onOpenWorkspace }: Rol
 
       <section className="buek-section space-y-6">
         <h2 className="buek-card-title text-slate-400">Masalah Hari Ini</h2>
-        <div className="buek-gap grid gap-6">
+        <div className="buek-gap grid gap-4 lg:gap-6">
           {eng.problems.map((problem) => {
             const m = problem.metrics;
             return (
               <article
                 key={problem.id}
-                className="buek-card rounded-2xl border border-white/10 p-6"
+                className="mobile-touch-card buek-card rounded-2xl border border-white/10 p-5 lg:p-6"
               >
                 {m ? (
                   <div className="space-y-5">
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="buek-small text-slate-500">Machine</p>
-                        <p className="buek-card-title text-white">{m.machineCode}</p>
-                      </div>
-                      <div>
-                        <p className="buek-small text-slate-500">Issue</p>
-                        <p className="buek-body text-white">{m.issueTitle}</p>
-                      </div>
-                      <div>
-                        <p className="buek-small text-slate-500">Current PPM</p>
-                        <p className="text-2xl font-semibold text-amber-300">
-                          {m.currentPpm.toLocaleString()}
+                        <p className="mobile-small text-slate-500">Today&apos;s Investigation</p>
+                        <p className="mobile-title mt-1 text-2xl font-bold text-white lg:text-3xl">
+                          {m.machineCode}
                         </p>
+                        <p className="mobile-body mt-1 text-slate-400">{m.issueTitle}</p>
                       </div>
-                      <div>
-                        <p className="buek-small text-slate-500">Target</p>
-                        <p className="text-2xl font-semibold text-slate-200">
-                          {m.targetPpm.toLocaleString()}
-                        </p>
+                      <div className="text-right">
+                        <p className="mobile-small text-slate-500">Priority</p>
+                        <p className="mobile-body text-lg font-bold capitalize text-cyan-400">{m.priority}</p>
                       </div>
-                      <div>
-                        <p className="buek-small text-slate-500">Increase</p>
-                        <p className="buek-body text-red-400">+{m.increasePercent}%</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                        <p className="mobile-small text-slate-500">PPM</p>
+                        <p className="text-xl font-semibold text-amber-300">{m.currentPpm.toLocaleString()}</p>
                       </div>
-                      <div>
-                        <p className="buek-small text-slate-500">Priority</p>
-                        <p className="buek-body capitalize text-cyan-300">{m.priority}</p>
+                      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                        <p className="mobile-small text-slate-500">Target</p>
+                        <p className="text-xl font-semibold text-white">{m.targetPpm.toLocaleString()}</p>
                       </div>
-                      <div>
-                        <p className="buek-small text-slate-500">Due</p>
-                        <p className="buek-body text-white">{m.dueLabel}</p>
+                      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                        <p className="mobile-small text-slate-500">Increase</p>
+                        <p className="text-xl font-semibold text-red-400">+{m.increasePercent}%</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                        <p className="mobile-small text-slate-500">Due</p>
+                        <p className="mobile-body font-medium text-white">{m.dueLabel}</p>
                       </div>
                     </div>
                     <button
@@ -67,9 +64,9 @@ export function EngineerHome({ user, workspace, roleHome, onOpenWorkspace }: Rol
                           });
                         }
                       }}
-                      className="rounded-xl bg-cyan-500 px-6 py-3 text-base font-semibold text-slate-950 hover:bg-cyan-400"
+                      className="mobile-btn w-full rounded-xl bg-cyan-500 px-6 py-4 text-base font-semibold text-slate-950 hover:bg-cyan-400 lg:w-auto lg:py-3"
                     >
-                      {problem.actionLabel}
+                      {problem.actionLabel} →
                     </button>
                   </div>
                 ) : (

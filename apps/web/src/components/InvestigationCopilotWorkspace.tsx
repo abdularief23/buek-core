@@ -15,6 +15,7 @@ import {
 } from "../lib/data-api.js";
 import { isEngineer, isPlantManager, isSupervisor } from "../lib/roles.js";
 import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
+import { InvestigationStepper } from "./InvestigationStepper.js";
 import { EngineeringAnalysisDocumentPreview } from "./EngineeringAnalysisDocumentPreview.js";
 
 const WIZARD_STEPS = [
@@ -449,7 +450,16 @@ function EngineeringAnalysisWizard({
 
       {editable ? (
         <>
-          <nav className="flex flex-wrap gap-2">
+          <div className="lg:hidden">
+            <InvestigationStepper
+              analysis={analysis}
+              currentStep={step}
+              onStepSelect={setStep}
+              title={issueTitle}
+            />
+          </div>
+
+          <nav className="hidden flex-wrap gap-2 lg:flex">
             {WIZARD_STEPS.map((label, index) => (
               <button
                 key={label}

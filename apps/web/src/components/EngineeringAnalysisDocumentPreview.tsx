@@ -135,9 +135,40 @@ export function EngineeringAnalysisDocumentPreview({
         </div>
       </div>
 
+      <div className="md:hidden">
+        <div className="mobile-touch-card rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <p className="mobile-small text-slate-500">Draft Report</p>
+          <p className="mobile-title mt-1 text-xl font-bold text-white">{issueTitle}</p>
+          <p className="mobile-body mt-2 text-slate-400">
+            {analysis.selectedCause?.label ?? "Analisa engineering"} · {docNo}
+          </p>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-cyan-500"
+              style={{
+                width: `${analysis.status === "verification_complete" ? 100 : analysis.status === "analysis_approved" ? 85 : analysis.status === "waiting_supervisor_review" ? 70 : 50}%`
+              }}
+            />
+          </div>
+          <p className="mobile-small mt-2 text-slate-500">
+            {analysis.submittedBy ? `Oleh ${analysis.submittedBy}` : ""}
+            {analysis.submittedAt ? ` · ${new Date(analysis.submittedAt).toLocaleDateString("id-ID")}` : ""}
+          </p>
+          {canExport ? (
+            <button
+              type="button"
+              onClick={() => window.open(exportUrl, "_blank", "noopener,noreferrer")}
+              className="mobile-btn mt-4 w-full rounded-xl bg-cyan-500 py-3.5 font-semibold text-slate-950"
+            >
+              Buka Dokumen PDF →
+            </button>
+          ) : null}
+        </div>
+      </div>
+
       <div
         id={`analysis-document-${issueKey}`}
-        className="analysis-document-preview rounded-2xl border border-white/10 bg-white p-8 font-mono text-sm leading-relaxed text-slate-800 shadow-inner"
+        className="analysis-document-preview hidden rounded-2xl border border-white/10 bg-white p-8 font-mono text-sm leading-relaxed text-slate-800 shadow-inner md:block"
       >
         <p className="text-center text-base font-bold tracking-widest text-slate-900">
           ENGINEERING ANALYSIS DOCUMENT

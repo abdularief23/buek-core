@@ -873,7 +873,38 @@ function ReportDetailWorkspace({
         <ReportWorkflowStepper status={report.status} />
       </section>
 
-      <div className="buek-card rounded-2xl border border-white/10 bg-slate-900/50 p-8 font-mono text-sm leading-relaxed text-slate-200">
+      <div className="mobile-touch-card buek-card rounded-2xl border border-white/10 p-5 md:hidden">
+        <p className="mobile-small text-slate-500">Draft Report</p>
+        <p className="mobile-title mt-1 text-xl font-bold text-white">{report.issueTitle ?? report.title}</p>
+        <p className="mobile-body mt-2 text-slate-400">
+          {report.reportNumber ?? report.id} · {report.author?.name ?? "—"}
+        </p>
+        <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-cyan-500"
+            style={{
+              width: `${report.status === "approved" ? 100 : report.status === "pending_approval" ? 80 : 50}%`
+            }}
+          />
+        </div>
+        <p className="mobile-small mt-2 capitalize text-slate-500">{report.status.replace(/_/g, " ")}</p>
+        <div className="mt-4 flex flex-col gap-2">
+          {editable ? (
+            <button type="button" onClick={() => void handleSubmit()} className="mobile-btn rounded-xl bg-cyan-500 py-3.5 font-semibold text-slate-950">
+              Submit for Approval →
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => window.open(reportExportUrl(slug, report.id), "_blank", "noopener,noreferrer")}
+            className="mobile-btn rounded-xl border border-white/10 py-3.5 font-medium text-white"
+          >
+            Buka Dokumen PDF →
+          </button>
+        </div>
+      </div>
+
+      <div className="hidden rounded-2xl border border-white/10 bg-slate-900/50 p-8 font-mono text-sm leading-relaxed text-slate-200 md:block buek-card">
         <p className="text-center text-base font-bold tracking-widest text-white">INVESTIGATION REPORT</p>
         <p className="my-4 text-center text-slate-500">--------------------------------</p>
         <div className="grid gap-1 sm:grid-cols-2">
