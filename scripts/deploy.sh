@@ -61,6 +61,8 @@ echo ""
 
 echo ""
 echo "==> Done. Verify: https://core.buekwebsite.com"
+echo "    IMPORTANT: Hard-refresh browser (Ctrl+Shift+R) to clear cached index.html"
+echo ""
 echo "    Login page MUST show:"
 echo "      - Appearance panel (Light / Dark / Auto)"
 echo "      - Language panel (Indonesia / English / 日本語)"

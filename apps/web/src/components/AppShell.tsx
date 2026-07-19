@@ -43,8 +43,8 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-950 text-white">
-      <aside className="hidden w-[280px] shrink-0 border-r border-white/5 bg-slate-950 lg:flex lg:flex-col">
+    <div className="app-shell flex min-h-screen w-full">
+      <aside className="app-shell-sidebar hidden w-[280px] shrink-0 border-r border-white/5 lg:flex lg:flex-col">
         <div className="flex items-center gap-3 border-b border-white/10 px-6 py-5">
           <img src="/logo-mark.svg" alt="" className="h-8 w-8 rounded-lg bg-white p-1" />
           <div className="min-w-0 flex-1">
@@ -120,7 +120,7 @@ export function AppShell({
           <div key={activeView} className="buek-view-enter mx-auto w-full max-w-[1600px]">{children}</div>
         </main>
 
-        <aside className="fixed inset-x-0 bottom-0 z-30 border-t border-white/5 bg-slate-950 lg:hidden">
+        <aside className="app-shell-sidebar fixed inset-x-0 bottom-0 z-30 border-t border-white/5 lg:hidden">
           <AppNav
             active={activeView}
             onChange={onNavigate}
