@@ -35,6 +35,7 @@ import {
   handleRejectSopRevision,
   handleRejectWorkOrder,
   handleReportDetail,
+  handleReportExport,
   handleRequestReportRevision,
   handleSopRevisionDetail,
   handleSubmitReport,
@@ -245,6 +246,7 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.post("/api/data/:slug/sop-revisions/:revisionId/reject", (req, res) => void handleRejectSopRevision(req, res));
   app.get("/api/data/:slug/reports/pending", (req, res) => void handlePendingReports(req, res));
   app.get("/api/data/:slug/reports/:reportId", (req, res) => void handleReportDetail(req, res));
+  app.get("/api/data/:slug/reports/:reportId/export", (req, res) => void handleReportExport(req, res));
   app.post("/api/data/:slug/reports/draft", (req, res) => void handleCreateDraftReport(req, res));
   app.put("/api/data/:slug/reports/:reportId/sections", (req, res) => void handleUpdateReportSections(req, res));
   app.post("/api/data/:slug/reports/:reportId/submit", (req, res) => void handleSubmitReport(req, res));

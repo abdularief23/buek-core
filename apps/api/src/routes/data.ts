@@ -32,6 +32,7 @@ import {
   getPendingReports,
   getPendingSopRevisions,
   getReportById,
+  getReportExportHtml,
   getSopRevisionById,
   rejectReport,
   rejectSopRevision,
@@ -273,6 +274,20 @@ export async function handleReportDetail(req: Request, res: Response) {
       return;
     }
     res.json({ report });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleReportExport(req: Request, res: Response) {
+  try {
+    const html = await getReportExportHtml(getSlug(req), String(req.params.reportId));
+    if (!html) {
+      res.status(404).json({ error: { message: "Report not found" } });
+      return;
+    }
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(html);
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }
