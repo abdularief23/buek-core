@@ -34,7 +34,8 @@ fi
 $DOCKER compose down --remove-orphans 2>/dev/null || true
 
 echo "==> Rebuilding (host Nginx mode — web on 127.0.0.1:8080)..."
-$DOCKER compose up -d --build
+$DOCKER compose build --no-cache web api
+$DOCKER compose up -d --force-recreate
 
 echo "==> Waiting for services..."
 sleep 8
@@ -57,6 +58,11 @@ fi
 echo ""
 echo "==> API feature check:"
 curl -sf http://127.0.0.1:8080/health | head -c 500 || true
+echo ""
+
+echo ""
+echo "==> Version check:"
+curl -sf http://127.0.0.1:8080/version.json || echo "WARN: version.json missing"
 echo ""
 
 echo ""

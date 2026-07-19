@@ -2,7 +2,7 @@
 # Paste & run this in SumoPod Web Console (no SSH from PC needed)
 set -euo pipefail
 
-echo "=== Buek Core 502 Recovery ==="
+echo "=== Buek Core Deploy & Recovery ==="
 
 # Install GitHub Actions deploy key (idempotent)
 DEPLOY_KEY_FILE="$(dirname "$0")/../deploy/authorized_key.pub"
@@ -47,7 +47,9 @@ grep -q '^CORS_ORIGIN=' .env && sed -i 's|^CORS_ORIGIN=.*|CORS_ORIGIN=https://co
 echo "==> Pulling latest code..."
 git fetch origin main
 git checkout main
-git pull origin main
+git reset --hard origin/main
+export GIT_COMMIT="$(git rev-parse --short HEAD)"
+echo "==> Build commit: ${GIT_COMMIT}"
 
 echo "==> Stopping old containers..."
 DOCKER="docker"
@@ -56,20 +58,20 @@ if ! docker info >/dev/null 2>&1; then
 fi
 $DOCKER compose down --remove-orphans 2>/dev/null || true
 
-echo "==> Building and starting (host Nginx mode)..."
-$DOCKER compose up -d --build
+echo "==> Force rebuilding containers (no cache)..."
+$DOCKER compose build --no-cache web api
+$DOCKER compose up -d --force-recreate
 
 echo "==> Waiting..."
-sleep 8
+sleep 12
 
 echo "==> Status:"
 $DOCKER compose ps
 
-echo "==> Health check:"
+echo "==> Local health check:"
 if curl -sf http://127.0.0.1:8080/health; then
   echo ""
-  echo "SUCCESS! Site should work at https://core.buekwebsite.com"
-  echo "Hard refresh browser: Ctrl+Shift+R"
+  echo "OK: API healthy"
 else
   echo ""
   echo "FAILED. Check logs:"
@@ -77,3 +79,13 @@ else
   echo "  $DOCKER compose logs api --tail 30"
   exit 1
 fi
+
+echo ""
+echo "==> Version check:"
+curl -sf http://127.0.0.1:8080/version.json || echo "WARN: version.json missing"
+echo ""
+
+echo ""
+echo "SUCCESS! Now hard-refresh browser: Ctrl+Shift+R"
+echo "Verify: https://core.buekwebsite.com/version.json"
+echo "Expected featureSet: engineering-copilot-v2"
