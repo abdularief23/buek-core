@@ -9,6 +9,8 @@ COPY packages/ui/package.json packages/ui/package.json
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+ARG VITE_APP_BUILD=dev
+ENV VITE_APP_BUILD=$VITE_APP_BUILD
 RUN pnpm --filter @buek/web... build
 
 FROM nginx:1.27-alpine AS runtime
