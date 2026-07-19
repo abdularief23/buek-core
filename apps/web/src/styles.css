@@ -147,6 +147,24 @@ body {
   color: #0f172a !important;
 }
 
+:root[data-appearance="light"] .login-demo-hint {
+  background-color: rgba(8, 145, 178, 0.08) !important;
+  border-color: rgba(8, 145, 178, 0.25) !important;
+}
+
+:root[data-appearance="light"] .login-demo-hint p:first-child {
+  color: #0e7490 !important;
+}
+
+:root[data-appearance="light"] .login-demo-code {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+:root[data-appearance="light"] .login-demo-fill {
+  color: #0369a1 !important;
+}
+
 /* AI Copilot keeps dark panel styling in light mode */
 :root[data-appearance="light"] .ai-copilot-panel {
   color: #f8fafc;
