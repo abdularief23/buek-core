@@ -44,6 +44,8 @@ import {
   handleUpdateReportSections,
   handleWorkOrderDetail,
   handleWorkflows,
+  handleComplaintDetail,
+  handleComplaints,
   handleConnectors,
   handleBusinessRules,
   handleEvaluateRules,
@@ -258,6 +260,8 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/data/:slug/production", (req, res) => void handleProductionDashboard(req, res));
   app.get("/api/data/:slug/kpis/:kpiLabel", (req, res) => void handleKpiDetail(req, res));
   app.get("/api/data/:slug/notifications", (req, res) => void handleNotifications(req, res));
+  app.get("/api/data/:slug/complaints", (req, res) => void handleComplaints(req, res));
+  app.get("/api/data/:slug/complaints/:complaintId", (req, res) => void handleComplaintDetail(req, res));
   app.get("/api/data/:slug/connectors", (req, res) => void handleConnectors(req, res));
   app.get("/api/data/:slug/business-rules", (req, res) => void handleBusinessRules(req, res));
   app.post("/api/data/:slug/business-rules/evaluate", (req, res) => void handleEvaluateRules(req, res));

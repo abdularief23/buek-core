@@ -6,13 +6,6 @@ export interface BriefingItem {
   text: string;
   actionLabel: string;
   workspace?: DynamicWorkspaceState;
-  explainPrompt?: string;
-}
-
-function primaryIssueKey(workspaceId: string): string {
-  if (workspaceId === "toyota-plant") return "torque-drift";
-  if (workspaceId === "nestle-factory") return "metal-detector";
-  return "white-streak";
 }
 
 export function buildProactiveBriefing(
@@ -21,7 +14,6 @@ export function buildProactiveBriefing(
   roleHome: RoleHomeData
 ): { greeting: string; items: BriefingItem[] } {
   const slug = workspace.id;
-  const issueKey = primaryIssueKey(slug);
   const items: BriefingItem[] = [];
 
   if (roleHome.roleKey === "supervisor" && roleHome.supervisor) {
@@ -30,16 +22,16 @@ export function buildProactiveBriefing(
     const sop = sup.waitingApproval.find((w) => w.action === "sop-revisions");
 
     if (sup.openIssues[0]) {
+      const issue = sup.openIssues[0];
       items.push({
         id: "issue-1",
-        text: sup.openIssues[0].title,
+        text: issue.title,
         actionLabel: "Investigasi",
         workspace: {
           kind: "investigation",
           slug,
-          issueKey: sup.openIssues[0].issueKey ?? issueKey
-        },
-        explainPrompt: `Jelaskan dampak ${sup.openIssues[0].title} terhadap produksi hari ini`
+          issueKey: issue.issueKey ?? issue.id.replace(`issue-${slug}-`, "")
+        }
       });
     }
     if (wo && wo.count > 0) {
@@ -51,31 +43,47 @@ export function buildProactiveBriefing(
       });
     }
     if (sop && sop.count > 0) {
-      const sopLabel =
-        slug === "toyota-plant" ? "ASM-022" : slug === "nestle-factory" ? "HACCP-011" : "SOP-014";
       items.push({
         id: "sop-pending",
-        text: `${sopLabel} siap disetujui`,
-        actionLabel: "Approve",
+        text: "SOP revision menunggu approval",
+        actionLabel: "Review",
         workspace: { kind: "sop-revisions", slug }
       });
     }
 
     return {
-      greeting: `Selamat pagi ${userName}. Saya menemukan ${items.length} hal yang perlu perhatian Anda.`,
+      greeting: `Selamat pagi ${userName}. ${items.length} hal perlu perhatian Anda hari ini.`,
       items
     };
   }
 
   if (roleHome.roleKey === "manager" && roleHome.manager) {
-    roleHome.manager.criticalIssues.slice(0, 3).forEach((issue) => {
+    const focus = roleHome.manager.todayFocus?.[0];
+    if (focus?.route === "customer-complaints" && (focus.count ?? 0) > 0) {
       items.push({
-        id: issue.id,
-        text: issue.title,
+        id: "customer-complaint",
+        text: `Customer Complaint — ${focus.badge ?? `${focus.count} aktif`}`,
         actionLabel: "Lihat",
-        workspace: { kind: "kpi-detail", slug, kpiLabel: "Production" },
-        explainPrompt: issue.prompt
+        workspace: { kind: "customer-complaints", slug }
       });
+    }
+
+    roleHome.manager.criticalIssues.slice(0, 2).forEach((issue) => {
+      if (issue.route === "customer-complaint" && issue.complaintId) {
+        items.push({
+          id: issue.id,
+          text: issue.title,
+          actionLabel: "Detail",
+          workspace: { kind: "customer-complaint", slug, complaintId: issue.complaintId }
+        });
+      } else if (issue.route === "investigation" && issue.issueKey) {
+        items.push({
+          id: issue.id,
+          text: issue.title,
+          actionLabel: "Investigasi",
+          workspace: { kind: "investigation", slug, issueKey: issue.issueKey }
+        });
+      }
     });
 
     return {
@@ -93,20 +101,26 @@ export function buildProactiveBriefing(
     };
   }
 
-  const proactive = workspace.dailyWorkspace.proactiveCards ?? [];
-  proactive.slice(0, 3).forEach((card, idx) => {
-    items.push({
-      id: `proactive-${idx}`,
-      text: card.text,
-      actionLabel: "Lihat",
-      explainPrompt: card.prompt
+  if (roleHome.roleKey === "engineer" && roleHome.engineer) {
+    roleHome.engineer.problems.slice(0, 2).forEach((problem) => {
+      if (problem.issueKey) {
+        items.push({
+          id: problem.id,
+          text: problem.title,
+          actionLabel: problem.actionLabel,
+          workspace: { kind: "investigation", slug, issueKey: problem.issueKey }
+        });
+      }
     });
-  });
+
+    return {
+      greeting: `Selamat pagi ${userName}. ${items.length ? `${items.length} investigasi aktif.` : "Tidak ada isu kritis saat ini."}`,
+      items
+    };
+  }
 
   return {
-    greeting:
-      workspace.dailyWorkspace.proactiveGreeting ||
-      `Selamat pagi ${userName}. Ada yang bisa saya bantu hari ini?`,
+    greeting: `Selamat pagi ${userName}. Buka kartu di Home untuk melihat data — gunakan ✨ jika butuh analisis AI.`,
     items
   };
 }

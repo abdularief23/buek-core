@@ -178,7 +178,7 @@ export function App() {
     const userMessage: ChatMessage = {
       id: createMessageId(),
       role: "user",
-      content: contextualPrompt
+      content: trimmedInput
     };
     const assistantMessage: ChatMessage = { id: createMessageId(), role: "assistant", content: "" };
 
@@ -469,6 +469,11 @@ export function App() {
         open={inboxOpen}
         onClose={() => setInboxOpen(false)}
         onSelect={(prompt, label) => handleContextualAsk(prompt, label)}
+        onOpenWorkspace={(ws) => {
+          setDynamicWorkspace(ws);
+          setActiveView("home");
+          setInboxOpen(false);
+        }}
         onCountChange={setInboxCount}
       />
     </main>

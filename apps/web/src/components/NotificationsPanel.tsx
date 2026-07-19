@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { fetchNotifications, type NotificationItem } from "../lib/data-api.js";
+import { notificationToWorkspace } from "../lib/notification-routing.js";
+import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
 
 interface NotificationsPanelProps {
   workspaceSlug: string;
   open: boolean;
   onClose: () => void;
   onSelect: (prompt: string, contextLabel: string) => void;
+  onOpenWorkspace?: (workspace: DynamicWorkspaceState) => void;
   onCountChange?: (count: number) => void;
 }
 
@@ -25,6 +28,7 @@ export function NotificationsPanel({
   open,
   onClose,
   onSelect,
+  onOpenWorkspace,
   onCountChange
 }: NotificationsPanelProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -77,8 +81,14 @@ export function NotificationsPanel({
                 <button
                   type="button"
                   onClick={() => {
-                    onSelect(notification.prompt, notification.category);
-                    onClose();
+                    const ws = notificationToWorkspace(workspaceSlug, notification);
+                    if (ws && onOpenWorkspace) {
+                      onOpenWorkspace(ws);
+                      onClose();
+                    } else {
+                      onSelect(notification.prompt, notification.category);
+                      onClose();
+                    }
                   }}
                   className="w-full px-6 py-4 text-left transition hover:bg-white/[0.03]"
                 >

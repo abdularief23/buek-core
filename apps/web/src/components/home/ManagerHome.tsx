@@ -8,6 +8,30 @@ const trendIcon = { up: "▲", down: "▼", flat: "→" } as const;
 export function ManagerHome({ user, workspace, roleHome, onOpenWorkspace }: RoleHomeProps) {
   const mgr = roleHome.manager!;
 
+  function openFocus(item: NonNullable<typeof mgr.todayFocus>[number]) {
+    if (item.route === "customer-complaints") {
+      onOpenWorkspace({ kind: "customer-complaints", slug: workspace.id });
+      return;
+    }
+    if (item.route === "production-dashboard") {
+      onOpenWorkspace({ kind: "production-dashboard", slug: workspace.id });
+      return;
+    }
+    onOpenWorkspace({ kind: "kpi-detail", slug: workspace.id, kpiLabel: item.kpiLabel ?? "Quality" });
+  }
+
+  function openCriticalIssue(issue: (typeof mgr.criticalIssues)[number]) {
+    if (issue.route === "customer-complaint" && issue.complaintId) {
+      onOpenWorkspace({ kind: "customer-complaint", slug: workspace.id, complaintId: issue.complaintId });
+      return;
+    }
+    if (issue.route === "investigation" && issue.issueKey) {
+      onOpenWorkspace({ kind: "investigation", slug: workspace.id, issueKey: issue.issueKey });
+      return;
+    }
+    onOpenWorkspace({ kind: "production-dashboard", slug: workspace.id });
+  }
+
   function openKpi(label: string) {
     if (label === "Production") {
       onOpenWorkspace({ kind: "production-dashboard", slug: workspace.id });
@@ -23,6 +47,29 @@ export function ManagerHome({ user, workspace, roleHome, onOpenWorkspace }: Role
         workspace={workspace}
         subtitle="Ringkasan pabrik — KPI, risiko, dan keputusan eksekutif"
       />
+
+      {mgr.todayFocus?.length ? (
+        <section className="buek-section space-y-4">
+          <h2 className="buek-card-title text-slate-400">Today&apos;s Focus</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {mgr.todayFocus.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => openFocus(item)}
+                className="buek-card rounded-2xl border border-white/10 text-left hover:border-cyan-400/30"
+              >
+                <p className="buek-body text-slate-500">{item.label}</p>
+                {item.badge ? (
+                  <p className="mt-2 text-lg font-semibold text-amber-300">{item.badge}</p>
+                ) : (
+                  <p className="mt-2 text-lg font-semibold text-white">Lihat detail →</p>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="buek-section space-y-4">
         <h2 className="buek-card-title text-slate-400">Ringkasan Pabrik</h2>
@@ -49,7 +96,7 @@ export function ManagerHome({ user, workspace, roleHome, onOpenWorkspace }: Role
             <li key={issue.id}>
               <button
                 type="button"
-                onClick={() => openKpi("Production")}
+                onClick={() => openCriticalIssue(issue)}
                 className="buek-card w-full rounded-xl border border-red-500/20 bg-red-500/5 text-left buek-body text-slate-200 hover:border-red-500/40"
               >
                 {issue.title}

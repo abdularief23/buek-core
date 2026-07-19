@@ -1,4 +1,5 @@
 import type { RoleHomeData } from "../role-workspaces.js";
+import { countOpenComplaints } from "./customer-complaints.js";
 import {
   getIssues,
   getLiveKpis,
@@ -48,7 +49,7 @@ export async function enrichRoleHomeFromDb(
         title: issue.machine ? `${issue.machine.code} — ${issue.title}` : issue.title,
         owner: issue.owner?.name ?? "Unassigned",
         status: issue.status,
-        prompt: `Status of ${issue.title} and who owns it`
+        issueKey: issue.id.replace(`issue-${workspaceSlug}-`, "")
       }));
 
       return {
@@ -82,21 +83,38 @@ export async function enrichRoleHomeFromDb(
     }
 
     if (roleHome.roleKey === "manager" && roleHome.manager) {
-      const [kpis, issues, stats, weeklyTrend] = await Promise.all([
+      const [kpis, issues, stats, weeklyTrend, complaintCount, complaints] = await Promise.all([
         getLiveKpis(workspaceSlug),
         getIssues(workspaceSlug, ["open", "investigating"]),
         getSupervisorStats(workspaceSlug),
-        getWeeklyTrend(workspaceSlug)
+        getWeeklyTrend(workspaceSlug),
+        countOpenComplaints(workspaceSlug),
+        import("./customer-complaints.js").then((m) => m.getComplaints(workspaceSlug, ["open", "investigating"]))
       ]);
 
-      const criticalIssues = issues
-        .filter((i) => i.severity === "high" || i.severity === "critical")
-        .slice(0, 4)
-        .map((issue) => ({
-          id: issue.id,
-          title: issue.machine ? `${issue.machine.code} — ${issue.title}` : issue.title,
-          prompt: `Executive summary of ${issue.title} impact on production`
-        }));
+      const primaryComplaint = complaints[0];
+
+      const criticalIssues = [
+        ...(primaryComplaint
+          ? [
+              {
+                id: primaryComplaint.id,
+                title: `Customer Complaint — ${primaryComplaint.customerName}`,
+                route: "customer-complaint" as const,
+                complaintId: primaryComplaint.id
+              }
+            ]
+          : []),
+        ...issues
+          .filter((i) => i.severity === "high" || i.severity === "critical")
+          .slice(0, 3)
+          .map((issue) => ({
+            id: issue.id,
+            title: issue.machine ? `${issue.machine.code} — ${issue.title}` : issue.title,
+            route: "investigation" as const,
+            issueKey: issue.id.replace(`issue-${workspaceSlug}-`, "")
+          }))
+      ];
 
       const productionKpi = kpis.find((k) => k.label === "Production");
       const qualityKpi = kpis.find((k) => k.label === "Quality");
@@ -124,9 +142,27 @@ export async function enrichRoleHomeFromDb(
                 status: kpi.status
               }))
             : roleHome.manager.factoryOverview,
-          criticalIssues: criticalIssues.length
-            ? criticalIssues
-            : roleHome.manager.criticalIssues,
+          todayFocus: [
+            {
+              id: "customer-complaint",
+              label: "Customer Complaint",
+              count: complaintCount,
+              ...(complaintCount > 0 ? { badge: `${complaintCount} New` } : {}),
+              route: "customer-complaints" as const
+            },
+            {
+              id: "production",
+              label: "Production",
+              route: "production-dashboard" as const
+            },
+            {
+              id: "quality",
+              label: "Quality",
+              route: "kpi-detail" as const,
+              kpiLabel: "Quality"
+            }
+          ],
+          criticalIssues: criticalIssues.length ? criticalIssues : roleHome.manager.criticalIssues,
           weeklyTrend,
           executiveSummary
         }
@@ -162,6 +198,8 @@ export async function enrichRoleHomeFromDb(
         issueKey: issue.id.replace(`issue-${workspaceSlug}-`, "")
       }));
 
+      const firstInv = investigations[0];
+
       return {
         ...roleHome,
         engineer: {
@@ -171,9 +209,13 @@ export async function enrichRoleHomeFromDb(
             ? investigations.map((inv) => ({
                 id: inv.id,
                 label: inv.label,
-                prompt: `Continue ${inv.label} investigation`
+                issueKey: inv.issueKey
               }))
-            : roleHome.engineer.investigations
+            : roleHome.engineer.investigations,
+          aiSuggestions: roleHome.engineer.aiSuggestions.map((s, idx) => ({
+            ...s,
+            issueKey: investigations[idx]?.issueKey ?? firstInv?.issueKey ?? "white-streak"
+          }))
         }
       };
     }

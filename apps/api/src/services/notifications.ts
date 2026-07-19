@@ -72,7 +72,9 @@ export async function getNotifications(slug: string): Promise<NotificationDto[]>
       category: "Quality",
       message: `${stats.pendingReports} engineering report${stats.pendingReports > 1 ? "s" : ""} pending review`,
       prompt: "Show pending engineering reports",
-      time: formatTime(new Date())
+      time: formatTime(new Date()),
+      entityType: "engineering_report",
+      entityId: "queue"
     });
   }
 

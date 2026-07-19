@@ -11,6 +11,8 @@ import {
   fetchPendingReports,
   fetchPendingSopRevisions,
   fetchPendingWorkOrders,
+  fetchComplaint,
+  fetchComplaints,
   fetchProductionDashboard,
   fetchReport,
   fetchSopRevision,
@@ -21,6 +23,7 @@ import {
   submitReportForApproval,
   updateReportSections,
   type AiSuggestion,
+  type CustomerComplaint,
   type EngineeringReport,
   type ReportSections,
   type KpiDetail,
@@ -39,7 +42,9 @@ export type DynamicWorkspaceState =
   | { kind: "engineering-reports"; slug: string }
   | { kind: "engineering-report"; slug: string; reportId: string }
   | { kind: "production-dashboard"; slug: string }
-  | { kind: "kpi-detail"; slug: string; kpiLabel: string };
+  | { kind: "kpi-detail"; slug: string; kpiLabel: string }
+  | { kind: "customer-complaints"; slug: string }
+  | { kind: "customer-complaint"; slug: string; complaintId: string };
 
 interface DynamicWorkspaceProps {
   workspace: DynamicWorkspaceState;
@@ -61,6 +66,30 @@ export function DynamicWorkspace({
   onDataChange
 }: DynamicWorkspaceProps) {
   const notifyChange = onDataChange ?? (() => {});
+
+  if (workspace.kind === "customer-complaints") {
+    return (
+      <CustomerComplaintListWorkspace
+        slug={workspace.slug}
+        onClose={onClose}
+        onSelect={(complaintId) =>
+          onWorkspaceChange({ kind: "customer-complaint", slug: workspace.slug, complaintId })
+        }
+      />
+    );
+  }
+
+  if (workspace.kind === "customer-complaint") {
+    return (
+      <CustomerComplaintDetailWorkspace
+        slug={workspace.slug}
+        complaintId={workspace.complaintId}
+        onClose={onClose}
+        onBack={() => onWorkspaceChange({ kind: "customer-complaints", slug: workspace.slug })}
+        onAskAi={onAskAi}
+      />
+    );
+  }
 
   if (workspace.kind === "production-dashboard") {
     return (
@@ -1129,6 +1158,161 @@ function ReportDetailWorkspace({
 }
 
 const shiftIcon = { done: "✔", running: "▶", waiting: "○" } as const;
+
+function CustomerComplaintListWorkspace({
+  slug,
+  onClose,
+  onSelect
+}: {
+  slug: string;
+  onClose: () => void;
+  onSelect: (complaintId: string) => void;
+}) {
+  const [complaints, setComplaints] = useState<CustomerComplaint[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchComplaints(slug)
+      .then((data) => setComplaints(data.complaints))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  return (
+    <div className="space-y-8 pb-16">
+      <header className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <p className="buek-small text-slate-500">Workspace</p>
+          <h1 className="buek-heading text-white">Customer Complaint</h1>
+          <p className="mt-2 buek-body text-slate-400">
+            {loading ? "Loading..." : `${complaints.length} complaint aktif`}
+          </p>
+        </div>
+        <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
+          ← Back
+        </button>
+      </header>
+
+      <div className="space-y-4">
+        {complaints.map((complaint) => (
+          <button
+            key={complaint.id}
+            type="button"
+            onClick={() => onSelect(complaint.id)}
+            className="buek-card w-full rounded-2xl border border-white/10 text-left hover:border-cyan-400/30"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="buek-card-title text-white">{complaint.complaintNumber}</p>
+                <p className="mt-1 buek-body text-slate-300">
+                  {complaint.customerName} · {complaint.product}
+                </p>
+              </div>
+              <span className="rounded-full bg-red-500/20 px-3 py-1 text-sm text-red-300 capitalize">
+                {complaint.priority}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CustomerComplaintDetailWorkspace({
+  slug,
+  complaintId,
+  onClose,
+  onBack,
+  onAskAi
+}: {
+  slug: string;
+  complaintId: string;
+  onClose: () => void;
+  onBack: () => void;
+  onAskAi: (prompt: string, contextLabel: string) => void;
+}) {
+  const [complaint, setComplaint] = useState<CustomerComplaint | null>(null);
+
+  useEffect(() => {
+    fetchComplaint(slug, complaintId).then((data) => setComplaint(data.complaint));
+  }, [slug, complaintId]);
+
+  if (!complaint) {
+    return <p className="buek-body text-slate-500">Memuat customer complaint...</p>;
+  }
+
+  return (
+    <div className="space-y-8 pb-16">
+      <header className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <button type="button" onClick={onBack} className="buek-small text-cyan-400 hover:text-cyan-300">
+            ← Customer Complaint
+          </button>
+          <h1 className="mt-3 buek-heading text-white">{complaint.complaintNumber}</h1>
+          <p className="mt-2 buek-body text-slate-400">{complaint.customerName}</p>
+        </div>
+        <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
+          Close
+        </button>
+      </header>
+
+      <div className="buek-card rounded-2xl border border-white/10 bg-slate-900/50 p-8 font-mono text-sm text-slate-200">
+        <p className="text-center font-bold tracking-widest text-white">CUSTOMER COMPLAINT</p>
+        <p className="my-4 text-center text-slate-500">--------------------------------</p>
+        <p>Complaint ID : {complaint.complaintNumber}</p>
+        <p>Customer     : {complaint.customerName}</p>
+        <p>Product      : {complaint.product}</p>
+        <p>Reported     : {new Date(complaint.reportedAt).toLocaleDateString("id-ID")}</p>
+        <p>Priority     : {complaint.priority}</p>
+        <p>Status       : {complaint.status}</p>
+        <p>PIC          : {complaint.engineer?.name ?? "—"}</p>
+        <p className="my-4 text-center text-slate-500">--------------------------------</p>
+        {complaint.description ? <p className="whitespace-pre-wrap">{complaint.description}</p> : null}
+      </div>
+
+      {complaint.timeline.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="buek-card-title text-slate-400">Timeline</h2>
+          <ul className="space-y-2">
+            {complaint.timeline.map((entry) => (
+              <li key={`${entry.time}-${entry.title}`} className="buek-body text-slate-300">
+                {entry.time} — {entry.title}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {complaint.attachments.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="buek-card-title text-slate-400">Attachments</h2>
+          {complaint.attachments.map((a) => (
+            <p key={a} className="buek-body text-slate-400">
+              □ {a}
+            </p>
+          ))}
+        </section>
+      ) : null}
+
+      <div className="flex flex-wrap gap-3">
+        {[
+          { label: "✨ Ringkas", prompt: `Ringkas customer complaint ${complaint.complaintNumber}` },
+          { label: "✨ Cari kasus serupa", prompt: `Cari kasus serupa untuk ${complaint.product}` },
+          { label: "✨ Draft Report", prompt: `Buat draft laporan investigasi untuk ${complaint.complaintNumber}` }
+        ].map((action) => (
+          <button
+            key={action.label}
+            type="button"
+            onClick={() => onAskAi(action.prompt, complaint.complaintNumber)}
+            className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 hover:bg-cyan-500/20"
+          >
+            {action.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ProductionDashboardWorkspace({
   slug,

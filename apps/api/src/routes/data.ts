@@ -19,6 +19,7 @@ import { getNotifications } from "../services/notifications.js";
 import { getBusinessRules, evaluateBusinessRules, getCriticalAlerts } from "../services/business-rules.js";
 import { listConnectors, fetchOperationalSnapshot } from "../connectors/index.js";
 import { getKpiDetail, getProductionDashboard } from "../services/production-dashboard.js";
+import { getComplaintById, getComplaints } from "../services/customer-complaints.js";
 import { submitOperatorReport } from "../services/operator-report.js";
 import {
   approveReport,
@@ -528,6 +529,29 @@ export async function handleCriticalAlerts(req: Request, res: Response) {
   try {
     const alerts = await getCriticalAlerts(getSlug(req));
     res.json({ alerts });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleComplaints(req: Request, res: Response) {
+  try {
+    const status = req.query.status ? String(req.query.status).split(",") : undefined;
+    const complaints = await getComplaints(getSlug(req), status);
+    res.json({ complaints });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleComplaintDetail(req: Request, res: Response) {
+  try {
+    const complaint = await getComplaintById(getSlug(req), String(req.params.complaintId));
+    if (!complaint) {
+      res.status(404).json({ error: { message: "Complaint not found" } });
+      return;
+    }
+    res.json({ complaint });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

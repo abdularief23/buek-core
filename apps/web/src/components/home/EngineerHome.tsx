@@ -58,7 +58,7 @@ export function EngineerHome({ user, workspace, roleHome, onOpenWorkspace }: Rol
                   onOpenWorkspace({
                     kind: "investigation",
                     slug: workspace.id,
-                    issueKey: item.id.replace(`issue-${workspace.id}-`, "")
+                    issueKey: item.issueKey ?? item.id.replace(`issue-${workspace.id}-`, "")
                   })
                 }
                 className="flex w-full items-center justify-between px-6 py-5 text-left buek-body text-slate-300 hover:bg-white/[0.03] hover:text-white"
@@ -87,13 +87,7 @@ export function EngineerHome({ user, workspace, roleHome, onOpenWorkspace }: Rol
                 onOpenWorkspace({
                   kind: "investigation",
                   slug: workspace.id,
-                  issueKey:
-                    eng.problems[0]?.issueKey ??
-                    (workspace.id === "toyota-plant"
-                      ? "torque-drift"
-                      : workspace.id === "nestle-factory"
-                        ? "metal-detector"
-                        : "white-streak")
+                  issueKey: suggestion.issueKey ?? eng.problems[0]?.issueKey ?? "white-streak"
                 })
               }
               className="mt-4 text-base font-medium text-cyan-400 hover:text-cyan-300"

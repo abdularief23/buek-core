@@ -60,6 +60,7 @@ model Workspace {
   agentActions     AgentAction[]
   businessRules    BusinessRule[]
   lessonsLearned   LessonLearned[]
+  customerComplaints CustomerComplaint[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -142,6 +143,7 @@ model Employee {
   reports        EngineeringReport[] @relation("ReportAuthor")
   approvedReports EngineeringReport[] @relation("ReportApprover")
   lessonsLearned LessonLearned[] @relation("LessonAuthor")
+  customerComplaints CustomerComplaint[] @relation("ComplaintEngineer")
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -413,6 +415,29 @@ model LessonLearned {
   createdAt   DateTime  @default(now())
 
   @@index([workspaceId])
+}
+
+model CustomerComplaint {
+  id              String    @id @default(cuid())
+  workspaceId     String
+  complaintNumber String
+  customerName    String
+  product         String
+  priority        String    @default("medium")
+  status          String    @default("open")
+  description     String?
+  reportedAt      DateTime  @default(now())
+  dueAt           DateTime?
+  engineerId      String?
+  timeline        Json?
+  attachments     Json?
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  engineer        Employee? @relation("ComplaintEngineer", fields: [engineerId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, complaintNumber])
 }
 
 model OperatorChecklistRun {

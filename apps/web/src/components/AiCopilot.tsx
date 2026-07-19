@@ -5,7 +5,7 @@ import { buildProactiveBriefing } from "../lib/proactive-briefing.js";
 import type { ChatMessage, DemoUser, RoleHomeData, Workspace } from "../types.js";
 import { ChatMessageBlock } from "./ChatMessageBlock.js";
 
-export type AiAssistantMode = "search" | "summarize" | "analyze" | "action" | null;
+export type AiAssistantMode = "summarize" | "analyze" | "search" | "draft" | null;
 
 interface AiCopilotProps {
   user: DemoUser;
@@ -30,17 +30,10 @@ const modes: Array<{
   label: string;
   description: string;
 }> = [
-  { id: "search", icon: "🔍", label: "Cari informasi", description: "Cari SOP, data, atau kasus" },
-  { id: "summarize", icon: "📄", label: "Ringkas data", description: "Ringkasan singkat untuk keputusan" },
-  { id: "analyze", icon: "🧠", label: "Analisis masalah", description: "Root cause & rekomendasi" },
-  { id: "action", icon: "⚡", label: "Lakukan tindakan", description: "Buat WO, assign, approve" }
-];
-
-const actionOptions = [
-  { label: "Lihat histori", prompt: "Tampilkan histori masalah serupa" },
-  { label: "Cari kasus serupa", prompt: "Cari kasus serupa dari knowledge base" },
-  { label: "Buat work order", prompt: "Buat work order untuk perbaikan mesin" },
-  { label: "Hubungi engineer", prompt: "Assign engineer untuk investigasi" }
+  { id: "summarize", icon: "✨", label: "Ringkas", description: "Ringkasan data dari sistem" },
+  { id: "analyze", icon: "✨", label: "Analisis", description: "Analisis root cause & rekomendasi" },
+  { id: "search", icon: "✨", label: "Cari", description: "Cari SOP, histori, kasus serupa" },
+  { id: "draft", icon: "✨", label: "Buat Draft", description: "Susun draft laporan investigasi" }
 ];
 
 export function AiCopilot({
@@ -61,7 +54,7 @@ export function AiCopilot({
 }: AiCopilotProps) {
   const endRef = useRef<HTMLDivElement | null>(null);
   const briefing = buildProactiveBriefing(user.name, workspace, roleHome);
-  const showChat = mode === "analyze" || mode === "search" || mode === "summarize" || messages.length > 0;
+  const showChat = mode !== null || messages.length > 0;
 
   useEffect(() => {
     if (open) {
@@ -78,9 +71,13 @@ export function AiCopilot({
 
   function handleModeSelect(next: Exclude<AiAssistantMode, null>) {
     onModeChange(next);
-    if (next === "summarize") {
-      onExplain("Ringkas status pabrik hari ini untuk saya", "Ringkasan");
-    }
+    const prompts: Record<Exclude<AiAssistantMode, null>, string> = {
+      summarize: "Ringkas status operasional hari ini berdasarkan data sistem",
+      analyze: "Analisis isu prioritas hari ini dan berikan rekomendasi",
+      search: "Cari SOP dan kasus serupa yang relevan",
+      draft: "Buat draft laporan investigasi untuk isu prioritas"
+    };
+    onExplain(prompts[next], modes.find((m) => m.id === next)?.label ?? "AI");
   }
 
   return (
@@ -115,15 +112,12 @@ export function AiCopilot({
                         <span className="flex-1 buek-body text-slate-200">{item.text}</span>
                         <button
                           type="button"
-                          onClick={() => {
-                            if (item.workspace && onOpenWorkspace) {
-                              onOpenWorkspace(item.workspace);
-                              onToggle();
-                            } else if (item.explainPrompt) {
-                              onModeChange("analyze");
-                              onExplain(item.explainPrompt, item.text);
-                            }
-                          }}
+                        onClick={() => {
+                          if (item.workspace && onOpenWorkspace) {
+                            onOpenWorkspace(item.workspace);
+                            onToggle();
+                          }
+                        }}
                           className="shrink-0 rounded-lg bg-cyan-500/20 px-3 py-1.5 text-sm font-medium text-cyan-300 hover:bg-cyan-500/30"
                         >
                           {item.actionLabel} ↓
@@ -151,25 +145,6 @@ export function AiCopilot({
                         <p className="text-sm font-medium text-white">{item.label}</p>
                         <p className="text-xs text-slate-500">{item.description}</p>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {mode === "action" && messages.length === 0 ? (
-              <div className="border-b border-white/10 px-6 py-5">
-                <p className="text-sm text-slate-500">Yang ingin Anda lakukan?</p>
-                <div className="mt-3 space-y-2">
-                  {actionOptions.map((option) => (
-                    <button
-                      key={option.label}
-                      type="button"
-                      onClick={() => onExplain(option.prompt, option.label)}
-                      className="flex w-full items-center gap-3 rounded-xl border border-white/10 px-4 py-3 text-left text-sm text-slate-300 hover:border-cyan-400/30"
-                    >
-                      <span className="text-cyan-400">○</span>
-                      {option.label}
                     </button>
                   ))}
                 </div>
