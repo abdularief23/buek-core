@@ -16,6 +16,7 @@ import {
   handleEngineerMetrics,
   handlePendingEngineeringAnalyses,
   handleGetEngineeringAnalysis,
+  handleAnalysisDocumentExport,
   handleSaveEngineeringAnalysis,
   handleSubmitEngineeringAnalysis,
   handleApproveEngineeringAnalysis,
@@ -278,6 +279,7 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/data/:slug/engineer/metrics", (req, res) => void handleEngineerMetrics(req, res));
   app.get("/api/data/:slug/supervisor/pending-analyses", (req, res) => void handlePendingEngineeringAnalyses(req, res));
   app.get("/api/data/:slug/issues/:issueKey/analysis", (req, res) => void handleGetEngineeringAnalysis(req, res));
+  app.get("/api/data/:slug/issues/:issueKey/analysis/document", (req, res) => void handleAnalysisDocumentExport(req, res));
   app.put("/api/data/:slug/issues/:issueKey/analysis", (req, res) => void handleSaveEngineeringAnalysis(req, res));
   app.post("/api/data/:slug/issues/:issueKey/analysis/submit", (req, res) => void handleSubmitEngineeringAnalysis(req, res));
   app.post("/api/data/:slug/issues/:issueKey/analysis/approve", (req, res) => void handleApproveEngineeringAnalysis(req, res));

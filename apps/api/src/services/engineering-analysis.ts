@@ -3,6 +3,8 @@ import { canApprove, canDraftReport, assertRole } from "../lib/roles.js";
 import { defaultInvestigationSteps, getInvestigationCopilot } from "./investigation-copilot.js";
 import { createWorkOrderFromExecutionPlan } from "./execution-work-order.js";
 import { createDraftReport } from "./workflow-data.js";
+import type { ReportSections } from "./report-template.js";
+import { getTenantThemeOrDefault } from "../tenants/index.js";
 
 export type AnalysisStatus =
   | "draft"
@@ -507,4 +509,90 @@ export async function generateReportFromAnalysis(
 
   const result = await createDraftReport(slug, issueKey, engineerName, undefined, role, draft);
   return { ...result, metrics };
+}
+
+export function buildAnalysisDocumentSections(
+  issueTitle: string,
+  metrics: EngineerIssueMetrics,
+  analysis: EngineeringAnalysisData
+): ReportSections {
+  const evidenceLines = [
+    analysis.evidence.qcResult ? "✓ QC Result" : null,
+    analysis.evidence.photo ? "✓ Photo" : null,
+    analysis.evidence.trend ? "✓ Trend" : null,
+    analysis.evidence.machineHistory ? "✓ Machine History" : null,
+    analysis.evidence.notes || null,
+    analysis.evidence.photos?.length ? `✓ ${analysis.evidence.photos.length} foto evidence terlampir` : null
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const attachments = [
+    ...(analysis.evidence.photos?.length ? [`${analysis.evidence.photos.length} Evidence Photo(s)`] : []),
+    ...(analysis.analysisPhotos?.length ? [`${analysis.analysisPhotos.length} Analysis Photo(s)`] : []),
+    ...(analysis.evidence.qcResult ? ["QC Result"] : []),
+    ...(analysis.evidence.trend ? ["Trend Data"] : []),
+    ...(analysis.evidence.machineHistory ? ["Machine History"] : [])
+  ];
+
+  return {
+    background: [
+      `Issue: ${issueTitle}`,
+      `Machine: ${metrics.machineCode}`,
+      `PPM: ${metrics.currentPpm.toLocaleString()} (target ${metrics.targetPpm.toLocaleString()}, +${metrics.increasePercent}%)`,
+      `Priority: ${metrics.priority}`,
+      `Due: ${metrics.dueLabel}`
+    ].join("\n"),
+    evidence: evidenceLines || "—",
+    analysis: `Engineer-selected possible cause: ${analysis.selectedCause?.label ?? "—"} (${analysis.selectedCause?.confidence ?? 0}% confidence)`,
+    decision: `Engineer decision: ${analysis.selectedCause?.label ?? "Manual analysis"}`,
+    rootCause: `Working hypothesis: ${analysis.selectedCause?.label ?? "—"}`,
+    countermeasure: [...analysis.countermeasures, analysis.countermeasureNotes].filter(Boolean).join("\n") || "—",
+    executionPlan: [
+      `PIC: ${analysis.executionPlan.pic || "—"}`,
+      `Execution Date: ${analysis.executionPlan.executionDate || "—"}`,
+      `Expected Finish: ${analysis.executionPlan.expectedFinish || "—"}`,
+      `Verification Date: ${analysis.executionPlan.verificationDate || "—"}`
+    ].join("\n"),
+    verification: `Verification scheduled: ${analysis.executionPlan.verificationDate || "—"}`,
+    verificationResult: analysis.verification?.lessonsLearned ?? "Pending supervisor approval and execution",
+    lessonsLearned: analysis.verification?.lessonsLearned ?? "—",
+    attachments: attachments.length ? attachments : ["No attachments"]
+  };
+}
+
+function analysisDocumentNumber(issueKey: string, submittedAt?: string) {
+  const date = (submittedAt ?? new Date().toISOString()).slice(0, 10).replace(/-/g, "");
+  const key = issueKey.replace(/[^a-z0-9]/gi, "").slice(0, 12).toUpperCase();
+  return `EA-${key}-${date}`;
+}
+
+export async function getAnalysisDocumentPreviewHtml(slug: string, issueKey: string) {
+  const data = await getEngineeringAnalysis(slug, issueKey);
+  if (!data) return null;
+  if (data.analysis.status === "draft") return null;
+
+  const sections = buildAnalysisDocumentSections(data.issueTitle, data.metrics, data.analysis);
+  const tenant = getTenantThemeOrDefault(slug);
+  const workspace = await prisma.workspace.findUnique({ where: { slug } });
+  const docNumber = analysisDocumentNumber(issueKey, data.analysis.submittedAt);
+  const { renderPrintableHtml } = await import("./report-export.js");
+
+  return renderPrintableHtml({
+    reportNumber: docNumber,
+    problem: data.issueTitle,
+    machine: data.metrics.machineCode,
+    date: (data.analysis.submittedAt ?? new Date().toISOString()).slice(0, 10),
+    engineer: data.analysis.submittedBy ?? "—",
+    status: data.analysis.status.replace(/_/g, " "),
+    version: 1,
+    sections,
+    content: "",
+    reportTitle: "ENGINEERING ANALYSIS DOCUMENT",
+    brandColor: tenant.primary,
+    industryLabel: tenant.industryLabel,
+    ...(workspace?.organization ? { organization: workspace.organization } : {}),
+    ...(data.analysis.approvedBy ? { approvedBy: data.analysis.approvedBy } : {}),
+    ...(data.analysis.approvedAt ? { approvedAt: data.analysis.approvedAt.slice(0, 10) } : {})
+  });
 }

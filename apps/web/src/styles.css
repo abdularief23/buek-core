@@ -203,6 +203,18 @@ body {
   color: #f8fafc !important;
 }
 
+:root[data-appearance="light"] .analysis-document-preview {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-appearance="light"] .analysis-document-preview .text-slate-900,
+:root[data-appearance="light"] .analysis-document-preview .text-slate-800,
+:root[data-appearance="light"] .analysis-document-preview .text-slate-700 {
+  color: #1e293b !important;
+}
+
 :root {
   --tenant-primary: #0891b2;
   --tenant-primary-light: #06b6d4;
