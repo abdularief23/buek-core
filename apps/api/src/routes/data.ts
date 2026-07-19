@@ -32,6 +32,7 @@ import {
   getPendingReports,
   getPendingSopRevisions,
   getReportById,
+  getReportExportDocx,
   getReportExportHtml,
   getSopRevisionById,
   rejectReport,
@@ -287,7 +288,26 @@ export async function handleReportDetail(req: Request, res: Response) {
 
 export async function handleReportExport(req: Request, res: Response) {
   try {
-    const html = await getReportExportHtml(getSlug(req), String(req.params.reportId));
+    const slug = getSlug(req);
+    const reportId = String(req.params.reportId);
+    const format = typeof req.query.format === "string" ? req.query.format : "html";
+
+    if (format === "docx") {
+      const buffer = await getReportExportDocx(slug, reportId);
+      if (!buffer) {
+        res.status(404).json({ error: { message: "Report not found" } });
+        return;
+      }
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      );
+      res.setHeader("Content-Disposition", `attachment; filename="report-${reportId}.docx"`);
+      res.send(buffer);
+      return;
+    }
+
+    const html = await getReportExportHtml(slug, reportId);
     if (!html) {
       res.status(404).json({ error: { message: "Report not found" } });
       return;

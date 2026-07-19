@@ -722,27 +722,65 @@ export async function saveMemory(slug: string, scope: string, content: string, t
 }
 
 export async function getReportExportHtml(slug: string, reportId: string) {
-  const report = await getReportById(slug, reportId);
-  if (!report) return null;
+  const payload = await getReportExportPayload(slug, reportId);
+  if (!payload) return null;
+
+  const { renderPrintableHtml } = await import("./report-export.js");
+  return renderPrintableHtml(payload);
+}
+
+export async function getReportExportDocx(slug: string, reportId: string) {
+  const payload = await getReportExportPayload(slug, reportId);
+  if (!payload) return null;
+
+  const { renderReportDocx } = await import("./report-export-docx.js");
+  return renderReportDocx({
+    reportNumber: payload.reportNumber,
+    problem: payload.problem,
+    date: payload.date,
+    engineer: payload.engineer,
+    status: payload.status,
+    version: payload.version,
+    sections: payload.sections,
+    content: payload.content,
+    reportTitle: payload.reportTitle,
+    ...(payload.organization ? { organization: payload.organization } : {}),
+    ...(payload.machine ? { machine: payload.machine } : {}),
+    ...(payload.approvedBy ? { approvedBy: payload.approvedBy } : {}),
+    ...(payload.approvedAt ? { approvedAt: payload.approvedAt } : {})
+  });
+}
+
+async function getReportExportPayload(slug: string, reportId: string) {
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return null;
+
+  const row = await prisma.engineeringReport.findFirst({
+    where: { id: reportId, workspaceId },
+    include: { author: true, issue: true, approvedBy: true }
+  });
+  if (!row) return null;
 
   const workspace = await prisma.workspace.findUnique({ where: { slug } });
   const tenant = getTenantThemeOrDefault(slug);
 
-  const { renderPrintableHtml } = await import("./report-export.js");
-  return renderPrintableHtml({
-    reportNumber: report.reportNumber ?? reportId,
-    problem: report.issueTitle ?? report.title,
-    date: report.submittedAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
-    engineer: report.author?.name ?? "—",
-    status: report.status,
-    version: report.version,
-    sections: report.sections ?? null,
-    content: report.content,
+  return {
+    reportNumber: row.reportNumber ?? reportId,
+    problem: row.issue?.title ?? row.title,
+    date: row.submittedAt?.toISOString().slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+    engineer: row.author?.name ?? "—",
+    status: row.status,
+    version: row.version,
+    sections: (row.sections as ReportSections | null) ?? null,
+    content: row.content,
+    ...(row.machineCode ? { machine: row.machineCode } : {}),
     ...(workspace?.organization ? { organization: workspace.organization } : {}),
     reportTitle: tenant.reportTitle,
     brandColor: tenant.primary,
-    industryLabel: tenant.industryLabel
-  });
+    industryLabel: tenant.industryLabel,
+    ...(row.approvedBy?.name ? { approvedBy: row.approvedBy.name } : {}),
+    ...(row.approvedAt ? { approvedAt: row.approvedAt.toISOString().slice(0, 10) } : {})
+  };
 }
 
 export async function logAgentAction(

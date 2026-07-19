@@ -1,5 +1,7 @@
 import { prisma } from "../db.js";
 
+import { extractTextFromBuffer, inferKnowledgeType } from "./document-parser.js";
+
 export interface KnowledgeDocumentDto {
   id: string;
   title: string;
@@ -18,6 +20,7 @@ export interface UploadKnowledgeInput {
   content: string;
   referenceId?: string;
   fileName?: string;
+  parserLabel?: string;
 }
 
 function chunkText(content: string, maxCharacters = 900): string[] {
@@ -54,13 +57,54 @@ function simulateOcr(fileName: string | undefined, content: string): { text: str
   if (content.trim()) {
     return { text: content.trim(), ocrApplied: false };
   }
-  if (fileName?.toLowerCase().endsWith(".pdf")) {
-    return {
-      text: `[OCR Simulated] Content extracted from ${fileName}. In production, OCR pipeline processes scanned PDF pages.`,
-      ocrApplied: true
-    };
-  }
   return { text: "", ocrApplied: false };
+}
+
+export async function uploadKnowledgeFromFile(
+  workspaceSlug: string,
+  fileName: string,
+  buffer: Buffer,
+  options: { title?: string; type?: string; referenceId?: string } = {}
+): Promise<KnowledgeDocumentDto> {
+  const parsed = await extractTextFromBuffer(buffer, fileName);
+  if (!parsed.text.trim()) {
+    throw new Error(`No extractable content in ${fileName}.`);
+  }
+
+  const title = options.title ?? fileName.replace(/\.[^.]+$/, "");
+  const type = options.type ?? inferKnowledgeType(fileName);
+
+  return uploadKnowledge({
+    workspaceSlug,
+    title,
+    type,
+    content: parsed.text,
+    fileName,
+    ...(options.referenceId ? { referenceId: options.referenceId } : {}),
+    parserLabel: parsed.parser
+  });
+}
+
+export async function uploadKnowledgeBatch(
+  workspaceSlug: string,
+  files: Array<{ fileName: string; buffer: Buffer }>
+): Promise<{ documents: KnowledgeDocumentDto[]; errors: Array<{ fileName: string; message: string }> }> {
+  const documents: KnowledgeDocumentDto[] = [];
+  const errors: Array<{ fileName: string; message: string }> = [];
+
+  for (const file of files) {
+    try {
+      const document = await uploadKnowledgeFromFile(workspaceSlug, file.fileName, file.buffer);
+      documents.push(document);
+    } catch (error) {
+      errors.push({
+        fileName: file.fileName,
+        message: error instanceof Error ? error.message : "Upload failed"
+      });
+    }
+  }
+
+  return { documents, errors };
 }
 
 async function getWorkspaceContext(slug: string) {
@@ -103,6 +147,8 @@ export async function uploadKnowledge(input: UploadKnowledgeInput): Promise<Know
     throw new Error("No content to index. Provide text content or a supported file.");
   }
 
+  const parserNote = input.parserLabel ? ` (${input.parserLabel})` : ocrApplied ? " (OCR)" : "";
+
   const chunks = chunkText(text);
   const sourcePath = input.fileName ? `upload://${input.fileName}` : "upload://paste";
 
@@ -132,7 +178,7 @@ export async function uploadKnowledge(input: UploadKnowledgeInput): Promise<Know
       workspaceId: workspace.id,
       occurredAt: new Date(),
       title: "Knowledge Uploaded",
-      detail: `${input.title} — ${chunks.length} chunks indexed${ocrApplied ? " (OCR)" : ""}`,
+      detail: `${input.title} — ${chunks.length} chunks indexed${parserNote}`,
       category: "knowledge",
       entityType: "knowledge_document",
       entityId: document.id
