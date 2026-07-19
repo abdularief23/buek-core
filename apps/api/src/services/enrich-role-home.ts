@@ -8,6 +8,7 @@ import {
   getTeamPerformance,
   getWeeklyTrend
 } from "./data-engine.js";
+import { getEngineerIssueMetrics } from "./engineering-analysis.js";
 import { getOperatorChecklist } from "./workflow-data.js";
 
 function kpiToOverviewStatus(status: "green" | "yellow" | "red"): "green" | "yellow" | "red" {
@@ -171,33 +172,73 @@ export async function enrichRoleHomeFromDb(
     }
 
     if (roleHome.roleKey === "engineer" && roleHome.engineer) {
-      const issues = await getIssues(workspaceSlug, ["open", "investigating"]);
+      const [issues, metricsList] = await Promise.all([
+        getIssues(workspaceSlug, ["open", "investigating"]),
+        getEngineerIssueMetrics(workspaceSlug)
+      ]);
       const investigations = issues
         .filter((i) => i.investigation)
         .slice(0, 4)
         .map((i) => ({
           id: i.id,
           label: i.title,
-          issueKey: i.id.replace(`issue-${workspaceSlug}-`, ""),
-          progress: i.progress
+          issueKey: i.id.replace(`issue-${workspaceSlug}-`, "")
         }));
 
-      const problems = issues.slice(0, 3).map((issue) => ({
-        id: issue.id,
-        severity: (issue.severity === "high" || issue.severity === "critical"
-          ? "critical"
-          : issue.severity === "medium"
-            ? "warning"
-            : "attention") as "critical" | "warning" | "attention",
-        icon: severityIcon(issue.severity),
-        title: issue.machine ? `${issue.machine.name} ${issue.title}` : issue.title,
-        detail: issue.description?.slice(0, 80) ?? `${issue.progress}% complete`,
-        actionLabel: issue.investigation ? "Possible Cause" : "Investigate",
-        prompt: `Continue ${issue.title} investigation`,
-        contextLabel: issue.title,
-        action: "investigation" as const,
-        issueKey: issue.id.replace(`issue-${workspaceSlug}-`, "")
-      }));
+      const problems = (metricsList.length ? metricsList : issues.slice(0, 3)).map((item) => {
+        const issue =
+          "id" in item
+            ? item
+            : issues.find((i) => i.id.endsWith((item as { issueKey: string }).issueKey));
+        const metrics =
+          "currentPpm" in item
+            ? item
+            : metricsList.find((m) => m.issueKey === issue?.id.replace(`issue-${workspaceSlug}-`, ""));
+        const issueKey =
+          metrics?.issueKey ?? issue?.id.replace(`issue-${workspaceSlug}-`, "") ?? "";
+        const analysisStatus = metrics?.analysisStatus;
+        const actionLabel =
+          analysisStatus === "waiting_supervisor_review"
+            ? "Menunggu Review"
+            : analysisStatus === "analysis_approved" || analysisStatus === "verification_complete"
+              ? "Lihat Analisa"
+              : analysisStatus === "revision_requested" || investigations.some((i) => i.issueKey === issueKey)
+                ? "Lanjutkan Analisa"
+                : "Analisa";
+
+        return {
+          id: issue?.id ?? issueKey,
+          severity: (issue?.severity === "high" || issue?.severity === "critical"
+            ? "critical"
+            : issue?.severity === "medium"
+              ? "warning"
+              : "attention") as "critical" | "warning" | "attention",
+          icon: severityIcon(issue?.severity ?? "medium"),
+          title: metrics?.issueTitle ?? issue?.title ?? "Issue",
+          detail: metrics
+            ? `PPM ${metrics.currentPpm.toLocaleString()} · Target ${metrics.targetPpm.toLocaleString()}`
+            : issue?.description?.slice(0, 80) ?? "",
+          actionLabel,
+          prompt: `Continue ${metrics?.issueTitle ?? issue?.title} analysis`,
+          contextLabel: metrics?.issueTitle ?? issue?.title ?? "",
+          action: "investigation" as const,
+          issueKey,
+          ...(metrics
+            ? {
+                metrics: {
+                  machineCode: metrics.machineCode,
+                  issueTitle: metrics.issueTitle,
+                  currentPpm: metrics.currentPpm,
+                  targetPpm: metrics.targetPpm,
+                  increasePercent: metrics.increasePercent,
+                  priority: metrics.priority,
+                  dueLabel: metrics.dueLabel,
+                  ...(metrics.analysisStatus ? { analysisStatus: metrics.analysisStatus } : {})
+                }
+              }
+            : {})
+        };
+      });
 
       const firstInv = investigations[0];
       const tenant = getTenantThemeOrDefault(workspaceSlug);

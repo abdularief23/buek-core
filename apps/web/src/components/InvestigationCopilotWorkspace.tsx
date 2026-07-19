@@ -1,19 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  advanceInvestigation,
-  createDraftReport,
-  fetchInvestigationCopilot,
-  fetchIssueByKey,
-  type ExecutionPlanDto,
-  type InvestigationCopilot,
-  type InvestigationDraftInput,
-  type IssueRecord,
+  approveEngineeringAnalysis,
+  fetchEngineeringAnalysis,
+  generateReportFromAnalysis,
+  rejectEngineeringAnalysis,
+  saveEngineeringAnalysis,
+  submitEngineeringAnalysis,
+  submitVerificationResult,
+  type EngineeringAnalysisData,
   type PossibleCause
 } from "../lib/data-api.js";
 import { isEngineer, isPlantManager, isSupervisor } from "../lib/roles.js";
 import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
 
-interface InvestigationCopilotWorkspaceProps {
+const WIZARD_STEPS = [
+  "Evidence",
+  "Possible Root Cause",
+  "Countermeasure",
+  "Execution Plan",
+  "Submit"
+] as const;
+
+interface Props {
   slug: string;
   issueKey: string;
   userName: string;
@@ -23,16 +31,11 @@ interface InvestigationCopilotWorkspaceProps {
   onWorkspaceChange: (next: DynamicWorkspaceState) => void;
 }
 
-type CopilotHint =
-  | { kind: "context" }
-  | { kind: "similar" }
-  | { kind: "sop" }
-  | { kind: "cause"; cause: PossibleCause }
-  | { kind: "countermeasure" }
-  | { kind: "execution" }
-  | { kind: "verification" };
+export function InvestigationCopilotWorkspace(props: Props) {
+  return <EngineeringAnalysisWizard {...props} />;
+}
 
-export function InvestigationCopilotWorkspace({
+function EngineeringAnalysisWizard({
   slug,
   issueKey,
   userName,
@@ -40,565 +43,580 @@ export function InvestigationCopilotWorkspace({
   onClose,
   onDataChange,
   onWorkspaceChange
-}: InvestigationCopilotWorkspaceProps) {
-  const [issue, setIssue] = useState<IssueRecord | null>(null);
-  const [copilot, setCopilot] = useState<InvestigationCopilot | null>(null);
-  const [advancing, setAdvancing] = useState(false);
-  const [creatingDraft, setCreatingDraft] = useState(false);
-  const [activeHint, setActiveHint] = useState<CopilotHint>({ kind: "context" });
-
-  const [evidence, setEvidence] = useState("");
-  const [selectedCauseId, setSelectedCauseId] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState("");
-  const [decision, setDecision] = useState("");
-  const [selectedCountermeasureId, setSelectedCountermeasureId] = useState<string | null>(null);
-  const [countermeasureDraft, setCountermeasureDraft] = useState("");
-  const [executionPlan, setExecutionPlan] = useState<ExecutionPlanDto | null>(null);
-  const [rejectBefore, setRejectBefore] = useState("");
-  const [rejectAfter, setRejectAfter] = useState("");
-  const [verificationResult, setVerificationResult] = useState<"PASS" | "FAIL" | "">("");
-  const [verificationNotes, setVerificationNotes] = useState("");
-  const [lessonsLearned, setLessonsLearned] = useState("");
-  const [workOrderCreated, setWorkOrderCreated] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchIssueByKey(slug, issueKey).then((data) => setIssue(data.issue));
-    fetchInvestigationCopilot(slug, issueKey)
-      .then((data) => {
-        setCopilot(data.copilot);
-        setExecutionPlan(data.copilot.defaultExecutionPlan);
-        setEvidence(
-          [
-            data.copilot.autoLoadedContext.join("\n"),
-            "",
-            data.copilot.issueTitle
-          ].join("\n")
-        );
-      })
-      .catch(() => setCopilot(null));
-  }, [slug, issueKey]);
-
-  const selectedCause = useMemo(
-    () => copilot?.possibleCauses.find((c) => c.id === selectedCauseId) ?? null,
-    [copilot, selectedCauseId]
-  );
-
-  const selectedCountermeasure = useMemo(
-    () => copilot?.countermeasureOptions.find((c) => c.id === selectedCountermeasureId) ?? null,
-    [copilot, selectedCountermeasureId]
-  );
-
-  function selectCause(cause: PossibleCause) {
-    setSelectedCauseId(cause.id);
-    setActiveHint({ kind: "cause", cause });
-    setAnalysis(
-      `Possible cause selected by engineer: ${cause.label} (${cause.confidence}% confidence).\nSupporting signals: ${cause.evidence.join(", ")}.\nAI does not declare root cause — engineer retains decision authority.`
-    );
-    setDecision(`Engineer decision: proceed with ${cause.label} as working hypothesis for countermeasure planning.`);
-  }
-
-  function selectCountermeasure(id: string, label: string) {
-    setSelectedCountermeasureId(id);
-    setActiveHint({ kind: "countermeasure" });
-    setCountermeasureDraft(
-      `Selected countermeasure: ${label}\n\nAI draft — engineer may edit before submission:\n• Execute ${label.toLowerCase()}\n• Verify reject rate after implementation\n• Document result in technical report`
-    );
-  }
-
-  async function completeStep(stepKey: string) {
-    if (!issue || advancing) return;
-    setAdvancing(true);
-    try {
-      const result = await advanceInvestigation(slug, issue.id, stepKey, userRole);
-      setIssue(result.issue);
-      onDataChange?.();
-    } finally {
-      setAdvancing(false);
-    }
-  }
-
-  async function handleGenerateReport() {
-    if (!issue || !copilot || creatingDraft || !selectedCause || !executionPlan) return;
-    setCreatingDraft(true);
-    try {
-      const verificationResultText = [
-        rejectBefore ? `Reject Before: ${rejectBefore}%` : null,
-        rejectAfter ? `Reject After: ${rejectAfter}%` : null,
-        verificationResult ? `Result: ${verificationResult}` : null,
-        verificationNotes || null
-      ]
-        .filter(Boolean)
-        .join("\n");
-
-      const draft: InvestigationDraftInput = {
-        evidence,
-        analysis,
-        decision,
-        rootCause: `Working hypothesis (engineer-selected): ${selectedCause.label}`,
-        countermeasure: countermeasureDraft,
-        executionPlan: [
-          `PIC: ${executionPlan.pic}`,
-          `Due Date: ${executionPlan.dueDate}`,
-          `Machine Stop: ${executionPlan.machineStop ? "Yes" : "No"}`,
-          `Material Needed: ${executionPlan.materialNeeded}`,
-          `Estimated Downtime: ${executionPlan.estimatedDowntime}`
-        ].join("\n"),
-        verification: verificationNotes,
-        verificationResult: verificationResultText,
-        selectedCauseLabel: selectedCause.label,
-        executionPlanFields: executionPlan,
-        lessonsLearned
-      };
-
-      const result = await createDraftReport(slug, issueKey, userName, userRole, draft);
-      if (result.workOrder) {
-        setWorkOrderCreated(`${result.workOrder.number} — ${result.workOrder.title}`);
-      }
-      onWorkspaceChange({ kind: "engineering-report", slug, reportId: result.report.id });
-      onDataChange?.();
-    } finally {
-      setCreatingDraft(false);
-    }
-  }
-
-  if (!issue || !copilot) {
-    return <p className="buek-body text-slate-500">Loading engineering co-pilot...</p>;
-  }
+}: Props) {
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState(false);
+  const [step, setStep] = useState(0);
+  const [issueTitle, setIssueTitle] = useState("");
+  const [metrics, setMetrics] = useState<{
+    machineCode: string;
+    currentPpm: number;
+    targetPpm: number;
+    increasePercent: number;
+    priority: string;
+    dueLabel: string;
+  } | null>(null);
+  const [analysis, setAnalysis] = useState<EngineeringAnalysisData | null>(null);
+  const [possibleCauses, setPossibleCauses] = useState<PossibleCause[]>([]);
+  const [countermeasureOptions, setCountermeasureOptions] = useState<string[]>([]);
+  const [otherCause, setOtherCause] = useState("");
+  const [askHistorical, setAskHistorical] = useState<boolean | null>(null);
+  const [verificationPpm, setVerificationPpm] = useState("");
+  const [countermeasureDone, setCountermeasureDone] = useState<boolean | null>(null);
 
   const engineerView = isEngineer(userRole);
   const supervisorView = isSupervisor(userRole);
   const managerView = isPlantManager(userRole);
-  const canGenerate =
-    engineerView &&
-    Boolean(selectedCause && selectedCountermeasureId && countermeasureDraft && executionPlan && verificationResult);
+  const readOnly = managerView || (!engineerView && !supervisorView);
+
+  useEffect(() => {
+    fetchEngineeringAnalysis(slug, issueKey)
+      .then((data) => {
+        setIssueTitle(data.issueTitle);
+        setMetrics({
+          machineCode: data.metrics.machineCode,
+          currentPpm: data.metrics.currentPpm,
+          targetPpm: data.metrics.targetPpm,
+          increasePercent: data.metrics.increasePercent,
+          priority: data.metrics.priority,
+          dueLabel: data.metrics.dueLabel
+        });
+        setAnalysis(data.analysis);
+        setPossibleCauses(data.copilot.possibleCauses);
+        setCountermeasureOptions(data.copilot.countermeasureOptions.map((o) => o.label));
+        if (data.analysis.selectedCause?.isOther) {
+          setOtherCause(data.analysis.selectedCause.label);
+        }
+        if (data.analysis.useHistoricalCountermeasure !== undefined) {
+          setAskHistorical(data.analysis.useHistoricalCountermeasure);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [slug, issueKey]);
+
+  async function persistDraft(next: EngineeringAnalysisData) {
+    setAnalysis(next);
+    if (!engineerView) return;
+    await saveEngineeringAnalysis(slug, issueKey, next, userRole);
+  }
+
+  function selectCause(cause: PossibleCause) {
+    if (!analysis) return;
+    void persistDraft({
+      ...analysis,
+      selectedCause: { label: cause.label, confidence: cause.confidence }
+    });
+    setStep(2);
+  }
+
+  function selectOtherCause() {
+    if (!analysis || !otherCause.trim()) return;
+    void persistDraft({
+      ...analysis,
+      selectedCause: { label: otherCause.trim(), confidence: 0, isOther: true }
+    });
+    setStep(2);
+  }
+
+  function applyHistoricalCountermeasures(useHistorical: boolean) {
+    if (!analysis) return;
+    setAskHistorical(useHistorical);
+    const selected = useHistorical ? countermeasureOptions : [];
+    void persistDraft({
+      ...analysis,
+      useHistoricalCountermeasure: useHistorical,
+      countermeasures: selected,
+      countermeasureNotes: selected.join("\n")
+    });
+  }
+
+  async function handleSubmit() {
+    if (!analysis || acting) return;
+    setActing(true);
+    try {
+      await submitEngineeringAnalysis(slug, issueKey, analysis, userName, userRole);
+      setAnalysis({ ...analysis, status: "waiting_supervisor_review" });
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleApprove() {
+    if (acting) return;
+    setActing(true);
+    try {
+      const result = await approveEngineeringAnalysis(slug, issueKey, userName, userRole);
+      setAnalysis(result.analysis);
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleReject() {
+    if (acting) return;
+    setActing(true);
+    try {
+      const result = await rejectEngineeringAnalysis(slug, issueKey, userName, userRole);
+      setAnalysis(result.analysis);
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleGenerateReport() {
+    if (acting) return;
+    setActing(true);
+    try {
+      const result = await generateReportFromAnalysis(slug, issueKey, userName, userRole);
+      onWorkspaceChange({ kind: "engineering-report", slug, reportId: result.report.id });
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleVerification() {
+    if (!analysis || acting || !metrics) return;
+    setActing(true);
+    try {
+      const result = await submitVerificationResult(slug, issueKey, {
+        countermeasureComplete: countermeasureDone ?? true,
+        currentPpm: Number(verificationPpm) || metrics.targetPpm,
+        targetPpm: metrics.targetPpm,
+        engineerName: userName,
+        role: userRole
+      });
+      setAnalysis(result.analysis);
+      onDataChange?.();
+    } finally {
+      setActing(false);
+    }
+  }
+
+  if (loading || !analysis || !metrics) {
+    return <p className="buek-body text-slate-500">Loading engineering analysis...</p>;
+  }
+
+  const status = analysis.status;
+  const editable = engineerView && (status === "draft" || status === "revision_requested");
+  const waitingReview = status === "waiting_supervisor_review";
+  const approved = status === "analysis_approved" || status === "verification_complete";
 
   return (
     <div className="space-y-6 pb-16">
       <header className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
         <div>
-          <p className="buek-small text-slate-500">Engineering Co-Pilot Workspace</p>
-          <h1 className="buek-heading text-white">{issue.title}</h1>
-          <p className="mt-2 buek-body text-slate-400">
-            {issue.machine?.code} · Issue #{issue.id.slice(-3)} · AI assists, engineer decides
-          </p>
+          <p className="buek-small text-slate-500">Engineering Analysis</p>
+          <h1 className="buek-heading text-white">{issueTitle}</h1>
         </div>
         <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
           ← Back
         </button>
       </header>
 
-      {supervisorView ? (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-          <p className="buek-small text-amber-200">Supervisor view — monitor progress. Approval on submitted technical report.</p>
+      <section className="buek-card grid gap-4 rounded-2xl border border-white/10 p-6 sm:grid-cols-2 lg:grid-cols-4">
+        <Metric label="Machine" value={metrics.machineCode} />
+        <Metric label="PPM" value={metrics.currentPpm.toLocaleString()} highlight />
+        <Metric label="Target" value={metrics.targetPpm.toLocaleString()} />
+        <Metric label="Increase" value={`+${metrics.increasePercent}%`} warn />
+        <Metric label="Priority" value={metrics.priority} />
+        <Metric label="Due" value={metrics.dueLabel} />
+      </section>
+
+      {status === "revision_requested" ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 buek-small text-amber-200">
+          Revisi diminta supervisor: {analysis.revisionNotes ?? "—"}
         </div>
       ) : null}
-      {managerView ? (
-        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3">
-          <p className="buek-small text-cyan-200">Plant Manager view — read-only investigation tracking.</p>
-        </div>
+
+      {waitingReview && engineerView ? (
+        <StatusBanner title="Engineering Analysis Completed" subtitle="Waiting Supervisor Review" />
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
-          <section className="buek-card space-y-3 rounded-2xl border border-white/10 p-6">
-            <h2 className="buek-card-title text-slate-400">Auto-Loaded Context</h2>
-            <ul className="space-y-2">
-              {copilot.autoLoadedContext.map((line) => (
-                <li key={line} className="flex items-start gap-2 buek-small text-slate-300">
-                  <span className="text-cyan-400">•</span>
-                  {line}
-                </li>
-              ))}
-            </ul>
-          </section>
+      {supervisorView && waitingReview ? (
+        <SupervisorReviewPanel analysis={analysis} acting={acting} onApprove={() => void handleApprove()} onReject={() => void handleReject()} />
+      ) : null}
 
-          <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-            <h2 className="buek-card-title text-slate-400">Collect Evidence</h2>
-            <textarea
-              value={evidence}
-              onChange={(e) => setEvidence(e.target.value)}
-              onFocus={() => setActiveHint({ kind: "similar" })}
-              rows={4}
-              disabled={!engineerView}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white disabled:opacity-60"
-              placeholder="Observations, photos, trend data..."
-            />
-          </section>
-
-          <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-            <h2 className="buek-card-title text-slate-400">Review Similar Cases</h2>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {copilot.similarCases.map((item) => (
+      {approved && engineerView ? (
+        <section className="buek-card space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
+          <StatusBanner title="Engineering Analysis Approved" subtitle="Generate official report after execution" />
+          <button
+            type="button"
+            disabled={acting}
+            onClick={() => void handleGenerateReport()}
+            className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+          >
+            Generate Investigation Report (PDF/DOCX)
+          </button>
+          {status === "analysis_approved" ? (
+            <div className="space-y-3 border-t border-white/10 pt-4">
+              <p className="buek-body text-white">Countermeasure selesai?</p>
+              <div className="flex gap-3">
                 <button
-                  key={item.id}
                   type="button"
-                  onClick={() => setActiveHint({ kind: "similar" })}
-                  className="rounded-xl border border-white/10 px-4 py-3 text-left hover:border-cyan-400/30"
+                  onClick={() => setCountermeasureDone(true)}
+                  className={`rounded-lg px-4 py-2 ${countermeasureDone === true ? "bg-emerald-500/20 text-emerald-300" : "border border-white/10"}`}
                 >
-                  <p className="buek-body text-white">{item.title}</p>
-                  <p className="buek-small text-slate-500">{item.reference ?? "Company Brain"}</p>
+                  Ya
                 </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-            <h2 className="buek-card-title text-slate-400">Review SOP</h2>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {copilot.sopReferences.map((sop) => (
                 <button
-                  key={sop.id}
                   type="button"
-                  onClick={() => setActiveHint({ kind: "sop" })}
-                  className="rounded-xl border border-white/10 px-4 py-3 text-left hover:border-cyan-400/30"
+                  onClick={() => setCountermeasureDone(false)}
+                  className={`rounded-lg px-4 py-2 ${countermeasureDone === false ? "bg-amber-500/20 text-amber-300" : "border border-white/10"}`}
                 >
-                  <p className="buek-body text-white">{sop.title}</p>
-                  <p className="buek-small text-cyan-400">{sop.referenceId}</p>
+                  Belum
                 </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="buek-card space-y-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
-            <h2 className="buek-card-title text-cyan-300">Choose Possible Cause</h2>
-            <p className="buek-small text-slate-500">AI ranks hypotheses — engineer selects. AI never declares root cause.</p>
-            <div className="space-y-2">
-              {copilot.possibleCauses.map((cause, index) => (
-                <button
-                  key={cause.id}
-                  type="button"
-                  disabled={!engineerView}
-                  onClick={() => selectCause(cause)}
-                  className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left ${
-                    selectedCauseId === cause.id
-                      ? "border-cyan-400/50 bg-cyan-500/10"
-                      : "border-white/10 hover:border-cyan-400/30"
-                  }`}
-                >
-                  <span className="buek-body text-white">
-                    {index + 1}. {cause.label}
-                  </span>
-                  <span className="text-cyan-300">{cause.confidence}%</span>
-                </button>
-              ))}
-            </div>
-            {selectedCause ? (
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                <p className="buek-small font-semibold text-emerald-300">Evidence supporting selection</p>
-                <ul className="mt-2 space-y-1">
-                  {selectedCause.evidence.map((e) => (
-                    <li key={e} className="buek-small text-slate-300">
-                      ✓ {e}
-                    </li>
-                  ))}
-                </ul>
               </div>
-            ) : null}
-          </section>
+              {countermeasureDone !== null ? (
+                <>
+                  <label className="block space-y-1">
+                    <span className="buek-small text-slate-500">Current PPM (setelah countermeasure)</span>
+                    <input
+                      type="number"
+                      value={verificationPpm}
+                      onChange={(e) => setVerificationPpm(e.target.value)}
+                      placeholder={String(metrics.targetPpm)}
+                      className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={acting}
+                    onClick={() => void handleVerification()}
+                    className="rounded-xl border border-emerald-400/30 px-6 py-2 text-emerald-300 hover:bg-emerald-500/10"
+                  >
+                    Submit Verification → Lessons Learned
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+          {analysis.verification?.lessonsLearned ? (
+            <p className="buek-small text-emerald-400">✓ {analysis.verification.lessonsLearned}</p>
+          ) : null}
+        </section>
+      ) : null}
 
-          {selectedCause ? (
+      {editable ? (
+        <>
+          <nav className="flex flex-wrap gap-2">
+            {WIZARD_STEPS.map((label, index) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setStep(index)}
+                className={`rounded-lg px-3 py-1.5 text-sm ${
+                  step === index ? "bg-cyan-500 text-slate-950" : "border border-white/10 text-slate-400"
+                }`}
+              >
+                STEP {index + 1}: {label}
+              </button>
+            ))}
+          </nav>
+
+          {step === 0 ? (
             <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-              <h2 className="buek-card-title text-slate-400">AI Analysis & Engineer Decision</h2>
+              <h2 className="buek-card-title text-slate-400">STEP 1 — Evidence</h2>
+              {(
+                [
+                  ["qcResult", "QC Result"],
+                  ["photo", "Photo"],
+                  ["trend", "Trend"],
+                  ["machineHistory", "Machine History"]
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={analysis.evidence[key]}
+                    onChange={(e) =>
+                      void persistDraft({
+                        ...analysis,
+                        evidence: { ...analysis.evidence, [key]: e.target.checked }
+                      })
+                    }
+                  />
+                  <span className="buek-body text-slate-200">{label}</span>
+                </label>
+              ))}
               <textarea
-                value={analysis}
-                onChange={(e) => setAnalysis(e.target.value)}
+                value={analysis.evidence.notes}
+                onChange={(e) =>
+                  void persistDraft({
+                    ...analysis,
+                    evidence: { ...analysis.evidence, notes: e.target.value }
+                  })
+                }
                 rows={3}
-                disabled={!engineerView}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white disabled:opacity-60"
-              />
-              <textarea
-                value={decision}
-                onChange={(e) => setDecision(e.target.value)}
-                rows={2}
-                disabled={!engineerView}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white disabled:opacity-60"
-                placeholder="Engineer decision..."
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+                placeholder="Catatan evidence..."
               />
             </section>
           ) : null}
 
-          {selectedCause ? (
-            <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-              <h2 className="buek-card-title text-slate-400">Possible Countermeasure</h2>
+          {step === 1 ? (
+            <section className="buek-card space-y-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
+              <h2 className="buek-card-title text-cyan-300">STEP 2 — Possible Root Cause</h2>
+              <p className="buek-small text-slate-500">AI menemukan kemungkinan berikut — engineer memilih.</p>
               <div className="space-y-2">
-                {copilot.countermeasureOptions.map((option) => (
+                {possibleCauses.map((cause) => (
                   <label
-                    key={option.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 ${
-                      selectedCountermeasureId === option.id
+                    key={cause.id}
+                    className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 ${
+                      analysis.selectedCause?.label === cause.label
                         ? "border-cyan-400/50 bg-cyan-500/10"
                         : "border-white/10"
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="countermeasure"
-                      disabled={!engineerView}
-                      checked={selectedCountermeasureId === option.id}
-                      onChange={() => selectCountermeasure(option.id, option.label)}
-                    />
-                    <span className="buek-body text-white">{option.label}</span>
-                    <span className="ml-auto buek-small text-slate-500">{option.category}</span>
+                    <span className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="cause"
+                        checked={analysis.selectedCause?.label === cause.label}
+                        onChange={() => selectCause(cause)}
+                      />
+                      <span className="buek-body text-white">{cause.label}</span>
+                    </span>
+                    <span className="text-cyan-300">{cause.confidence}%</span>
                   </label>
                 ))}
+                <label className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3">
+                  <input type="radio" name="cause" checked={analysis.selectedCause?.isOther === true} readOnly />
+                  <input
+                    type="text"
+                    value={otherCause}
+                    onChange={(e) => setOtherCause(e.target.value)}
+                    onBlur={() => otherCause.trim() && selectOtherCause()}
+                    placeholder="Other (manual input)"
+                    className="flex-1 bg-transparent text-white outline-none"
+                  />
+                </label>
               </div>
-              {selectedCountermeasure ? (
-                <textarea
-                  value={countermeasureDraft}
-                  onChange={(e) => setCountermeasureDraft(e.target.value)}
-                  rows={4}
-                  disabled={!engineerView}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white disabled:opacity-60"
-                />
-              ) : null}
             </section>
           ) : null}
 
-          {executionPlan && selectedCountermeasure ? (
+          {step === 2 && analysis.selectedCause ? (
             <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-              <h2 className="buek-card-title text-slate-400">Execution Plan → Work Order</h2>
+              <h2 className="buek-card-title text-slate-400">STEP 3 — Countermeasure</h2>
+              {askHistorical === null ? (
+                <div className="space-y-3">
+                  <p className="buek-body text-white">
+                    Apakah Anda ingin menggunakan countermeasure yang pernah berhasil?
+                  </p>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={() => applyHistoricalCountermeasures(true)} className="rounded-lg border border-white/10 px-4 py-2">
+                      Ya
+                    </button>
+                    <button type="button" onClick={() => applyHistoricalCountermeasures(false)} className="rounded-lg border border-white/10 px-4 py-2">
+                      Tidak
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="buek-small text-cyan-400">AI Recommendation — engineer dapat mengedit</p>
+                  {countermeasureOptions.map((option) => (
+                    <label key={option} className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={analysis.countermeasures.includes(option)}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...analysis.countermeasures, option]
+                            : analysis.countermeasures.filter((c) => c !== option);
+                          void persistDraft({
+                            ...analysis,
+                            countermeasures: next,
+                            countermeasureNotes: next.join("\n")
+                          });
+                        }}
+                      />
+                      <span className="buek-body text-slate-200">{option}</span>
+                    </label>
+                  ))}
+                  <textarea
+                    value={analysis.countermeasureNotes}
+                    onChange={(e) => void persistDraft({ ...analysis, countermeasureNotes: e.target.value })}
+                    rows={4}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+                  />
+                </>
+              )}
+            </section>
+          ) : null}
+
+          {step === 3 ? (
+            <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
+              <h2 className="buek-card-title text-slate-400">STEP 4 — Execution Plan</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {(
                   [
                     ["pic", "PIC"],
-                    ["dueDate", "Due Date"],
-                    ["materialNeeded", "Material Needed"],
-                    ["estimatedDowntime", "Estimated Downtime"]
+                    ["executionDate", "Execution Date"],
+                    ["expectedFinish", "Expected Finish"],
+                    ["verificationDate", "Verification (After)"]
                   ] as const
                 ).map(([key, label]) => (
                   <label key={key} className="block space-y-1">
                     <span className="buek-small text-slate-500">{label}</span>
                     <input
-                      type={key === "dueDate" ? "date" : "text"}
-                      value={executionPlan[key]}
-                      disabled={!engineerView}
-                      onChange={(e) => {
-                        setExecutionPlan({ ...executionPlan, [key]: e.target.value });
-                        setActiveHint({ kind: "execution" });
-                      }}
-                      className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white disabled:opacity-60"
+                      type={key.includes("Date") ? "date" : "text"}
+                      value={analysis.executionPlan[key]}
+                      onChange={(e) =>
+                        void persistDraft({
+                          ...analysis,
+                          executionPlan: { ...analysis.executionPlan, [key]: e.target.value }
+                        })
+                      }
+                      className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white"
                     />
                   </label>
                 ))}
-                <label className="flex items-center gap-2 pt-6">
-                  <input
-                    type="checkbox"
-                    checked={executionPlan.machineStop}
-                    disabled={!engineerView}
-                    onChange={(e) => setExecutionPlan({ ...executionPlan, machineStop: e.target.checked })}
-                  />
-                  <span className="buek-body text-slate-300">Machine Stop Required</span>
-                </label>
               </div>
             </section>
           ) : null}
 
-          {selectedCountermeasure ? (
+          {step === 4 ? (
             <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-              <h2 className="buek-card-title text-slate-400">Verification</h2>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <label className="block space-y-1">
-                  <span className="buek-small text-slate-500">Reject Before (%)</span>
-                  <input
-                    type="text"
-                    value={rejectBefore}
-                    disabled={!engineerView}
-                    onChange={(e) => setRejectBefore(e.target.value)}
-                    onFocus={() => setActiveHint({ kind: "verification" })}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white disabled:opacity-60"
-                    placeholder="18"
-                  />
-                </label>
-                <label className="block space-y-1">
-                  <span className="buek-small text-slate-500">Reject After (%)</span>
-                  <input
-                    type="text"
-                    value={rejectAfter}
-                    disabled={!engineerView}
-                    onChange={(e) => setRejectAfter(e.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white disabled:opacity-60"
-                    placeholder="2"
-                  />
-                </label>
-                <label className="block space-y-1">
-                  <span className="buek-small text-slate-500">Result</span>
-                  <select
-                    value={verificationResult}
-                    disabled={!engineerView}
-                    onChange={(e) => setVerificationResult(e.target.value as "PASS" | "FAIL" | "")}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white disabled:opacity-60"
-                  >
-                    <option value="">Select</option>
-                    <option value="PASS">PASS</option>
-                    <option value="FAIL">FAIL</option>
-                  </select>
-                </label>
-              </div>
-              <textarea
-                value={verificationNotes}
-                onChange={(e) => setVerificationNotes(e.target.value)}
-                rows={2}
-                disabled={!engineerView}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white disabled:opacity-60"
-                placeholder="AI summary will be included in technical report..."
-              />
-              {verificationResult === "PASS" && rejectBefore && rejectAfter ? (
-                <p className="buek-small text-emerald-400">
-                  ✓ Verification PASS — reject improved from {rejectBefore}% to {rejectAfter}%.
-                </p>
-              ) : null}
-            </section>
-          ) : null}
-
-          {verificationResult ? (
-            <section className="buek-card space-y-3 rounded-2xl border border-white/10 p-6">
-              <h2 className="buek-card-title text-slate-400">Lessons Learned</h2>
-              <textarea
-                value={lessonsLearned}
-                onChange={(e) => setLessonsLearned(e.target.value)}
-                rows={2}
-                disabled={!engineerView}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white disabled:opacity-60"
-                placeholder="Key takeaway for Company Brain..."
-              />
-            </section>
-          ) : null}
-
-          {engineerView ? (
-            <>
-              {workOrderCreated ? (
-                <p className="buek-small text-emerald-400">
-                  ✓ Work Order created: {workOrderCreated} — pending supervisor approval
-                </p>
-              ) : null}
+              <h2 className="buek-card-title text-slate-400">STEP 5 — Submit Engineering Analysis</h2>
+              <p className="buek-body text-slate-400">
+                Setelah submit, status menjadi <strong className="text-white">Waiting Supervisor Review</strong>.
+                Laporan resmi (PDF/DOCX) baru dibuat setelah supervisor approve.
+              </p>
               <button
-              type="button"
-              disabled={!canGenerate || creatingDraft}
-              onClick={() => void handleGenerateReport()}
-              className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
-            >
-              {creatingDraft ? "Generating Technical Report..." : "Generate Technical Investigation Report"}
-            </button>
-            </>
-          ) : null}
-
-          {issue.investigation ? (
-            <section className="space-y-3">
-              <h2 className="buek-card-title text-slate-400">Workflow Steps</h2>
-              <ul className="space-y-2">
-                {issue.investigation.steps.map((step) => (
-                  <li key={step.key}>
-                    <button
-                      type="button"
-                      disabled={step.done || advancing || !engineerView}
-                      onClick={() => void completeStep(step.key)}
-                      className={`flex w-full items-center justify-between rounded-xl border px-5 py-3 text-left ${
-                        step.done
-                          ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
-                          : "border-white/10 hover:border-cyan-400/30"
-                      }`}
-                    >
-                      <span className="buek-small">{step.label}</span>
-                      <span>{step.done ? "✓" : "□"}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                type="button"
+                disabled={acting || !analysis.selectedCause}
+                onClick={() => void handleSubmit()}
+                className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+              >
+                {acting ? "Submitting..." : "Submit Engineering Analysis"}
+              </button>
             </section>
           ) : null}
-        </div>
 
-        <aside className="buek-card sticky top-4 h-fit space-y-4 rounded-2xl border border-cyan-500/30 bg-slate-900/80 p-5">
-          <p className="buek-small font-semibold uppercase tracking-wider text-cyan-400">AI Co-Pilot</p>
-          <CopilotPanel hint={activeHint} copilot={copilot} selectedCause={selectedCause} />
-          <p className="buek-small text-slate-500">AI prepares context and drafts. Engineer retains all technical decisions.</p>
-        </aside>
-      </div>
+          <div className="flex justify-between">
+            <button
+              type="button"
+              disabled={step === 0}
+              onClick={() => setStep((s) => Math.max(0, s - 1))}
+              className="rounded-lg border border-white/10 px-4 py-2 text-slate-300 disabled:opacity-40"
+            >
+              ← Previous
+            </button>
+            <button
+              type="button"
+              disabled={step >= WIZARD_STEPS.length - 1}
+              onClick={() => setStep((s) => Math.min(WIZARD_STEPS.length - 1, s + 1))}
+              className="rounded-lg border border-white/10 px-4 py-2 text-slate-300 disabled:opacity-40"
+            >
+              Next →
+            </button>
+          </div>
+        </>
+      ) : null}
+
+      {readOnly && !supervisorView ? (
+        <p className="buek-small text-slate-500">Read-only view untuk role ini.</p>
+      ) : null}
     </div>
   );
 }
 
-function CopilotPanel({
-  hint,
-  copilot,
-  selectedCause
+function Metric({
+  label,
+  value,
+  highlight,
+  warn
 }: {
-  hint: CopilotHint;
-  copilot: InvestigationCopilot;
-  selectedCause: PossibleCause | null;
+  label: string;
+  value: string;
+  highlight?: boolean;
+  warn?: boolean;
 }) {
-  if (hint.kind === "similar") {
-    return (
-      <div className="space-y-2">
-        <p className="buek-body text-white">Saya menemukan {copilot.similarCases.length} laporan serupa.</p>
-        {copilot.similarCases.map((c) => (
-          <p key={c.id} className="buek-small text-slate-400">
-            → {c.title} ({c.reference})
-          </p>
-        ))}
-      </div>
-    );
-  }
-
-  if (hint.kind === "sop") {
-    return (
-      <div className="space-y-2">
-        <p className="buek-body text-white">SOP terkait tersedia:</p>
-        {copilot.sopReferences.map((s) => (
-          <p key={s.id} className="buek-small text-slate-400">
-            → {s.referenceId}: {s.title}
-          </p>
-        ))}
-      </div>
-    );
-  }
-
-  if (hint.kind === "cause" && selectedCause) {
-    return (
-      <div className="space-y-2">
-        <p className="buek-body text-white">Evidence supporting {selectedCause.label}:</p>
-        {selectedCause.evidence.map((e) => (
-          <p key={e} className="buek-small text-emerald-300">
-            ✓ {e}
-          </p>
-        ))}
-        <p className="buek-small text-slate-500">Engineer memilih — ini bukan keputusan AI.</p>
-      </div>
-    );
-  }
-
-  if (hint.kind === "countermeasure") {
-    return (
-      <p className="buek-body text-slate-300">
-        Pilih countermeasure. AI akan menyusun draft teknis setelah engineer memilih — tidak mengisi otomatis.
-      </p>
-    );
-  }
-
-  if (hint.kind === "execution") {
-    return (
-      <p className="buek-body text-slate-300">
-        Rencana eksekusi ini akan masuk Work Order: PIC, due date, material, dan downtime estimate.
-      </p>
-    );
-  }
-
-  if (hint.kind === "verification") {
-    return (
-      <p className="buek-body text-slate-300">
-        Isi metrik before/after. AI akan merangkum hasil verifikasi di Technical Investigation Report.
-      </p>
-    );
-  }
-
   return (
-    <div className="space-y-2">
-      <p className="buek-body text-white">Konteks otomatis dimuat:</p>
-      {copilot.autoLoadedContext.slice(0, 3).map((line) => (
-        <p key={line} className="buek-small text-slate-400">
-          • {line}
-        </p>
-      ))}
+    <div>
+      <p className="buek-small text-slate-500">{label}</p>
+      <p
+        className={`buek-body font-semibold ${
+          highlight ? "text-amber-300" : warn ? "text-red-400" : "text-white"
+        }`}
+      >
+        {value}
+      </p>
     </div>
   );
+}
+
+function StatusBanner({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-4">
+      <p className="buek-body font-semibold text-white">{title}</p>
+      <p className="buek-small text-cyan-300">{subtitle}</p>
+    </div>
+  );
+}
+
+function SupervisorReviewPanel({
+  analysis,
+  acting,
+  onApprove,
+  onReject
+}: {
+  analysis: EngineeringAnalysisData;
+  acting: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
+  return (
+    <section className="buek-card space-y-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
+      <h2 className="buek-card-title text-amber-300">Supervisor Review — Engineering Analysis</h2>
+      <ReviewRow label="Evidence" value={formatEvidence(analysis)} />
+      <ReviewRow label="Root Cause (engineer-selected)" value={analysis.selectedCause?.label ?? "—"} />
+      <ReviewRow label="Countermeasure" value={analysis.countermeasureNotes || analysis.countermeasures.join(", ")} />
+      <ReviewRow label="Execution Date" value={analysis.executionPlan.executionDate} />
+      <ReviewRow label="Verification Plan" value={analysis.executionPlan.verificationDate} />
+      <div className="flex flex-wrap gap-3 pt-2">
+        <button
+          type="button"
+          disabled={acting}
+          onClick={onApprove}
+          className="rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+        >
+          Approve
+        </button>
+        <button
+          type="button"
+          disabled={acting}
+          onClick={onReject}
+          className="rounded-xl border border-red-500/40 px-6 py-3 font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+        >
+          Request Revision
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-b border-white/5 pb-3">
+      <p className="buek-small text-slate-500">{label}</p>
+      <p className="buek-body whitespace-pre-wrap text-slate-200">{value || "—"}</p>
+    </div>
+  );
+}
+
+function formatEvidence(analysis: EngineeringAnalysisData) {
+  return [
+    analysis.evidence.qcResult ? "QC Result" : null,
+    analysis.evidence.photo ? "Photo" : null,
+    analysis.evidence.trend ? "Trend" : null,
+    analysis.evidence.machineHistory ? "Machine History" : null,
+    analysis.evidence.notes || null
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
