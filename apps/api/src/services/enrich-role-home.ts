@@ -1,4 +1,5 @@
 import type { RoleHomeData } from "../role-workspaces.js";
+import { getTenantThemeOrDefault } from "../tenants/index.js";
 import { countOpenComplaints } from "./customer-complaints.js";
 import {
   getIssues,
@@ -199,6 +200,7 @@ export async function enrichRoleHomeFromDb(
       }));
 
       const firstInv = investigations[0];
+      const tenant = getTenantThemeOrDefault(workspaceSlug);
 
       return {
         ...roleHome,
@@ -214,7 +216,8 @@ export async function enrichRoleHomeFromDb(
             : roleHome.engineer.investigations,
           aiSuggestions: roleHome.engineer.aiSuggestions.map((s, idx) => ({
             ...s,
-            issueKey: investigations[idx]?.issueKey ?? firstInv?.issueKey ?? "white-streak"
+            issueKey:
+              investigations[idx]?.issueKey ?? firstInv?.issueKey ?? tenant.primaryIssueKey
           }))
         }
       };

@@ -1,4 +1,5 @@
 import { prisma } from "../db.js";
+import { getTenantThemeOrDefault } from "../tenants/index.js";
 import { canApprove, canDraftReport, canUseOperatorChecklist, assertRole } from "../lib/roles.js";
 import {
   buildDraftSectionsFromIssue,
@@ -725,6 +726,7 @@ export async function getReportExportHtml(slug: string, reportId: string) {
   if (!report) return null;
 
   const workspace = await prisma.workspace.findUnique({ where: { slug } });
+  const tenant = getTenantThemeOrDefault(slug);
 
   const { renderPrintableHtml } = await import("./report-export.js");
   return renderPrintableHtml({
@@ -736,7 +738,10 @@ export async function getReportExportHtml(slug: string, reportId: string) {
     version: report.version,
     sections: report.sections ?? null,
     content: report.content,
-    ...(workspace?.organization ? { organization: workspace.organization } : {})
+    ...(workspace?.organization ? { organization: workspace.organization } : {}),
+    reportTitle: tenant.reportTitle,
+    brandColor: tenant.primary,
+    industryLabel: tenant.industryLabel
   });
 }
 

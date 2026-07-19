@@ -34,6 +34,12 @@ export function OperatorHome({
   const targetOutput = checklist?.targetOutput ?? op.targetOutput;
   const progress = checklist?.progress ?? op.progress;
   const items = checklist?.items ?? op.checklist;
+  const problemPlaceholder =
+    workspace.theme?.id === "toyota-plant"
+      ? "Misalnya: Torque EA-04 out of spec"
+      : workspace.theme?.id === "nestle-factory"
+        ? "Misalnya: Metal detector alarm"
+        : "Misalnya: White Streak defect";
   const progressPct = Math.round((progress / targetOutput) * 100);
 
   async function handleToggle(itemId: string) {
@@ -76,9 +82,18 @@ export function OperatorHome({
   return (
     <div className="space-y-12 pb-16">
       <header className="space-y-3 border-b border-white/10 pb-8">
-        <h1 className="buek-heading text-white">Good Morning, {user.name} 👋</h1>
+        <h1 className="buek-heading text-white">
+          Good Morning, {user.name} 👋
+          {workspace.theme ? <span className="ml-2 text-2xl">{workspace.theme.emoji}</span> : null}
+        </h1>
         <p className="buek-body text-slate-400">
           Operator <span className="text-slate-600">•</span> {line}
+          {workspace.theme ? (
+            <>
+              <span className="text-slate-600"> • </span>
+              <span className="text-tenant">{workspace.theme.industryLabel}</span>
+            </>
+          ) : null}
         </p>
         <p className="buek-subtitle text-slate-500">
           {workspace.organization} · {shift}
@@ -96,7 +111,7 @@ export function OperatorHome({
             <input
               value={problem}
               onChange={(e) => setProblem(e.target.value)}
-              placeholder="Misalnya: White Streak"
+              placeholder={problemPlaceholder}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
               required
             />

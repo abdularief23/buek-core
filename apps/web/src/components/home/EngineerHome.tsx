@@ -1,3 +1,4 @@
+import { tenantPrimaryIssueKey } from "../../lib/tenant-theme.js";
 import { TodayTimeline } from "../TodayTimeline.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
@@ -87,7 +88,10 @@ export function EngineerHome({ user, workspace, roleHome, onOpenWorkspace }: Rol
                 onOpenWorkspace({
                   kind: "investigation",
                   slug: workspace.id,
-                  issueKey: suggestion.issueKey ?? eng.problems[0]?.issueKey ?? "white-streak"
+                  issueKey:
+                    suggestion.issueKey ??
+                    eng.problems[0]?.issueKey ??
+                    tenantPrimaryIssueKey(workspace.theme)
                 })
               }
               className="mt-4 text-base font-medium text-cyan-400 hover:text-cyan-300"

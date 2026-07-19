@@ -14,6 +14,7 @@ export interface TenantThemePayload {
   modules: string[];
   knowledgeTopics: string[];
   defaultUserName: string;
+  primaryIssueKey: string;
 }
 
 export function applyTenantTheme(theme: TenantThemePayload | null | undefined): void {
@@ -32,4 +33,8 @@ export function applyTenantTheme(theme: TenantThemePayload | null | undefined): 
   root.style.setProperty("--tenant-accent", theme.accent);
   root.style.setProperty("--tenant-accent-muted", theme.accentMuted);
   root.style.setProperty("--tenant-ring", theme.ring);
+}
+
+export function tenantPrimaryIssueKey(theme: TenantThemePayload | null | undefined, fallback = "white-streak"): string {
+  return theme?.primaryIssueKey ?? fallback;
 }

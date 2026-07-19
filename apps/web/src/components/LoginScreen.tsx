@@ -35,7 +35,8 @@ const fallbackWorkspaces: DemoWorkspaceOption[] = [
       sopCount: 532,
       modules: ["Manufacturing", "Quality", "Maintenance"],
       knowledgeTopics: ["Print Head", "Ink", "White Streak"],
-      defaultUserName: "Abdul"
+      defaultUserName: "Abdul",
+      primaryIssueKey: "white-streak"
     }
   },
   {
@@ -60,7 +61,8 @@ const fallbackWorkspaces: DemoWorkspaceOption[] = [
       sopCount: 861,
       modules: ["Manufacturing", "Quality", "Maintenance", "Logistics"],
       knowledgeTopics: ["Torque", "Engine", "Welding"],
-      defaultUserName: "Sari"
+      defaultUserName: "Sari",
+      primaryIssueKey: "torque-drift"
     }
   },
   {
@@ -85,7 +87,8 @@ const fallbackWorkspaces: DemoWorkspaceOption[] = [
       sopCount: 742,
       modules: ["Manufacturing", "Quality", "Food Safety", "Compliance"],
       knowledgeTopics: ["HACCP", "CCP", "Food Safety"],
-      defaultUserName: "Budi"
+      defaultUserName: "Budi",
+      primaryIssueKey: "metal-detector"
     }
   }
 ];

@@ -39,6 +39,23 @@ body {
   color: var(--tenant-accent);
 }
 
+.bg-tenant-primary {
+  background-color: var(--tenant-primary);
+}
+
+.btn-tenant {
+  background-color: var(--tenant-primary);
+  color: #fff;
+}
+
+.btn-tenant:hover {
+  background-color: var(--tenant-primary-light);
+}
+
+.ring-tenant {
+  --tw-ring-color: var(--tenant-ring);
+}
+
 .bg-tenant-muted {
   background-color: var(--tenant-accent-muted);
 }

@@ -1,3 +1,4 @@
+import { getTenantThemeOrDefault } from "../tenants/index.js";
 import { getIssues, getLiveKpis } from "./data-engine.js";
 
 export interface ShiftStatus {
@@ -34,7 +35,51 @@ function trendFromSeries(series: Array<{ value: number }>): "up" | "down" | "fla
   return "flat";
 }
 
+function tenantKpiHighlights(slug: string, label: string): string[] {
+  const tenant = getTenantThemeOrDefault(slug);
+
+  if (label === "Production") {
+    if (slug === "toyota-plant") {
+      return [`Output ${tenant.lineLabel} berjalan`, "Chassis assembly on schedule"];
+    }
+    if (slug === "nestle-factory") {
+      return [`Batch output ${tenant.lineLabel}`, "Filling line operating normal"];
+    }
+    return [`Output ${tenant.lineLabel} berjalan`, "Printer assembly on schedule"];
+  }
+
+  if (label === "Quality") {
+    if (slug === "toyota-plant") {
+      return ["Torque EA-04 drift detected", "Welding rework under review"];
+    }
+    if (slug === "nestle-factory") {
+      return ["Metal detector alarm on P-03", "CCP verification pending"];
+    }
+    return ["White streak +18% vs kemarin", "Nozzle calibration perlu review"];
+  }
+
+  if (label === "Delivery") {
+    if (slug === "toyota-plant") {
+      return ["Engine shipment on-time 98%", "1 chassis unit pending QA"];
+    }
+    if (slug === "nestle-factory") {
+      return ["Batch release on schedule", "1 pallet hold for QA"];
+    }
+    return ["On-time delivery 99%", "1 shipment pending approval"];
+  }
+
+  if (label === "Safety") {
+    if (slug === "nestle-factory") {
+      return ["HACCP compliance 100%", "GMP audit passed"];
+    }
+    return ["Zero incident hari ini", "PPE compliance 100%"];
+  }
+
+  return [`${tenant.industryLabel} metrics within range`];
+}
+
 export async function getProductionDashboard(slug: string): Promise<ProductionDashboardDto> {
+  const tenant = getTenantThemeOrDefault(slug);
   const [kpis, issues] = await Promise.all([
     getLiveKpis(slug),
     getIssues(slug, ["open", "investigating"])
@@ -42,7 +87,7 @@ export async function getProductionDashboard(slug: string): Promise<ProductionDa
 
   const production = kpis.find((k) => k.label === "Production");
   const achievement = production ? parseFloat(production.value) : 91.5;
-  const target = slug === "epson-factory" ? 12000 : 8400;
+  const target = tenant.productionTarget;
   const current = Math.round((achievement / 100) * target);
   const critical = issues.filter((i) => i.severity === "high" || i.severity === "critical").length;
 
@@ -50,6 +95,7 @@ export async function getProductionDashboard(slug: string): Promise<ProductionDa
   if (critical > 0) {
     const top = issues.find((i) => i.severity === "high" || i.severity === "critical");
     if (top?.machine) risks.push(`${top.machine.code} memerlukan perhatian`);
+    else if (top) risks.push(`${top.title} — perlu tindakan`);
   }
   if (achievement < 95) risks.push("Target produksi berisiko tidak tercapai");
 
@@ -57,7 +103,7 @@ export async function getProductionDashboard(slug: string): Promise<ProductionDa
     target,
     current,
     achievement,
-    unit: "pcs",
+    unit: slug === "nestle-factory" ? "units" : "pcs",
     shifts: [
       { name: "Shift A", status: "done" },
       { name: "Shift B", status: "running" },
@@ -74,17 +120,7 @@ export async function getKpiDetail(slug: string, label: string): Promise<KpiDeta
   if (!kpi) return null;
 
   const trend = trendFromSeries(kpi.series);
-  const highlights: string[] = [];
-
-  if (kpi.label === "Production") {
-    highlights.push("Output shift B sedang berjalan", "Line 3 beroperasi normal");
-  } else if (kpi.label === "Quality") {
-    highlights.push("White streak +18% vs kemarin", "Nozzle calibration perlu review");
-  } else if (kpi.label === "Delivery") {
-    highlights.push("On-time delivery 99%", "1 shipment pending approval");
-  } else if (kpi.label === "Safety") {
-    highlights.push("Zero incident hari ini", "PPE compliance 100%");
-  }
+  const highlights = tenantKpiHighlights(slug, kpi.label);
 
   return {
     label: kpi.label,
