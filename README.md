@@ -1,142 +1,267 @@
-# Buek Core
+<p align="center">
+  <img src="apps/web/public/og-image.svg" alt="Buek Core" width="720" />
+</p>
 
-**Build AI Workers for Any Industry**
+<h1 align="center">Buek Core</h1>
 
-Buek Core adalah platform AI modular yang memisahkan **AI reasoning** dari **domain knowledge**. Developer membangun sekali, lalu menambah vertikal industri lewat domain module — tanpa mengubah AI Core.
+<p align="center">
+  <strong>Build AI Workers for Any Industry</strong><br />
+  <em>One AI Core. Unlimited Industry Knowledge.</em>
+</p>
 
-> **Live Demo:** [https://core.buekwebsite.com](https://core.buekwebsite.com)
+<p align="center">
+  <a href="https://core.buekwebsite.com"><strong>🌐 Live Demo</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#demo-flow"><strong>🎬 Demo Flow</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#for-developers"><strong>⚙️ Developer Docs</strong></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/OpenAI-GPT--4.1+-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI GPT" />
+  <img src="https://img.shields.io/badge/Codex-Dev_Assist-000000?style=for-the-badge&logo=openai&logoColor=white" alt="Codex" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Prisma-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+</p>
 
 ---
 
-## Visi
+## The Problem
 
-**One AI Core. Unlimited Industry Knowledge.**
+Manufacturing teams lose **hours every day** to work that should take minutes:
 
-| Lapisan | Fungsi |
-|---------|--------|
-| **AI Core** | Reasoning, agents, memory, tools — reusable di semua industri |
-| **Domain Modules** | Knowledge, SOP, workflow, prompts khusus vertikal (Manufacturing, dll.) |
-| **Apps** | Web shell role-based + API runtime |
+- Searching historical reports and past investigations  
+- Reading SOPs and work instructions under pressure  
+- Investigating defects without structured guidance  
+- Writing engineering reports from scratch  
+- Losing institutional knowledge when engineers rotate  
 
-Vertikal pertama: **Manufacturing** (Epson, Toyota, Nestlé demo tenants).
+**Result:** slower recovery, repeated failures, higher operational cost.
 
 ---
 
-## Fitur Utama
+## Our Solution
 
-### Role-Based Workspace
+**Buek Core** introduces **AI Workers** — role-based digital teammates that combine:
 
-Setiap role punya home, navigasi, dan AI persona berbeda:
+| Capability | What it does |
+|------------|--------------|
+| **Reasoning** | Ranked root-cause analysis — engineer always decides |
+| **Company Knowledge** | SOPs, manuals, issue history, lessons learned |
+| **Workflow** | Evidence → Analysis → Approval → Report → Lessons |
+| **Organizational Memory** | Every investigation makes the factory smarter |
 
-| Role | Fokus |
-|------|-------|
-| **Operator** | Checklist produksi, laporan masalah, konteks shift/line/mesin |
-| **Engineer** | Investigasi 5 langkah, analisa root cause, draft laporan |
-| **Supervisor** | Approval analisa, work order, SOP revision, laporan engineering |
-| **Plant Manager** | KPI, executive summary, read-only oversight |
+One platform. One AI Core. **Any industry** — starting with Manufacturing.
 
-### Engineering Analysis Wizard (5 Langkah)
+---
 
-1. **Evidence** — checklist + upload foto evidence  
-2. **Possible Root Cause** — AI suggestion, engineer memilih  
-3. **Countermeasure** — rekomendasi historis + foto analisa  
-4. **Execution Plan** — PIC, tanggal, verifikasi  
-5. **Preview & Submit** — preview dokumen + kirim ke supervisor  
+## Why Buek Core Should Win
 
-Setelah submit: **dokumen analisa terformat**, export PDF/HTML, menunggu supervisor review.
+| Question | Answer |
+|----------|--------|
+| **Real problem?** | Engineers spend 2–4 hours per defect investigation — we cut that to a guided 30-minute flow |
+| **Unique approach?** | Separates reusable **AI Core** from swappable **Domain Modules** — not another chatbot wrapper |
+| **OpenAI used how?** | Root cause ranking, SOP retrieval, report drafting, multi-role copilot, knowledge search |
+| **Production-ready?** | Live at [core.buekwebsite.com](https://core.buekwebsite.com) — multi-tenant, role-based, mobile field app |
 
-### AI Copilot
+> We don't replace engineers. We give every role an **AI Worker** that knows their factory.
 
-- Briefing proaktif per role  
-- Mode: Ringkas, Analisis, Cari, Buat Draft  
-- **Desktop:** panel floating  
-- **Mobile:** tombol ✨ kecil → fullscreen (tidak menutupi konten)
+---
 
-### Company Brain
+## See It In Action
 
-Hierarki **Machine → Issue → Technical Report** dengan metadata (tanggal issue, pembuat, lessons learned).
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      BUEK CORE                              │
+│              AI Workers for Manufacturing                   │
+│                                                             │
+│   [ Login ]  →  [ Choose Tenant ]  →  [ Pick Role ]        │
+│                                                             │
+│        Operator          Engineer         Supervisor        │
+│           │                  │                  │           │
+│     Report defect    5-step analysis      Approve report    │
+│     Upload photo     AI root causes       1-tap review      │
+│           │                  │                  │           │
+│           └──────────────────┴──────────────────┘       │
+│                              │                              │
+│                    Engineering Report (PDF)                   │
+│                    Company Brain (memory)                   │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### Mobile-First Field App
+**Try the live demo:** [https://core.buekwebsite.com](https://core.buekwebsite.com)
 
-Mobile dirancang sebagai **alat kerja lapangan**, bukan desktop yang diperkecil:
+| Step | What to do |
+|------|------------|
+| 1 | Open live demo → choose **Epson / Toyota / Nestlé** tenant |
+| 2 | Launch as **Engineer** → open today's investigation |
+| 3 | Walk through **5-step wizard** (Evidence → Root Cause → Countermeasure → Plan → Submit) |
+| 4 | Switch to **Supervisor** → approve the analysis |
+| 5 | Generate **PDF Engineering Report** |
 
-- ☰ Hamburger menu + bottom navigation (Home · AI · Workflow · Inbox · Me)  
-- Investigation **vertical stepper** dengan progress %  
-- Kartu besar, font 17px+, touch-friendly  
-- Laporan mobile: ringkasan draft + buka PDF (bukan dokumen penuh di layar kecil)
+> 🎥 **Demo Video:** _Add your YouTube/Loom link here before submission_
 
-### Multi-Tenant Demo
+---
 
-| Tenant | Industri | Contoh Issue |
+## Architecture
+
+```
+                         ┌─────────────────────┐
+                         │      BUEK CORE      │
+                         │    (Reusable AI)    │
+                         └──────────┬──────────┘
+                                    │
+              ┌─────────────────────┼─────────────────────┐
+              │                     │                     │
+         ┌────▼────┐          ┌─────▼─────┐         ┌─────▼─────┐
+         │ Memory  │          │ Knowledge │         │ Workflow  │
+         └─────────┘          └───────────┘         └───────────┘
+              │                     │                     │
+         ┌────▼────┐          ┌─────▼─────┐         ┌─────▼─────┐
+         │ Agents  │          │   Tools   │         │  Prompts  │
+         └─────────┘          └───────────┘         └───────────┘
+                                    │
+                         ┌──────────▼──────────┐
+                         │ Manufacturing Module │  ← first vertical
+                         │  SOP · KPI · Issues  │
+                         └──────────┬──────────┘
+                                    │
+         ┌──────────────┬───────────┼───────────┬──────────────┐
+         │              │           │           │              │
+    ┌────▼────┐   ┌─────▼────┐ ┌───▼───┐  ┌────▼────┐   ┌─────▼─────┐
+    │Operator │   │ Engineer │ │Super- │  │ Plant   │   │  Mobile   │
+    │         │   │          │ │visor  │  │ Manager │   │ Field App │
+    └─────────┘   └──────────┘ └───────┘  └─────────┘   └───────────┘
+```
+
+**Key design:** AI Core never contains industry knowledge. Each vertical is a **Domain Module** plugged in at runtime.
+
+---
+
+## Powered by OpenAI
+
+OpenAI GPT powers the intelligence layer across the platform:
+
+| Feature | How GPT is used |
+|---------|-----------------|
+| ✓ **Root Cause Analysis** | Ranked possible causes with confidence scores — engineer selects |
+| ✓ **SOP Understanding** | Retrieves and explains relevant procedures for the current issue |
+| ✓ **Report Generation** | Drafts structured engineering investigation reports |
+| ✓ **Knowledge Retrieval** | Semantic search across SOPs, manuals, lessons learned |
+| ✓ **AI Copilot** | Role-aware assistant (Operator / Engineer / Supervisor / Manager) |
+| ✓ **Multi-agent reasoning** | Investigation co-pilot + workflow agents + knowledge agents |
+
+```text
+Operator uploads evidence
+        ↓
+GPT analyzes context + machine history
+        ↓
+Knowledge Search (SOP + similar cases)
+        ↓
+Engineer selects root cause (AI suggests, human decides)
+        ↓
+GPT drafts countermeasure + execution plan
+        ↓
+Supervisor reviews & approves
+        ↓
+Official Engineering Report (PDF/DOCX)
+        ↓
+Stored in Company Brain → smarter next time
+```
+
+Default model: `gpt-4.1-mini` via OpenAI API · configurable per deployment.
+
+---
+
+## Demo Flow
+
+<a id="demo-flow"></a>
+
+```mermaid
+flowchart TD
+    A[Operator reports defect] --> B[Upload photo evidence]
+    B --> C[GPT analyzes + searches knowledge]
+    C --> D[Engineer opens investigation wizard]
+    D --> E[Step 1: Evidence]
+    E --> F[Step 2: AI Root Cause ranking]
+    F --> G[Step 3: Countermeasure]
+    G --> H[Step 4: Execution Plan]
+    H --> I[Step 5: Preview & Submit]
+    I --> J[Supervisor Approval]
+    J --> K[Engineering Report PDF]
+    K --> L[Company Brain memory]
+```
+
+| Role | Mobile (field) | Desktop (office) |
+|------|----------------|------------------|
+| **Operator** | Report defect, photo upload, checklist | — |
+| **Engineer** | Guided stepper, AI copilot | Full analysis wizard, document preview |
+| **Supervisor** | Quick approve / request revision | Approval queue, team overview |
+| **Plant Manager** | KPI alerts | Executive dashboard, reports |
+
+---
+
+## Built With
+
+| | |
+|---|---|
+| **AI** | OpenAI API · GPT-4.1+ · Codex (development) |
+| **Frontend** | React 19 · TypeScript · Vite · Tailwind CSS v4 |
+| **Backend** | Node.js · Express · Prisma ORM |
+| **Database** | PostgreSQL |
+| **Infra** | Docker Compose · Nginx · GitHub Actions CI/CD |
+| **Live** | [core.buekwebsite.com](https://core.buekwebsite.com) |
+
+---
+
+## Future Vision
+
+**One AI Core. Unlimited Industries.**
+
+| Industry | Status |
+|----------|--------|
+| 🏭 **Manufacturing** | ✅ Live demo (Epson, Toyota, Nestlé) |
+| 🏥 Healthcare | 🔜 Planned |
+| 🏗️ Construction | 🔜 Planned |
+| ⛏️ Mining | 🔜 Planned |
+| ⚡ Energy | 🔜 Planned |
+| 🏛️ Government | 🔜 Planned |
+| 🌐 Website Builder | 🔜 Planned |
+| 🎓 Education | 🔜 Planned |
+
+Add a new vertical = ship a **Domain Module**. AI Core stays the same.
+
+---
+
+## Demo Tenants
+
+| Tenant | Industry | Sample Issue |
 |--------|----------|--------------|
 | Epson Indonesia | Printer Manufacturing | White Streak defect |
 | Toyota Indonesia | Automotive | Torque drift EA-04 |
 | Nestlé Indonesia | Food & Beverage | Metal detector alarm |
 
-Login demo: pilih tenant + role (Operator / Engineer / Supervisor / Plant Manager).
+Login → pick tenant → pick role → launch.
 
 ---
 
-## Tech Stack
+<a id="for-developers"></a>
 
-| Layer | Teknologi |
-|-------|-----------|
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS v4 |
-| Backend | Node.js, Express, TypeScript |
-| Database | PostgreSQL, Prisma ORM |
-| AI | OpenAI API, modular agents & knowledge packages |
-| Deploy | Docker Compose, Nginx, GitHub Actions |
+## For Developers
 
----
-
-## Struktur Proyek
-
-```text
-apps/
-  web/          # React UI — role homes, wizard, copilot, workspaces
-  api/          # Express API — data engine, workflows, engineering analysis
-domains/
-  manufacturing/  # Domain module vertikal pertama
-packages/
-  ai-core/      # Registry, OpenAI client — tanpa domain knowledge
-  agents/       # Agent system & module discovery
-  knowledge/    # RAG-ready knowledge index
-  memory/       # Conversation / worker state
-  prompts/      # Prompt templates
-  tools/        # Tool registry
-  workflows/    # Workflow registry
-  ui/           # Shared UI (AppNav, AiPromptInput, dll.)
-  shared-types/
-docker/         # Dockerfile web & api
-scripts/        # deploy.sh, console-recover.sh, verify-deploy.sh
-deploy/         # SSH keys, manual deploy docs
-docs/           # architecture.md, deployment.md
-```
-
-Detail arsitektur: [docs/architecture.md](docs/architecture.md)
-
----
-
-## Getting Started
-
-### Prasyarat
-
-- Node.js 22+
-- pnpm 10+
-- PostgreSQL 16+ (atau via Docker)
-
-### Instalasi Lokal
+<details>
+<summary><strong>Quick Start (local)</strong></summary>
 
 ```bash
 git clone https://github.com/abdularief23/buek-core.git
 cd buek-core
-pnpm install
-cp .env.example .env
-# Isi OPENAI_API_KEY di .env
+pnpm install && cp .env.example .env
+# Set OPENAI_API_KEY in .env
 
-pnpm db:generate
-pnpm db:migrate
-pnpm db:seed
+pnpm db:generate && pnpm db:migrate && pnpm db:seed
 pnpm dev
 ```
 
@@ -144,130 +269,53 @@ pnpm dev
 |---------|-----|
 | Web | http://localhost:5173 |
 | API | http://localhost:4000 |
-| Health | http://localhost:4000/health |
 
-### Docker (Production-like)
+</details>
 
-```bash
-docker compose up -d --build
-```
-
----
-
-## Environment Variables
-
-| Variable | Deskripsi |
-|----------|-----------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `OPENAI_API_KEY` | Kunci OpenAI untuk chat & AI features |
-| `OPENAI_MODEL` | Model default (mis. `gpt-4.1-mini`) |
-| `VITE_API_URL` | Kosongkan untuk same-origin di production |
-| `CORS_ORIGIN` | Origin frontend untuk development |
-| `BUEK_DOMAIN_MODULES` | Domain modules yang di-load (`@buek/domain-manufacturing`) |
-
-Lihat [.env.example](.env.example) untuk daftar lengkap.
-
----
-
-## Scripts
-
-```bash
-pnpm dev          # Jalankan web + api parallel
-pnpm build        # Build semua packages
-pnpm lint         # ESLint semua packages
-pnpm db:generate  # Generate Prisma client
-pnpm db:migrate   # Jalankan migrasi dev
-pnpm db:seed      # Seed data demo
-pnpm db:deploy    # Migrasi production
-```
-
----
-
-## Deployment
-
-**Production:** [https://core.buekwebsite.com](https://core.buekwebsite.com)
+<details>
+<summary><strong>Project Structure</strong></summary>
 
 ```text
-core.buekwebsite.com/        → React web (Nginx)
-core.buekwebsite.com/api/*   → Express API
-core.buekwebsite.com/health  → Health check + build info
+apps/web/          React UI — role homes, wizard, copilot
+apps/api/          Express API — workflows, engineering analysis
+domains/manufacturing/   First domain module
+packages/ai-core/  Reusable AI platform (no domain knowledge)
+packages/knowledge/  RAG-ready knowledge layer
+packages/agents/   Agent system
+docker/            Production containers
 ```
 
-### Auto-Deploy (GitHub Actions)
+See [docs/architecture.md](docs/architecture.md) for full details.
 
-Set secrets di repo → Settings → Secrets → Actions:
+</details>
 
-| Secret | Value |
-|--------|-------|
-| `VPS_HOST` | IP VPS |
-| `VPS_USER` | `ubuntu` |
-| `SSH_PRIVATE_KEY` | Isi private key deploy |
+<details>
+<summary><strong>Deployment</strong></summary>
 
-Setiap push ke `main` menjalankan [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
+Production runs at **https://core.buekwebsite.com** via Docker Compose.
 
-### Manual Deploy
+Auto-deploy: push to `main` → GitHub Actions (set `VPS_HOST`, `VPS_USER`, `SSH_PRIVATE_KEY`).
 
-Jika CI gagal, lihat [deploy/MANUAL-DEPLOY.md](deploy/MANUAL-DEPLOY.md) atau:
+Manual fallback: [deploy/MANUAL-DEPLOY.md](deploy/MANUAL-DEPLOY.md) · Full guide: [docs/deployment.md](docs/deployment.md)
 
-```bash
-ssh ubuntu@<VPS_HOST>
-cd ~/buek-core
-git fetch origin main && git reset --hard origin/main
-docker compose build --no-cache web api
-docker compose up -d --force-recreate
-```
+</details>
 
-Verifikasi:
+<details>
+<summary><strong>Key API Endpoints</strong></summary>
 
-```bash
-curl https://core.buekwebsite.com/health
-# Harus return: "engineeringAnalysis": true
-```
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /api/auth/demo-launch` | Start demo session |
+| `GET /api/data/:slug/issues/:key/analysis` | Engineering analysis + AI copilot |
+| `POST /api/data/:slug/issues/:key/analysis/submit` | Submit to supervisor |
+| `GET /api/data/:slug/issues/:key/analysis/document` | Export report HTML/PDF |
+| `GET /api/data/:slug/company-brain` | Organizational memory |
+| `GET /api/knowledge/search` | Knowledge base search |
 
-Panduan lengkap: [docs/deployment.md](docs/deployment.md)
+</details>
 
 ---
 
-## API Highlights
+## License
 
-| Endpoint | Deskripsi |
-|----------|-----------|
-| `GET /api/auth/demo-options` | Daftar tenant & role demo |
-| `POST /api/auth/demo-launch` | Launch demo workspace |
-| `GET /api/data/:slug/issues/:key/analysis` | Engineering analysis + copilot |
-| `PUT /api/data/:slug/issues/:key/analysis` | Simpan draft analisa |
-| `POST /api/data/:slug/issues/:key/analysis/submit` | Submit ke supervisor |
-| `GET /api/data/:slug/issues/:key/analysis/document` | Export HTML/PDF dokumen analisa |
-| `GET /api/data/:slug/operator/options` | Line, shift, mesin untuk operator |
-| `GET /api/data/:slug/company-brain` | Hierarki machine → issue → report |
-| `GET /api/knowledge/search` | Pencarian knowledge base |
-
----
-
-## Filosofi Desktop vs Mobile
-
-| Desktop (kantor) | Mobile (lapangan) |
-|------------------|-------------------|
-| Dashboard & KPI | Tugas hari ini |
-| Approval queue lengkap | Approve cepat 1-tap |
-| Laporan PDF/DOCX penuh | Ringkasan + buka PDF |
-| Planning & analytics | Foto defect & evidence |
-| Company Brain browse | Chat AI & notifikasi |
-
-Buek Core tidak memaksa tampilan desktop diperkecil ke HP — setiap platform punya UX yang sesuai konteks kerja.
-
----
-
-## Roadmap (Singkat)
-
-- [ ] Scan QR Machine → konteks mesin otomatis  
-- [ ] Kamera defect langsung dari operator  
-- [ ] Push notification supervisor  
-- [ ] Vertikal domain baru (website builder, HR, dll.)  
-- [ ] Connector MES/ERP production (bukan demo database)
-
----
-
-## Lisensi
-
-Private — © Buek Core. Hubungi maintainer untuk akses.
+Private — © Buek Core. Contact maintainer for access.
