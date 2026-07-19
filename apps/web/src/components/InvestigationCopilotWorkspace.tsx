@@ -45,6 +45,8 @@ function EngineeringAnalysisWizard({
   onWorkspaceChange
 }: Props) {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [acting, setActing] = useState(false);
   const [step, setStep] = useState(0);
   const [issueTitle, setIssueTitle] = useState("");
@@ -70,8 +72,13 @@ function EngineeringAnalysisWizard({
   const readOnly = managerView || (!engineerView && !supervisorView);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+
     fetchEngineeringAnalysis(slug, issueKey)
       .then((data) => {
+        if (cancelled) return;
         setIssueTitle(data.issueTitle);
         setMetrics({
           machineCode: data.metrics.machineCode,
@@ -91,8 +98,19 @@ function EngineeringAnalysisWizard({
           setAskHistorical(data.analysis.useHistoricalCountermeasure);
         }
       })
-      .finally(() => setLoading(false));
-  }, [slug, issueKey]);
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : "Gagal memuat analisa engineering";
+        setLoadError(message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, issueKey, reloadKey]);
 
   async function persistDraft(next: EngineeringAnalysisData) {
     setAnalysis(next);
@@ -196,8 +214,36 @@ function EngineeringAnalysisWizard({
     }
   }
 
-  if (loading || !analysis || !metrics) {
-    return <p className="buek-body text-slate-500">Loading engineering analysis...</p>;
+  if (loading) {
+    return <p className="buek-body text-slate-500">Memuat analisa engineering...</p>;
+  }
+
+  if (loadError || !analysis || !metrics) {
+    return (
+      <div className="space-y-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-6">
+        <p className="buek-card-title text-red-300">Analisa engineering tidak dapat dimuat</p>
+        <p className="buek-body text-slate-400">
+          {loadError ?? "Data analisa tidak tersedia. Pastikan API berjalan dan database sudah di-migrate."}
+        </p>
+        <p className="buek-small text-slate-500">Issue: {issueKey}</p>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => setReloadKey((key) => key + 1)}
+            className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
+          >
+            Coba lagi
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+          >
+            Kembali
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const status = analysis.status;

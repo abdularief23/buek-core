@@ -3,7 +3,14 @@ const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiUrl}${path}`, init);
   if (!response.ok) {
-    throw new Error(`API ${response.status}`);
+    let detail = `API ${response.status}`;
+    try {
+      const body = (await response.json()) as { error?: { message?: string } };
+      if (body.error?.message) detail = body.error.message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(detail);
   }
   return (await response.json()) as T;
 }
