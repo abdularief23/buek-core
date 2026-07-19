@@ -18,7 +18,7 @@ const WIZARD_STEPS = [
   "Possible Root Cause",
   "Countermeasure",
   "Execution Plan",
-  "Submit"
+  "Preview & Submit"
 ] as const;
 
 interface Props {
@@ -152,8 +152,9 @@ function EngineeringAnalysisWizard({
     if (!analysis || acting) return;
     setActing(true);
     try {
-      await submitEngineeringAnalysis(slug, issueKey, analysis, userName, userRole);
-      setAnalysis({ ...analysis, status: "waiting_supervisor_review" });
+      await saveEngineeringAnalysis(slug, issueKey, analysis, userRole);
+      const result = await submitEngineeringAnalysis(slug, issueKey, analysis, userName, userRole);
+      setAnalysis(result.analysis);
       onDataChange?.();
     } finally {
       setActing(false);
@@ -527,18 +528,18 @@ function EngineeringAnalysisWizard({
 
           {step === 4 ? (
             <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-              <h2 className="buek-card-title text-slate-400">STEP 5 — Submit Engineering Analysis</h2>
+              <h2 className="buek-card-title text-slate-400">STEP 5 — Preview & Submit</h2>
               <p className="buek-body text-slate-400">
-                Setelah submit, status menjadi <strong className="text-white">Waiting Supervisor Review</strong>.
-                Laporan resmi (PDF/DOCX) baru dibuat setelah supervisor approve.
+                Periksa ringkasan analisa sebelum dikirim ke supervisor.
               </p>
+              <AnalysisPreviewContent analysis={analysis} engineerName={userName} />
               <button
                 type="button"
                 disabled={acting || !analysis.selectedCause}
                 onClick={() => void handleSubmit()}
                 className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
               >
-                {acting ? "Submitting..." : "Submit Engineering Analysis"}
+                {acting ? "Mengirim..." : "Submit ke Supervisor"}
               </button>
             </section>
           ) : null}
@@ -619,11 +620,10 @@ function SupervisorReviewPanel({
   return (
     <section className="buek-card space-y-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
       <h2 className="buek-card-title text-amber-300">Supervisor Review — Engineering Analysis</h2>
-      <ReviewRow label="Evidence" value={formatEvidence(analysis)} />
-      <ReviewRow label="Root Cause (engineer-selected)" value={analysis.selectedCause?.label ?? "—"} />
-      <ReviewRow label="Countermeasure" value={analysis.countermeasureNotes || analysis.countermeasures.join(", ")} />
-      <ReviewRow label="Execution Date" value={analysis.executionPlan.executionDate} />
-      <ReviewRow label="Verification Plan" value={analysis.executionPlan.verificationDate} />
+      {analysis.submittedBy ? (
+        <p className="buek-small text-slate-500">Dikirim oleh: {analysis.submittedBy}</p>
+      ) : null}
+      <AnalysisPreviewContent analysis={analysis} />
       <div className="flex flex-wrap gap-3 pt-2">
         <button
           type="button"
@@ -643,6 +643,30 @@ function SupervisorReviewPanel({
         </button>
       </div>
     </section>
+  );
+}
+
+function AnalysisPreviewContent({
+  analysis,
+  engineerName
+}: {
+  analysis: EngineeringAnalysisData;
+  engineerName?: string;
+}) {
+  return (
+    <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+      {engineerName ? <ReviewRow label="Engineer" value={engineerName} /> : null}
+      <ReviewRow label="Evidence" value={formatEvidence(analysis)} />
+      <ReviewRow label="Root Cause (engineer-selected)" value={analysis.selectedCause?.label ?? "—"} />
+      <ReviewRow
+        label="Countermeasure"
+        value={analysis.countermeasureNotes || analysis.countermeasures.join(", ") || "—"}
+      />
+      <ReviewRow label="PIC" value={analysis.executionPlan.pic || "—"} />
+      <ReviewRow label="Execution Date" value={analysis.executionPlan.executionDate || "—"} />
+      <ReviewRow label="Expected Finish" value={analysis.executionPlan.expectedFinish || "—"} />
+      <ReviewRow label="Verification Plan" value={analysis.executionPlan.verificationDate || "—"} />
+    </div>
   );
 }
 

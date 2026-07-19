@@ -1,6 +1,7 @@
 import { AppNav, type AppNavItem } from "@buek/ui";
 import type { TenantThemePayload } from "../lib/tenant-theme.js";
 import type { DemoUser } from "../types.js";
+import { PreferencesMenu } from "./PreferencesMenu.js";
 
 interface AppShellProps {
   activeView: AppNavItem;
@@ -81,6 +82,7 @@ export function AppShell({
           </form>
 
           <div className="ml-auto flex items-center gap-3">
+            <PreferencesMenu compact />
             <button
               type="button"
               onClick={onOpenInbox}

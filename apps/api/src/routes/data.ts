@@ -28,6 +28,7 @@ import {
   generateReportFromAnalysis,
   getEngineerIssueMetrics,
   getEngineeringAnalysis,
+  getPendingEngineeringAnalyses,
   rejectEngineeringAnalysis,
   saveEngineeringAnalysis,
   submitEngineeringAnalysis,
@@ -499,6 +500,15 @@ export async function handleEngineerMetrics(req: Request, res: Response) {
   try {
     const metrics = await getEngineerIssueMetrics(getSlug(req));
     res.json({ metrics });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handlePendingEngineeringAnalyses(req: Request, res: Response) {
+  try {
+    const pending = await getPendingEngineeringAnalyses(getSlug(req));
+    res.json({ pending });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

@@ -1,17 +1,8 @@
 import { Button } from "@buek/ui";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { checkApiDiagnostics, type ApiDiagnostics } from "../lib/api-diagnostics.js";
-import { APP_BUILD_ID, APP_FEATURE_SET } from "../lib/build-info.js";
+import { PreferencesMenu } from "./PreferencesMenu.js";
 import { applyTenantTheme } from "../lib/tenant-theme.js";
-import {
-  type AppearanceMode,
-  type AppLanguage,
-  getAppearanceMode,
-  getAppLanguage,
-  LANGUAGE_LABELS,
-  setAppearanceMode,
-  setAppLanguage
-} from "../lib/user-preferences.js";
+import { getAppLanguage } from "../lib/user-preferences.js";
 import type { DemoWorkspaceOption } from "../types.js";
 
 interface LoginScreenProps {
@@ -37,16 +28,7 @@ const LOGIN_COPY = {
     comingSoon: "Segera Hadir",
     appearance: "Tampilan",
     language: "Bahasa",
-    aiUnderstands: "AI memahami",
-    buildLabel: "Build",
-    apiStatus: "Status API",
-    connected: "Terhubung",
-    disconnected: "Tidak terhubung",
-    analysisApi: "API Analisa Engineering",
-    metricsApi: "API Metrics Engineer",
-    ready: "Siap",
-    missing: "Belum tersedia",
-    deployHint: "Jika panel Tampilan/Bahasa tidak muncul, jalankan ulang deploy: ./scripts/deploy.sh lalu hard-refresh browser (Ctrl+Shift+R)"
+    aiUnderstands: "AI memahami"
   },
   en: {
     tagline: "One AI Core. Unlimited Industry Knowledge.",
@@ -61,16 +43,7 @@ const LOGIN_COPY = {
     comingSoon: "Coming Soon",
     appearance: "Appearance",
     language: "Language",
-    aiUnderstands: "AI understands",
-    buildLabel: "Build",
-    apiStatus: "API Status",
-    connected: "Connected",
-    disconnected: "Disconnected",
-    analysisApi: "Engineering Analysis API",
-    metricsApi: "Engineer Metrics API",
-    ready: "Ready",
-    missing: "Not available",
-    deployHint: "If Appearance/Language panels are missing, redeploy with ./scripts/deploy.sh then hard-refresh (Ctrl+Shift+R)"
+    aiUnderstands: "AI understands"
   },
   ja: {
     tagline: "ひとつのAIコア。無限の産業知識。",
@@ -85,16 +58,7 @@ const LOGIN_COPY = {
     comingSoon: "近日公開",
     appearance: "表示",
     language: "言語",
-    aiUnderstands: "AIが理解",
-    buildLabel: "ビルド",
-    apiStatus: "API状態",
-    connected: "接続済み",
-    disconnected: "未接続",
-    analysisApi: "エンジニアリング分析API",
-    metricsApi: "エンジニア指標API",
-    ready: "準備完了",
-    missing: "未対応",
-    deployHint: "表示/言語パネルがない場合は ./scripts/deploy.sh で再デプロイし、ブラウザをハードリフレッシュしてください"
+    aiUnderstands: "AIが理解"
   }
 } as const;
 
@@ -195,9 +159,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
   const [selectedWorkspace, setSelectedWorkspace] = useState("epson-factory");
   const [selectedRole, setSelectedRole] = useState("Engineer");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [appearance, setAppearance] = useState<AppearanceMode>(getAppearanceMode());
-  const [language, setLanguage] = useState<AppLanguage>(getAppLanguage());
-  const [apiDiagnostics, setApiDiagnostics] = useState<ApiDiagnostics | null>(null);
+  const [language, setLanguage] = useState(getAppLanguage());
 
   const copy = LOGIN_COPY[language];
 
@@ -205,10 +167,6 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
     () => workspaces.find((ws) => ws.id === selectedWorkspace)?.theme ?? null,
     [workspaces, selectedWorkspace]
   );
-
-  useEffect(() => {
-    checkApiDiagnostics().then(setApiDiagnostics).catch(() => undefined);
-  }, []);
 
   useEffect(() => {
     applyTenantTheme(selectedTheme);
@@ -257,64 +215,17 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
   }
 
   return (
-    <section className="login-page mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
-      <div className="login-preferences mb-8 grid gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:grid-cols-2">
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-medium tracking-wide text-slate-500">{copy.appearance}</legend>
-          {(
-            [
-              ["light", "Light"],
-              ["dark", "Dark"],
-              ["system", "Auto"]
-            ] as const
-          ).map(([value, label]) => (
-            <label
-              key={value}
-              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-300 hover:bg-white/5"
-            >
-              <input
-                type="radio"
-                name="login-appearance"
-                checked={appearance === value}
-                onChange={() => {
-                  setAppearance(value);
-                  setAppearanceMode(value);
-                }}
-                className="tenant-accent"
-              />
-              {label}
-            </label>
-          ))}
-        </fieldset>
+    <div className="login-page min-h-screen">
+      <header className="flex items-center justify-end px-6 py-4">
+        <PreferencesMenu />
+      </header>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-medium tracking-wide text-slate-500">{copy.language}</legend>
-          {(["id", "en", "ja"] as const).map((value) => (
-            <label
-              key={value}
-              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-300 hover:bg-white/5"
-            >
-              <input
-                type="radio"
-                name="login-language"
-                checked={language === value}
-                onChange={() => {
-                  setLanguage(value);
-                  setAppLanguage(value);
-                }}
-                className="tenant-accent"
-              />
-              {LANGUAGE_LABELS[value]}
-            </label>
-          ))}
-        </fieldset>
-      </div>
-
-      <div className="text-center">
-        <img src="/logo-mark.svg" alt="" className="login-logo mx-auto h-14 w-14 rounded-2xl bg-white p-2" />
-        <h1 className="mt-6 text-2xl font-semibold">Buek Core</h1>
-        <p className="mt-2 text-sm text-slate-500">{copy.tagline}</p>
-      </div>
+      <section className="mx-auto flex max-w-lg flex-col justify-center px-6 pb-12">
+        <div className="text-center">
+          <img src="/logo-mark.svg" alt="" className="login-logo mx-auto h-14 w-14 rounded-2xl bg-white p-2" />
+          <h1 className="mt-6 text-2xl font-semibold">Buek Core</h1>
+          <p className="mt-2 text-sm text-slate-500">{copy.tagline}</p>
+        </div>
 
       <form onSubmit={handleProductionSubmit} className="mt-10 space-y-4">
         <p className="text-xs font-medium tracking-wide text-slate-500">{copy.production}</p>
@@ -458,39 +369,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
       </div>
 
       {loginError ? <p className="mt-6 text-center text-sm text-red-400">{loginError}</p> : null}
-
-      <footer className="login-diagnostics mt-10 space-y-2 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs text-slate-500">
-        <p>
-          {copy.buildLabel}: <span className="font-mono text-slate-400">{APP_BUILD_ID}</span> · {APP_FEATURE_SET}
-        </p>
-        <p>
-          {copy.apiStatus}:{" "}
-          <span className={apiDiagnostics?.apiReachable ? "text-emerald-400" : "text-red-400"}>
-            {apiDiagnostics?.apiReachable ? copy.connected : copy.disconnected}
-          </span>
-          {apiDiagnostics?.apiBuild ? (
-            <span className="text-slate-600"> · API {apiDiagnostics.apiBuild}</span>
-          ) : null}
-        </p>
-        {apiDiagnostics ? (
-          <>
-            <p>
-              {copy.analysisApi}:{" "}
-              <span className={apiDiagnostics.engineeringAnalysisApi ? "text-emerald-400" : "text-amber-400"}>
-                {apiDiagnostics.engineeringAnalysisApi ? copy.ready : copy.missing}
-              </span>
-            </p>
-            <p>
-              {copy.metricsApi}:{" "}
-              <span className={apiDiagnostics.engineerMetricsApi ? "text-emerald-400" : "text-amber-400"}>
-                {apiDiagnostics.engineerMetricsApi ? copy.ready : copy.missing}
-              </span>
-            </p>
-          </>
-        ) : null}
-        {apiDiagnostics?.error ? <p className="text-red-400">{apiDiagnostics.error}</p> : null}
-        <p className="text-slate-600">{copy.deployHint}</p>
-      </footer>
-    </section>
+      </section>
+    </div>
   );
 }

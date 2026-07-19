@@ -46,6 +46,7 @@ export interface EngineeringAnalysisData {
   approvedAt?: string;
   approvedBy?: string;
   revisionNotes?: string;
+  submittedBy?: string;
 }
 
 export interface EngineerIssueMetrics {
@@ -166,6 +167,46 @@ export async function getEngineerIssueMetrics(slug: string): Promise<EngineerIss
   return issues.map((issue) => metricsForIssue(slug, issue));
 }
 
+export interface PendingEngineeringAnalysis {
+  issueKey: string;
+  issueTitle: string;
+  machineCode: string;
+  engineerName: string;
+  rootCause?: string;
+  submittedAt?: string;
+}
+
+export async function getPendingEngineeringAnalyses(slug: string): Promise<PendingEngineeringAnalysis[]> {
+  const workspaceId = await getWorkspaceId(slug);
+  if (!workspaceId) return [];
+
+  const investigations = await prisma.investigation.findMany({
+    where: {
+      status: "waiting_supervisor_review",
+      issue: { workspaceId }
+    },
+    include: {
+      issue: {
+        include: { machine: true, owner: true }
+      }
+    },
+    orderBy: { updatedAt: "desc" }
+  });
+
+  return investigations.map((inv) => {
+    const analysis = inv.analysisData as EngineeringAnalysisData | null;
+    const issueKey = inv.issue.id.replace(`issue-${slug}-`, "");
+    return {
+      issueKey,
+      issueTitle: inv.issue.title,
+      machineCode: inv.issue.machine?.code ?? "—",
+      engineerName: analysis?.submittedBy ?? inv.issue.owner?.name ?? "Engineer",
+      ...(analysis?.selectedCause?.label ? { rootCause: analysis.selectedCause.label } : {}),
+      ...(analysis?.submittedAt ? { submittedAt: analysis.submittedAt } : {})
+    };
+  });
+}
+
 export async function getEngineeringAnalysis(slug: string, issueKey: string) {
   let issue = await getIssueWithInvestigation(slug, issueKey);
   if (!issue) return null;
@@ -233,7 +274,8 @@ export async function submitEngineeringAnalysis(
   const payload: EngineeringAnalysisData = {
     ...data,
     status: "waiting_supervisor_review",
-    submittedAt: new Date().toISOString()
+    submittedAt: new Date().toISOString(),
+    submittedBy: engineerName
   };
 
   await prisma.investigation.update({

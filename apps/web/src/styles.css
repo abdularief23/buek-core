@@ -18,11 +18,7 @@ body {
   background-color: #020617;
 }
 
-.login-shell {
-  background-color: #020617;
-  color: #f8fafc;
-}
-
+.login-shell,
 .app-shell {
   background-color: #020617;
   color: #f8fafc;
@@ -32,14 +28,14 @@ body {
   background-color: #020617;
 }
 
-:root[data-appearance="light"] body {
-  background-color: #f8fafc;
-  color: #0f172a;
+:root[data-appearance="light"] {
+  color-scheme: light;
 }
 
+:root[data-appearance="light"] body,
 :root[data-appearance="light"] .login-shell,
 :root[data-appearance="light"] .app-shell {
-  background-color: #f8fafc;
+  background-color: #e2e8f0;
   color: #0f172a;
 }
 
@@ -47,34 +43,32 @@ body {
   background-color: #f1f5f9;
 }
 
-:root[data-appearance="light"] .login-preferences,
-:root[data-appearance="light"] .login-card {
-  border-color: rgba(15, 23, 42, 0.12) !important;
-  background-color: rgba(15, 23, 42, 0.03) !important;
+:root[data-appearance="light"] .buek-card,
+:root[data-appearance="light"] .login-card,
+:root[data-appearance="light"] .login-preferences {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
 }
 
-:root[data-appearance="light"] .login-input {
-  background-color: #fff !important;
-  color: #0f172a !important;
-  ring-color: rgba(15, 23, 42, 0.12);
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
+:root[data-appearance="light"] .pref-menu-dropdown {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
 }
 
-:root[data-appearance="light"] .login-primary-btn {
-  background-color: #0f172a !important;
-  color: #f8fafc !important;
-}
-
-:root[data-appearance="light"] .login-primary-btn:hover {
-  background-color: #1e293b !important;
-}
-
-:root[data-appearance="light"] .login-launch-btn {
-  color: #0f172a !important;
+:root[data-appearance="light"] .pref-menu-trigger {
+  background-color: #f8fafc;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
 }
 
 :root[data-appearance="light"] .text-white {
   color: #0f172a !important;
+}
+
+:root[data-appearance="light"] .text-slate-200,
+:root[data-appearance="light"] .text-slate-300 {
+  color: #334155 !important;
 }
 
 :root[data-appearance="light"] .text-slate-400,
@@ -82,12 +76,75 @@ body {
   color: #475569 !important;
 }
 
-:root[data-appearance="light"] .border-white\/10 {
-  border-color: rgba(15, 23, 42, 0.12) !important;
+:root[data-appearance="light"] .text-amber-200 {
+  color: #92400e !important;
 }
 
-:root[data-appearance="light"] .bg-white\/5 {
-  background-color: rgba(15, 23, 42, 0.04) !important;
+:root[data-appearance="light"] .text-amber-300 {
+  color: #b45309 !important;
+}
+
+:root[data-appearance="light"] .text-amber-400 {
+  color: #d97706 !important;
+}
+
+:root[data-appearance="light"] .text-cyan-300,
+:root[data-appearance="light"] .text-cyan-400 {
+  color: #0e7490 !important;
+}
+
+:root[data-appearance="light"] .text-emerald-300,
+:root[data-appearance="light"] .text-emerald-400 {
+  color: #047857 !important;
+}
+
+:root[data-appearance="light"] .text-red-300,
+:root[data-appearance="light"] .text-red-400 {
+  color: #b91c1c !important;
+}
+
+:root[data-appearance="light"] .border-white\/5,
+:root[data-appearance="light"] .border-white\/10 {
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-appearance="light"] .bg-white\/5,
+:root[data-appearance="light"] .bg-white\/\[0\.02\],
+:root[data-appearance="light"] .bg-white\/\[0\.03\] {
+  background-color: #e2e8f0 !important;
+}
+
+:root[data-appearance="light"] .bg-cyan-500\/5,
+:root[data-appearance="light"] .bg-cyan-500\/10 {
+  background-color: rgba(8, 145, 178, 0.08) !important;
+}
+
+:root[data-appearance="light"] .bg-amber-500\/5,
+:root[data-appearance="light"] .bg-amber-500\/10 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+:root[data-appearance="light"] .bg-emerald-500\/5,
+:root[data-appearance="light"] .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+:root[data-appearance="light"] .login-input,
+:root[data-appearance="light"] input,
+:root[data-appearance="light"] textarea,
+:root[data-appearance="light"] select {
+  background-color: #fff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-appearance="light"] .login-primary-btn {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+:root[data-appearance="light"] .login-launch-btn {
+  color: #0f172a !important;
 }
 
 :root {
