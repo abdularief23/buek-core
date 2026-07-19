@@ -7,6 +7,7 @@ import {
   renderReportDocument,
   type ReportSections
 } from "./report-template.js";
+import { createWorkOrderFromExecutionPlan } from "./execution-work-order.js";
 
 export interface SopRevisionDto {
   id: string;
@@ -340,15 +341,31 @@ export async function getAiSuggestionForIssue(slug: string, issueKey: string): P
   });
 
   if (issue?.title.toLowerCase().includes("white")) {
-    return { candidate: "Print Head Nozzle Clog", confidence: "81%", basis: "4 similar cases in Company Brain" };
+    return {
+      candidate: "Print Head Nozzle Clog (possible cause #1)",
+      confidence: "82%",
+      basis: "Ranked hypothesis — engineer selects. 4 similar cases in Company Brain."
+    };
   }
   if (issue?.title.toLowerCase().includes("torque")) {
-    return { candidate: "Torque Tool Drift", confidence: "84%", basis: "ASM-022 + 3 historical cases" };
+    return {
+      candidate: "Torque Tool Drift (possible cause #1)",
+      confidence: "84%",
+      basis: "Ranked hypothesis — engineer selects. ASM-022 + 3 historical cases."
+    };
   }
   if (issue?.title.toLowerCase().includes("metal")) {
-    return { candidate: "Supplier Packaging Lot", confidence: "76%", basis: "HACCP-011 pattern match" };
+    return {
+      candidate: "Foreign Material in Line (possible cause #1)",
+      confidence: "76%",
+      basis: "Ranked hypothesis — engineer selects. HACCP-011 pattern match."
+    };
   }
-  return { candidate: "Bearing Wear", confidence: "81%", basis: "Machine history + telemetry trend" };
+  return {
+    candidate: "Bearing Wear (possible cause #1)",
+    confidence: "81%",
+    basis: "Ranked hypothesis — engineer selects. Machine history + telemetry trend."
+  };
 }
 
 export interface InvestigationDraftInput {
@@ -405,6 +422,7 @@ export async function createDraftReport(
     if (investigationDraft.executionPlan) sections.executionPlan = investigationDraft.executionPlan;
     if (investigationDraft.verification) sections.verification = investigationDraft.verification;
     if (investigationDraft.verificationResult) sections.verificationResult = investigationDraft.verificationResult;
+    if (investigationDraft.lessonsLearned) sections.lessonsLearned = investigationDraft.lessonsLearned;
   } else if (aiSuggestion) {
     sections.analysis = `[AI ranked hypothesis — engineer must select]\n${aiSuggestion.candidate} (${aiSuggestion.confidence})\n${aiSuggestion.basis}`;
   }
@@ -415,8 +433,10 @@ export async function createDraftReport(
     {
       reportNumber,
       problem: issue.title,
+      issueId: issue.id.replace(`issue-${slug}-`, ""),
       date: new Date().toISOString().slice(0, 10),
       engineer: engineerName,
+      supervisor: "Pending",
       status: "draft",
       organization: tenant.label,
       version: 1,
@@ -453,7 +473,35 @@ export async function createDraftReport(
     }
   });
 
-  return mapReportRow(report);
+  let workOrder: { id: string; number: string; title: string; status: string } | null = null;
+  if (investigationDraft?.executionPlanFields) {
+    workOrder = await createWorkOrderFromExecutionPlan(slug, {
+      issueId: issue.id,
+      machineCode: issue.machine?.code ?? null,
+      countermeasureTitle:
+        investigationDraft.selectedCauseLabel ??
+        investigationDraft.countermeasure?.slice(0, 80) ??
+        "Investigation countermeasure",
+      executionPlan: investigationDraft.executionPlanFields,
+      engineerId: engineer?.id ?? null
+    });
+  }
+
+  if (issue.machineId) {
+    await prisma.graphEdge.create({
+      data: {
+        workspaceId,
+        fromType: "machine",
+        fromId: issue.machineId,
+        relation: "technical_report",
+        toType: "engineering_report",
+        toId: report.id,
+        label: reportNumber
+      }
+    });
+  }
+
+  return { report: mapReportRow(report), workOrder };
 }
 
 export async function updateReportSections(
@@ -586,31 +634,49 @@ export async function approveReport(
       approvedAt: new Date(),
       approvedById: supervisor?.id ?? null
     },
-    include: { author: true, issue: true }
+    include: { author: true, issue: { include: { machine: true } } }
   });
 
   if (report.issueId) {
     await syncInvestigationProgress(report.issueId, "approved");
 
     const sections = (report.sections as ReportSections | null) ?? null;
+    const lessonContent =
+      sections?.lessonsLearned ||
+      (sections?.decision
+        ? `Decision: ${sections.decision}\nCountermeasure: ${sections.countermeasure ?? "—"}`
+        : `Investigation approved. Report ${report.reportNumber}.`);
+
     await createLessonLearned(
       workspaceId,
       report.issueId,
       `Lesson: ${report.issue?.title ?? report.title}`,
-      sections?.rootCause
-        ? `Root cause: ${sections.rootCause}\nCountermeasure: ${sections.countermeasure}`
-        : `Investigation approved. Report ${report.reportNumber}.`,
+      lessonContent,
       report.authorId
     );
 
     await prisma.memoryRecord.create({
       data: {
         workspaceId,
-        scope: "lessons_learned",
-        content: `Case closed: ${report.issue?.title}. ${sections?.rootCause ?? ""}`,
-        tags: ["lessons_learned", "company_brain"]
+        scope: report.machineCode ? `machine:${report.machineCode}` : `issue:${report.issueId}`,
+        content: `Technical report ${report.reportNumber} approved. ${lessonContent}`,
+        tags: ["lessons_learned", "company_brain", "technical_report"]
       }
     });
+
+    if (report.issue?.machineId) {
+      await prisma.graphEdge.create({
+        data: {
+          workspaceId,
+          fromType: "machine",
+          fromId: report.issue.machineId,
+          relation: "lessons_learned",
+          toType: "engineering_report",
+          toId: report.id,
+          label: report.reportNumber ?? report.id
+        }
+      });
+    }
   }
 
   await prisma.activityEvent.create({

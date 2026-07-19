@@ -179,8 +179,8 @@ export async function executeAiAction(
           "- Visual inspection confirms streak pattern on Line 3",
           "- Torque readings within spec",
           "",
-          "## Root Cause",
-          "Likely nozzle pressure variance during shift changeover.",
+          "## Possible Cause (engineer selects)",
+          "Ranked hypothesis: nozzle pressure variance during shift changeover.",
           "",
           "## Countermeasure",
           "Recalibrate nozzle per SOP-014 Rev.5. Monitor for 2 hours.",
@@ -216,7 +216,7 @@ export async function executeAiAction(
           slug,
           `issue:${issueKey}`,
           `Investigation report drafted on ${new Date().toISOString().slice(0, 10)} for ${issue?.title ?? issueKey}.`,
-          ["root_cause", "history", "ai_memory"]
+          ["possible_cause", "history", "ai_memory"]
         );
 
         const result: AiActionResult = {

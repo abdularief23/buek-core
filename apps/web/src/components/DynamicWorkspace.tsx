@@ -768,6 +768,7 @@ function ReportDetailWorkspace({
           executionPlan: data.report.sections.executionPlan ?? "",
           verification: data.report.sections.verification ?? "",
           verificationResult: data.report.sections.verificationResult ?? "",
+          lessonsLearned: data.report.sections.lessonsLearned ?? "",
           attachments: data.report.sections.attachments ?? []
         });
       }
@@ -889,7 +890,8 @@ function ReportDetailWorkspace({
                 ["Countermeasure", "countermeasure"],
                 ["Execution Plan", "executionPlan"],
                 ["Verification", "verification"],
-                ["Verification Result", "verificationResult"]
+                ["Verification Result", "verificationResult"],
+                ["Lessons Learned", "lessonsLearned"]
               ] as const
             ).map(([label, key]) => (
               <div key={key} className="mb-6">

@@ -13,6 +13,7 @@ import {
   handleAiAction,
   handleAiSuggestion,
   handleInvestigationCopilot,
+  handleCompanyBrain,
   handleApproveReport,
   handleApproveSopRevision,
   handleApproveWorkOrder,
@@ -259,6 +260,7 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.post("/api/data/:slug/operator/report", (req, res) => void handleOperatorReport(req, res));
   app.get("/api/data/:slug/issues/:issueKey/ai-suggestion", (req, res) => void handleAiSuggestion(req, res));
   app.get("/api/data/:slug/issues/:issueKey/copilot", (req, res) => void handleInvestigationCopilot(req, res));
+  app.get("/api/data/:slug/company-brain", (req, res) => void handleCompanyBrain(req, res));
   app.get("/api/data/:slug/lessons-learned", (req, res) => void handleLessonsLearned(req, res));
   app.get("/api/data/:slug/operator/checklist", (req, res) => void handleOperatorChecklist(req, res));
   app.post("/api/data/:slug/operator/checklist/toggle", (req, res) => void handleToggleChecklistItem(req, res));

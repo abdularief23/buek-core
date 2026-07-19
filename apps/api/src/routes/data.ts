@@ -22,6 +22,7 @@ import { getKpiDetail, getProductionDashboard } from "../services/production-das
 import { getComplaintById, getComplaints } from "../services/customer-complaints.js";
 import { submitOperatorReport } from "../services/operator-report.js";
 import { getInvestigationCopilot } from "../services/investigation-copilot.js";
+import { getCompanyBrainHierarchy } from "../services/company-brain.js";
 import {
   approveReport,
   approveSopRevision,
@@ -398,7 +399,7 @@ export async function handleCreateDraftReport(req: Request, res: Response) {
       investigationDraft?: Record<string, unknown>;
     };
     const suggestion = await getAiSuggestionForIssue(getSlug(req), body.issueKey);
-    const report = await createDraftReport(
+    const result = await createDraftReport(
       getSlug(req),
       body.issueKey,
       body.engineerName,
@@ -406,11 +407,11 @@ export async function handleCreateDraftReport(req: Request, res: Response) {
       body.role,
       body.investigationDraft
     );
-    if (!report) {
+    if (!result?.report) {
       res.status(404).json({ error: { message: "Issue not found" } });
       return;
     }
-    res.json({ report, aiSuggestion: suggestion });
+    res.json({ report: result.report, workOrder: result.workOrder ?? null, aiSuggestion: suggestion });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed";
     res.status(permissionStatus(message)).json({ error: { message } });
@@ -479,6 +480,15 @@ export async function handleInvestigationCopilot(req: Request, res: Response) {
       return;
     }
     res.json({ copilot });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleCompanyBrain(req: Request, res: Response) {
+  try {
+    const hierarchy = await getCompanyBrainHierarchy(getSlug(req));
+    res.json(hierarchy);
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

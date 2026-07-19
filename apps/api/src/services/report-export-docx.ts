@@ -83,6 +83,7 @@ export async function renderReportDocx(report: ReportDocxInput): Promise<Buffer>
       ...sectionParagraph("Execution Plan", report.sections.executionPlan),
       ...sectionParagraph("Verification", report.sections.verification),
       ...sectionParagraph("Verification Result", report.sections.verificationResult),
+      ...sectionParagraph("Lessons Learned", report.sections.lessonsLearned),
       new Paragraph({
         text: "Attachments",
         heading: HeadingLevel.HEADING_2,

@@ -230,3 +230,13 @@ export function defaultInvestigationSteps() {
     done: index === 0
   }));
 }
+
+/** Map legacy progress % to 12-step workflow for seed/demo data. */
+export function investigationStepsForProgress(progress: number) {
+  const doneCount = Math.max(1, Math.round((progress / 100) * ENGINEERING_WORKFLOW_STEPS.length));
+  return ENGINEERING_WORKFLOW_STEPS.map((step, index) => ({
+    key: step.key,
+    label: step.label,
+    done: index < doneCount
+  }));
+}

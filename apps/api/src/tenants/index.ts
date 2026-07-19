@@ -22,7 +22,6 @@ export interface TenantTheme {
   sopCount: number;
   modules: string[];
   knowledgeTopics: string[];
-  forbiddenTerms: string[];
   domainTerms: string[];
   aiPersonaIntro: string;
   aiClarifyingQuestions: string[];
@@ -94,10 +93,9 @@ export const tenantThemes: Record<string, TenantTheme> = {
     sopCount: 532,
     modules: ["Manufacturing", "Quality", "Maintenance"],
     knowledgeTopics: ["Print Head", "Ink", "White Streak", "PPM", "Printer Assembly", "SOP Printer"],
-    forbiddenTerms: ["Torque", "VIN", "HACCP", "Metal Detector"],
     domainTerms: ["Print Head", "Ink", "PPM", "White Streak", "Printer Assembly"],
     aiPersonaIntro:
-      "Anda adalah AI Printer Manufacturing Assistant untuk Epson Indonesia. Fokus pada print head, ink, white streak, PPM, dan assembly printer. Jangan membahas torque otomotif atau HACCP makanan.",
+      "Anda adalah AI Printer Manufacturing Assistant untuk Epson Indonesia. Dukung SOP, KPI, PPM, OEE, quality, maintenance, engineering report, dan work order di domain manufacturing.",
     aiClarifyingQuestions: ["Print Head?", "Ink?", "White Streak?", "Printer Assembly?"],
     defaultUserName: "Abdul",
     flagshipIssueKeys: ["white-streak", "ink-consumption"],
@@ -138,10 +136,9 @@ export const tenantThemes: Record<string, TenantTheme> = {
     sopCount: 861,
     modules: ["Manufacturing", "Quality", "Maintenance", "Logistics"],
     knowledgeTopics: ["Torque", "Welding", "Engine", "Chassis", "Assembly Car", "VIN"],
-    forbiddenTerms: ["White Streak", "Print Head", "HACCP", "Ink"],
     domainTerms: ["Torque", "Engine", "Chassis", "Welding", "VIN", "EA-04"],
     aiPersonaIntro:
-      "Anda adalah AI Manufacturing Assistant untuk industri otomotif Toyota Indonesia. Fokus pada torque, engine, chassis, welding, dan assembly. Jangan membahas white streak printer atau HACCP makanan.",
+      "Anda adalah AI Manufacturing Assistant untuk Toyota Indonesia. Dukung SOP, KPI, torque, welding, quality, maintenance, engineering report, dan work order.",
     aiClarifyingQuestions: ["Engine?", "Torque?", "Welding?", "Chassis?"],
     defaultUserName: "Sari",
     flagshipIssueKeys: ["torque-drift", "engine-inspection"],
@@ -182,10 +179,9 @@ export const tenantThemes: Record<string, TenantTheme> = {
     sopCount: 742,
     modules: ["Manufacturing", "Quality", "Food Safety", "Compliance"],
     knowledgeTopics: ["HACCP", "GMP", "Food Safety", "Packaging", "CCP", "Batch"],
-    forbiddenTerms: ["Torque", "White Streak", "Print Head", "VIN", "Welding"],
     domainTerms: ["HACCP", "CCP", "Batch", "Food Safety", "Metal Detector", "Packaging"],
     aiPersonaIntro:
-      "Anda adalah AI Food Manufacturing Assistant untuk Nestlé Indonesia. Fokus pada HACCP, GMP, food safety, packaging, CCP, dan batch. Jangan membahas torque otomotif atau white streak printer.",
+      "Anda adalah AI Food Manufacturing Assistant untuk Nestlé Indonesia. Dukung HACCP, GMP, food safety, packaging, CCP, quality, dan engineering report.",
     aiClarifyingQuestions: ["Packaging?", "Mixer?", "Metal Detector?", "Filling Machine?"],
     defaultUserName: "Budi",
     flagshipIssueKeys: ["metal-detector", "packaging-stop"],
@@ -239,9 +235,8 @@ export function getTenantThemeOrDefault(workspaceId: string): TenantTheme {
       sopCount: 0,
       modules: ["Manufacturing"],
       knowledgeTopics: ["SOP"],
-      forbiddenTerms: [],
       domainTerms: [],
-      aiPersonaIntro: "Anda adalah AI Manufacturing Assistant.",
+      aiPersonaIntro: "Anda adalah AI Manufacturing Assistant untuk operasi manufaktur.",
       aiClarifyingQuestions: ["Mesin?", "Produksi?", "Quality?"],
       defaultUserName: "User",
       flagshipIssueKeys: ["vibration"],

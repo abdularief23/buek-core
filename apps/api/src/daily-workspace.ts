@@ -59,7 +59,7 @@ export const epsonDailyWorkspace: DailyWorkspace = {
       detail: "Reject rate naik dibanding kemarin.",
       confidence: "88%",
       actionLabel: "Investigate",
-      prompt: "Continue white streak investigation — root cause analysis",
+      prompt: "Continue white streak investigation — possible cause analysis",
       contextLabel: "White Streak"
     },
     {
@@ -251,7 +251,7 @@ export const epsonDailyWorkspace: DailyWorkspace = {
     {
       icon: "🔴",
       text: "White Streak meningkat 12%.",
-      prompt: "Continue white streak investigation — root cause analysis",
+      prompt: "Continue white streak investigation — possible cause analysis",
       contextLabel: "White Streak"
     },
     {
@@ -279,7 +279,7 @@ export const toyotaDailyWorkspace: DailyWorkspace = {
       detail: "Bolt torque out of specification.",
       confidence: "91%",
       actionLabel: "Investigate",
-      prompt: "Bolt torque out of specification at EA-04 — root cause",
+      prompt: "Bolt torque out of specification at EA-04 — technical investigation",
       contextLabel: "Station EA-04"
     },
     {
@@ -509,7 +509,7 @@ export const nestleDailyWorkspace: DailyWorkspace = {
       title: "Packaging Line berhenti",
       detail: "Line ditahan menunggu QA review.",
       actionLabel: "Review",
-      prompt: "Packaging line P-03 stop — root cause and containment",
+      prompt: "Packaging line P-03 stop — investigation and containment",
       contextLabel: "Packaging"
     },
     {

@@ -32,7 +32,7 @@ const modes: Array<{
   description: string;
 }> = [
   { id: "summarize", icon: "✨", label: "Ringkas", description: "Ringkasan data dari sistem" },
-  { id: "analyze", icon: "✨", label: "Analisis", description: "Analisis root cause & rekomendasi" },
+  { id: "analyze", icon: "✨", label: "Analisis", description: "Ranked possible causes & rekomendasi" },
   { id: "search", icon: "✨", label: "Cari", description: "Cari SOP, histori, kasus serupa" },
   { id: "draft", icon: "✨", label: "Buat Draft", description: "Susun draft laporan investigasi" }
 ];
