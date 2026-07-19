@@ -14,6 +14,9 @@ interface LoginScreenProps {
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
 const demoOptionsEndpoint = `${configuredApiUrl}/api/auth/demo-options`;
 
+const DEMO_LOGIN_EMAIL = "abdul@epson.demo";
+const DEMO_LOGIN_PASSWORD = "BuekDemo2026!";
+
 const LOGIN_COPY = {
   id: {
     tagline: "Satu AI Core. Pengetahuan Industri Tanpa Batas.",
@@ -21,6 +24,11 @@ const LOGIN_COPY = {
     email: "Email",
     password: "Kata Sandi",
     signIn: "Masuk",
+    demoLoginTitle: "Belum bisa daftar — gunakan akun demo",
+    demoLoginHint: "Masuk dengan kredensial demo di bawah ini. Kata sandi sama untuk semua akun demo.",
+    demoLoginEmail: "Email demo",
+    demoLoginPassword: "Kata sandi demo",
+    demoLoginFill: "Isi otomatis",
     demoIndustry: "🌍 Demo Industri",
     demoHint: "Pilih tenant — yang berubah bukan nama, tetapi seluruh dunia AI.",
     role: "Peran",
@@ -36,6 +44,11 @@ const LOGIN_COPY = {
     email: "Email",
     password: "Password",
     signIn: "Sign In",
+    demoLoginTitle: "Registration unavailable — use a demo account",
+    demoLoginHint: "Sign in with the demo credentials below. The password is the same for all demo accounts.",
+    demoLoginEmail: "Demo email",
+    demoLoginPassword: "Demo password",
+    demoLoginFill: "Fill automatically",
     demoIndustry: "🌍 Demo Industry",
     demoHint: "Pick a tenant — what changes is not the name, but the entire AI world.",
     role: "Role",
@@ -51,6 +64,11 @@ const LOGIN_COPY = {
     email: "メール",
     password: "パスワード",
     signIn: "サインイン",
+    demoLoginTitle: "登録は未対応 — デモアカウントをご利用ください",
+    demoLoginHint: "下記のデモ認証情報でサインインしてください。パスワードはすべてのデモアカウントで共通です。",
+    demoLoginEmail: "デモメール",
+    demoLoginPassword: "デモパスワード",
+    demoLoginFill: "自動入力",
     demoIndustry: "🌍 デモ産業",
     demoHint: "テナントを選ぶ — 変わるのは名前ではなく、AIの世界全体です。",
     role: "役割",
@@ -214,6 +232,11 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
     if (workspace.theme) applyTenantTheme(workspace.theme);
   }
 
+  function fillDemoCredentials() {
+    setEmail(DEMO_LOGIN_EMAIL);
+    setPassword(DEMO_LOGIN_PASSWORD);
+  }
+
   return (
     <div className="login-page min-h-screen">
       <header className="flex items-center justify-end px-6 py-4">
@@ -256,6 +279,32 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
         >
           {copy.signIn}
         </Button>
+
+        <div className="login-demo-hint rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+          <p className="text-sm font-medium text-cyan-100">{copy.demoLoginTitle}</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">{copy.demoLoginHint}</p>
+          <dl className="mt-3 space-y-2 text-sm">
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+              <dt className="text-slate-500">{copy.demoLoginEmail}</dt>
+              <dd>
+                <code className="login-demo-code rounded-md bg-white/10 px-2 py-1 text-cyan-100">{DEMO_LOGIN_EMAIL}</code>
+              </dd>
+            </div>
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+              <dt className="text-slate-500">{copy.demoLoginPassword}</dt>
+              <dd>
+                <code className="login-demo-code rounded-md bg-white/10 px-2 py-1 text-cyan-100">{DEMO_LOGIN_PASSWORD}</code>
+              </dd>
+            </div>
+          </dl>
+          <button
+            type="button"
+            onClick={fillDemoCredentials}
+            className="login-demo-fill mt-3 text-xs font-medium text-cyan-300 underline-offset-2 hover:text-cyan-200 hover:underline"
+          >
+            {copy.demoLoginFill}
+          </button>
+        </div>
       </form>
 
       <div className="my-8 border-t border-white/10" />
