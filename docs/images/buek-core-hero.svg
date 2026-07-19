@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" fill="none">
+  <defs>
+    <linearGradient id="heroIconGrad" x1="120" y1="40" x2="280" y2="280" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8"/>
+      <stop offset="0.45" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="heroCoreGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="heroLineGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#38BDF8" stop-opacity="0.3"/>
+      <stop offset="0.5" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#7C3AED" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="heroShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#3B82F6" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- White background -->
+  <rect width="800" height="360" fill="#FFFFFF"/>
+
+  <!-- Logo mark (stylized b with cube + circuit traces) -->
+  <g transform="translate(200, 50)" filter="url(#heroShadow)">
+    <rect width="200" height="200" rx="44" fill="url(#heroIconGrad)"/>
+    <!-- b letterform -->
+    <path d="M56 40h38c22.09 0 40 17.91 40 40s-17.91 40-40 40H82v50H56V40zm16 16v48h22c13.255 0 24-10.745 24-24s-10.745-24-24-24H72z" fill="#fff"/>
+    <!-- core cube -->
+    <rect x="94" y="94" width="26" height="26" rx="5" fill="#fff" opacity="0.95"/>
+  </g>
+  <!-- circuit traces -->
+  <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.9">
+    <path d="M388 78h28" stroke="#38BDF8"/>
+    <circle cx="420" cy="78" r="5" fill="#38BDF8" stroke="none"/>
+    <path d="M400 98h36" stroke="#60A5FA"/>
+    <circle cx="440" cy="98" r="5" fill="#60A5FA" stroke="none"/>
+    <path d="M392 118h24" stroke="#818CF8"/>
+    <circle cx="420" cy="118" r="5" fill="#818CF8" stroke="none"/>
+  </g>
+
+  <!-- Brand wordmark -->
+  <text x="400" y="295" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="800" letter-spacing="2">
+    <tspan fill="#0F172A">BUEK </tspan>
+    <tspan fill="url(#heroCoreGrad)">CORE</tspan>
+  </text>
+
+  <!-- Divider with hexagon -->
+  <line x1="200" y1="318" x2="378" y2="318" stroke="url(#heroLineGrad)" stroke-width="2"/>
+  <polygon points="400,310 408,318 400,326 392,318" fill="#3B82F6"/>
+  <line x1="422" y1="318" x2="600" y2="318" stroke="url(#heroLineGrad)" stroke-width="2"/>
+
+  <!-- Tagline -->
+  <text x="400" y="348" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#334155" letter-spacing="4.5">
+    BUILD AI WORKERS FOR ANY INDUSTRY
+  </text>
+</svg>
