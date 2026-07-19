@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/OpenAI-GPT--4.1-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI GPT-4.1" />
-  <img src="https://img.shields.io/badge/Dev_Assist-Enabled-010409?style=for-the-badge" alt="OpenAI Codex Dev Assist" />
+  <img src="docs/images/badges/codex-dev-assist.svg" alt="Codex Dev Assist" height="28" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
