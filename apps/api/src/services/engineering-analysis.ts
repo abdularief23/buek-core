@@ -1,6 +1,6 @@
 import { prisma } from "../db.js";
 import { canApprove, canDraftReport, assertRole } from "../lib/roles.js";
-import { getInvestigationCopilot } from "./investigation-copilot.js";
+import { defaultInvestigationSteps, getInvestigationCopilot } from "./investigation-copilot.js";
 import { createWorkOrderFromExecutionPlan } from "./execution-work-order.js";
 import { createDraftReport } from "./workflow-data.js";
 
@@ -96,6 +96,20 @@ async function getIssueWithInvestigation(slug: string, issueKey: string) {
   return issue;
 }
 
+async function ensureInvestigation(issueId: string, progress = 0) {
+  const existing = await prisma.investigation.findUnique({ where: { issueId } });
+  if (existing) return existing;
+
+  return prisma.investigation.create({
+    data: {
+      issueId,
+      status: "in_progress",
+      progress,
+      steps: defaultInvestigationSteps()
+    }
+  });
+}
+
 function metricsForIssue(
   slug: string,
   issue: {
@@ -153,12 +167,21 @@ export async function getEngineerIssueMetrics(slug: string): Promise<EngineerIss
 }
 
 export async function getEngineeringAnalysis(slug: string, issueKey: string) {
-  const issue = await getIssueWithInvestigation(slug, issueKey);
+  let issue = await getIssueWithInvestigation(slug, issueKey);
   if (!issue) return null;
+
+  if (!issue.investigation) {
+    await ensureInvestigation(issue.id, issue.progress);
+    issue = await getIssueWithInvestigation(slug, issueKey);
+    if (!issue) return null;
+  }
 
   const analysis =
     (issue.investigation?.analysisData as EngineeringAnalysisData | null) ?? emptyAnalysis();
   const copilot = await getInvestigationCopilot(slug, issueKey);
+  if (!copilot) {
+    throw new Error("Investigation co-pilot data unavailable.");
+  }
   const metrics = metricsForIssue(slug, issue);
 
   return {

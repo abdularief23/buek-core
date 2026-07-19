@@ -1,7 +1,16 @@
 import { Button } from "@buek/ui";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { applyTenantTheme } from "../lib/tenant-theme.js";
-import type { DemoWorkspaceOption, TenantThemePayload } from "../types.js";
+import {
+  type AppearanceMode,
+  type AppLanguage,
+  getAppearanceMode,
+  getAppLanguage,
+  LANGUAGE_LABELS,
+  setAppearanceMode,
+  setAppLanguage
+} from "../lib/user-preferences.js";
+import type { DemoWorkspaceOption } from "../types.js";
 
 interface LoginScreenProps {
   loginError: string | null;
@@ -11,6 +20,54 @@ interface LoginScreenProps {
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
 const demoOptionsEndpoint = `${configuredApiUrl}/api/auth/demo-options`;
+
+const LOGIN_COPY = {
+  id: {
+    tagline: "Satu AI Core. Pengetahuan Industri Tanpa Batas.",
+    production: "Produksi",
+    email: "Email",
+    password: "Kata Sandi",
+    signIn: "Masuk",
+    demoIndustry: "🌍 Demo Industri",
+    demoHint: "Pilih tenant — yang berubah bukan nama, tetapi seluruh dunia AI.",
+    role: "Peran",
+    launchDemo: "Luncurkan Demo",
+    comingSoon: "Segera Hadir",
+    appearance: "Tampilan",
+    language: "Bahasa",
+    aiUnderstands: "AI memahami"
+  },
+  en: {
+    tagline: "One AI Core. Unlimited Industry Knowledge.",
+    production: "Production",
+    email: "Email",
+    password: "Password",
+    signIn: "Sign In",
+    demoIndustry: "🌍 Demo Industry",
+    demoHint: "Pick a tenant — what changes is not the name, but the entire AI world.",
+    role: "Role",
+    launchDemo: "Launch Demo",
+    comingSoon: "Coming Soon",
+    appearance: "Appearance",
+    language: "Language",
+    aiUnderstands: "AI understands"
+  },
+  ja: {
+    tagline: "ひとつのAIコア。無限の産業知識。",
+    production: "本番",
+    email: "メール",
+    password: "パスワード",
+    signIn: "サインイン",
+    demoIndustry: "🌍 デモ産業",
+    demoHint: "テナントを選ぶ — 変わるのは名前ではなく、AIの世界全体です。",
+    role: "役割",
+    launchDemo: "デモを起動",
+    comingSoon: "近日公開",
+    appearance: "表示",
+    language: "言語",
+    aiUnderstands: "AIが理解"
+  }
+} as const;
 
 const fallbackWorkspaces: DemoWorkspaceOption[] = [
   {
@@ -109,6 +166,10 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
   const [selectedWorkspace, setSelectedWorkspace] = useState("epson-factory");
   const [selectedRole, setSelectedRole] = useState("Engineer");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [appearance, setAppearance] = useState<AppearanceMode>(getAppearanceMode());
+  const [language, setLanguage] = useState<AppLanguage>(getAppLanguage());
+
+  const copy = LOGIN_COPY[language];
 
   const selectedTheme = useMemo(
     () => workspaces.find((ws) => ws.id === selectedWorkspace)?.theme ?? null,
@@ -162,51 +223,101 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
   }
 
   return (
-    <section className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
+    <section className="login-page mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
+      <div className="login-preferences mb-8 grid gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:grid-cols-2">
+        <fieldset className="space-y-2">
+          <legend className="text-xs font-medium tracking-wide text-slate-500">{copy.appearance}</legend>
+          {(
+            [
+              ["light", "Light"],
+              ["dark", "Dark"],
+              ["system", "Auto"]
+            ] as const
+          ).map(([value, label]) => (
+            <label
+              key={value}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+            >
+              <input
+                type="radio"
+                name="login-appearance"
+                checked={appearance === value}
+                onChange={() => {
+                  setAppearance(value);
+                  setAppearanceMode(value);
+                }}
+                className="tenant-accent"
+              />
+              {label}
+            </label>
+          ))}
+        </fieldset>
+
+        <fieldset className="space-y-2">
+          <legend className="text-xs font-medium tracking-wide text-slate-500">{copy.language}</legend>
+          {(["id", "en", "ja"] as const).map((value) => (
+            <label
+              key={value}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+            >
+              <input
+                type="radio"
+                name="login-language"
+                checked={language === value}
+                onChange={() => {
+                  setLanguage(value);
+                  setAppLanguage(value);
+                }}
+                className="tenant-accent"
+              />
+              {LANGUAGE_LABELS[value]}
+            </label>
+          ))}
+        </fieldset>
+      </div>
+
       <div className="text-center">
-        <img src="/logo-mark.svg" alt="" className="mx-auto h-14 w-14 rounded-2xl bg-white p-2" />
+        <img src="/logo-mark.svg" alt="" className="login-logo mx-auto h-14 w-14 rounded-2xl bg-white p-2" />
         <h1 className="mt-6 text-2xl font-semibold">Buek Core</h1>
-        <p className="mt-2 text-sm text-slate-500">One AI Core. Unlimited Industry Knowledge.</p>
+        <p className="mt-2 text-sm text-slate-500">{copy.tagline}</p>
       </div>
 
       <form onSubmit={handleProductionSubmit} className="mt-10 space-y-4">
-        <p className="text-xs font-medium tracking-wide text-slate-500">Production</p>
+        <p className="text-xs font-medium tracking-wide text-slate-500">{copy.production}</p>
         <label className="block text-sm text-slate-400">
-          Email
+          {copy.email}
           <input
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             type="email"
             autoComplete="email"
-            className="tenant-input mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10"
+            className="tenant-input login-input mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10"
           />
         </label>
         <label className="block text-sm text-slate-400">
-          Password
+          {copy.password}
           <input
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             type="password"
             autoComplete="current-password"
-            className="tenant-input mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10"
+            className="tenant-input login-input mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10"
           />
         </label>
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-white text-slate-950 hover:bg-slate-200"
+          className="login-primary-btn w-full bg-white text-slate-950 hover:bg-slate-200"
         >
-          Sign In
+          {copy.signIn}
         </Button>
       </form>
 
       <div className="my-8 border-t border-white/10" />
 
       <div className="space-y-5">
-        <p className="text-xs font-medium tracking-wide text-slate-500">🌍 Demo Industry</p>
-        <p className="text-sm text-slate-400">
-          Pilih tenant — yang berubah bukan nama, tetapi seluruh dunia AI.
-        </p>
+        <p className="text-xs font-medium tracking-wide text-slate-500">{copy.demoIndustry}</p>
+        <p className="text-sm text-slate-400">{copy.demoHint}</p>
 
         <div className="space-y-3">
           {workspaces.map((workspace) => {
@@ -217,7 +328,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
                 key={workspace.id}
                 type="button"
                 onClick={() => selectWorkspace(workspace)}
-                className={`w-full rounded-2xl border p-4 text-left transition ${
+                className={`login-card w-full rounded-2xl border p-4 text-left transition ${
                   active
                     ? "tenant-card-active border-[var(--tenant-primary)] bg-[var(--tenant-accent-muted)]"
                     : "border-white/10 bg-white/[0.02] hover:border-white/20"
@@ -246,7 +357,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
                     </div>
                     {workspace.knowledgeTopics?.length ? (
                       <p className="mt-2 text-xs text-slate-500">
-                        AI memahami: {workspace.knowledgeTopics.slice(0, 5).join(", ")}
+                        {copy.aiUnderstands}: {workspace.knowledgeTopics.slice(0, 5).join(", ")}
                       </p>
                     ) : null}
                   </div>
@@ -259,14 +370,14 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
           {comingSoon.map((workspace) => (
             <div
               key={workspace.id}
-              className="w-full rounded-2xl border border-dashed border-white/10 p-4 opacity-50"
+              className="login-card w-full rounded-2xl border border-dashed border-white/10 p-4 opacity-50"
             >
               <div className="flex items-start gap-3">
                 <span className="text-2xl">{workspace.emoji ?? "🏢"}</span>
                 <div>
                   <p className="font-semibold text-slate-400">{workspace.label}</p>
                   <p className="mt-1 text-sm text-slate-500">{workspace.industry}</p>
-                  <p className="mt-2 text-xs text-slate-600">Coming Soon</p>
+                  <p className="mt-2 text-xs text-slate-600">{copy.comingSoon}</p>
                 </div>
               </div>
             </div>
@@ -274,7 +385,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
         </div>
 
         <fieldset className="space-y-2">
-          <legend className="text-sm text-slate-400">Role</legend>
+          <legend className="text-sm text-slate-400">{copy.role}</legend>
           {roles.map((role) => (
             <label
               key={role}
@@ -297,7 +408,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
           type="button"
           disabled={isSubmitting}
           onClick={() => void handleDemoLaunch()}
-          className="tenant-button w-full border text-white hover:opacity-90"
+          className="tenant-button login-launch-btn w-full border text-white hover:opacity-90"
           style={
             selectedTheme
               ? {
@@ -308,7 +419,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
               : undefined
           }
         >
-          Launch Demo — {workspaces.find((w) => w.id === selectedWorkspace)?.label}
+          {copy.launchDemo} — {workspaces.find((w) => w.id === selectedWorkspace)?.label}
         </Button>
       </div>
 

@@ -373,7 +373,7 @@ export function App() {
 
   if (!isSignedIn) {
     return (
-      <main className="min-h-screen bg-slate-950 text-white">
+      <main className="login-shell min-h-screen">
         <LoginScreen
           loginError={loginError}
           onProductionSignIn={handleProductionSignIn}

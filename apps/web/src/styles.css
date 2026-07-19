@@ -18,9 +18,45 @@ body {
   background-color: #020617;
 }
 
+.login-shell {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
 :root[data-appearance="light"] body {
   background-color: #f8fafc;
   color: #0f172a;
+}
+
+:root[data-appearance="light"] .login-shell {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+:root[data-appearance="light"] .login-preferences,
+:root[data-appearance="light"] .login-card {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  background-color: rgba(15, 23, 42, 0.03) !important;
+}
+
+:root[data-appearance="light"] .login-input {
+  background-color: #fff !important;
+  color: #0f172a !important;
+  ring-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
+}
+
+:root[data-appearance="light"] .login-primary-btn {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+:root[data-appearance="light"] .login-primary-btn:hover {
+  background-color: #1e293b !important;
+}
+
+:root[data-appearance="light"] .login-launch-btn {
+  color: #0f172a !important;
 }
 
 :root[data-appearance="light"] .text-white {
