@@ -137,6 +137,7 @@ export interface ReportSections {
   executionPlan: string;
   verification: string;
   verificationResult: string;
+  lessonsLearned: string;
   attachments: string[];
 }
 
@@ -319,7 +320,7 @@ export function createDraftReport(
   role: string,
   investigationDraft?: InvestigationDraftInput
 ) {
-  return fetchJson<{ report: EngineeringReport; aiSuggestion: AiSuggestion }>(
+  return fetchJson<{ report: EngineeringReport; workOrder: WorkOrderSummary | null; aiSuggestion: AiSuggestion }>(
     `/api/data/${slug}/reports/draft`,
     {
       method: "POST",
@@ -371,6 +372,37 @@ export function reportExportDocxUrl(slug: string, reportId: string) {
 
 export function fetchAiSuggestion(slug: string, issueKey: string) {
   return fetchJson<{ suggestion: AiSuggestion }>(`/api/data/${slug}/issues/${issueKey}/ai-suggestion`);
+}
+
+export interface WorkOrderSummary {
+  id: string;
+  number: string;
+  title: string;
+  status: string;
+}
+
+export interface CompanyBrainMachineNode {
+  code: string;
+  name: string;
+  issues: Array<{
+    id: string;
+    issueKey: string;
+    title: string;
+    status: string;
+    reports: Array<{
+      id: string;
+      reportNumber: string;
+      title: string;
+      status: string;
+      countermeasure?: string;
+    }>;
+    lessonsLearned: Array<{ id: string; title: string; content: string }>;
+    countermeasures: string[];
+  }>;
+}
+
+export function fetchCompanyBrain(slug: string) {
+  return fetchJson<{ machines: CompanyBrainMachineNode[] }>(`/api/data/${slug}/company-brain`);
 }
 
 export function fetchLessonsLearned(slug: string) {

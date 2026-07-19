@@ -8,18 +8,23 @@ export interface ReportSections {
   executionPlan: string;
   verification: string;
   verificationResult: string;
+  lessonsLearned: string;
   attachments: string[];
 }
 
 export interface ReportMeta {
   reportNumber: string;
   problem: string;
+  issueId?: string;
   machine?: string;
   date: string;
   engineer: string;
+  supervisor?: string;
   status: string;
   organization?: string;
   version?: number;
+  approvedBy?: string;
+  approvedAt?: string;
 }
 
 export function emptyReportSections(): ReportSections {
@@ -33,8 +38,13 @@ export function emptyReportSections(): ReportSections {
     executionPlan: "",
     verification: "",
     verificationResult: "",
+    lessonsLearned: "",
     attachments: []
   };
+}
+
+function sectionBlock(title: string, body: string): string[] {
+  return ["", title, "────────────────────────", body || "____________________"];
 }
 
 export function renderReportDocument(meta: ReportMeta, sections: ReportSections): string {
@@ -43,56 +53,46 @@ export function renderReportDocument(meta: ReportMeta, sections: ReportSections)
       ? sections.attachments.map((a) => `□ ${a}`).join("\n")
       : "□ Photo\n□ SOP\n□ Trend";
 
-  return [
+  const lines = [
     meta.organization ? meta.organization.toUpperCase() : "ENGINEERING INVESTIGATION REPORT",
     "ENGINEERING INVESTIGATION REPORT",
-    "--------------------------------",
+    "",
     `Report No   : ${meta.reportNumber}`,
+    ...(meta.issueId ? [`Issue ID    : ${meta.issueId}`] : []),
     `Machine     : ${meta.machine ?? "—"}`,
     `Engineer    : ${meta.engineer}`,
+    ...(meta.supervisor ? [`Supervisor  : ${meta.supervisor}`] : []),
     `Date        : ${meta.date}`,
-    `Document    : v${meta.version ?? 1} · ${meta.status.toUpperCase()}`,
-    "--------------------------------",
-    "",
-    "PROBLEM",
-    "--------------------------------",
-    meta.problem,
-    "",
-    "EVIDENCE",
-    "--------------------------------",
-    sections.evidence || sections.background || "____________________",
-    "",
-    "ANALYSIS",
-    "--------------------------------",
-    sections.analysis || "____________________",
-    "",
-    "DECISION",
-    "--------------------------------",
-    sections.decision || sections.rootCause || "____________________",
-    "",
-    "COUNTERMEASURE",
-    "--------------------------------",
-    sections.countermeasure || "____________________",
-    "",
-    "EXECUTION PLAN",
-    "--------------------------------",
-    sections.executionPlan || "____________________",
-    "",
-    "VERIFICATION",
-    "--------------------------------",
-    sections.verification || "____________________",
+    `Revision    : v${meta.version ?? 1}`,
+    `Status      : ${meta.status.toUpperCase()}`,
+    ...sectionBlock("PROBLEM", meta.problem),
+    ...sectionBlock("EVIDENCE", sections.evidence || sections.background),
+    ...sectionBlock("ANALYSIS", sections.analysis),
+    ...sectionBlock("DECISION", sections.decision || sections.rootCause),
+    ...sectionBlock("COUNTERMEASURE", sections.countermeasure),
+    ...sectionBlock("EXECUTION PLAN", sections.executionPlan),
+    ...sectionBlock("VERIFICATION", sections.verification),
     ...(sections.verificationResult
-      ? ["", "VERIFICATION RESULT", "--------------------------------", sections.verificationResult]
+      ? sectionBlock("VERIFICATION RESULT", sections.verificationResult)
       : []),
+    ...sectionBlock("LESSONS LEARNED", sections.lessonsLearned),
     "",
-    "Attachments",
-    "--------------------------------",
-    attachmentLines,
-    "",
-    "Status",
-    "--------------------------------",
-    meta.status.toUpperCase()
-  ].join("\n");
+    "ATTACHMENTS",
+    "────────────────────────",
+    attachmentLines
+  ];
+
+  if (meta.status === "approved" && meta.approvedBy) {
+    lines.push(
+      "",
+      "APPROVAL",
+      "────────────────────────",
+      `Approved By : ${meta.approvedBy}`,
+      `Approved At : ${meta.approvedAt ?? meta.date}`
+    );
+  }
+
+  return lines.join("\n");
 }
 
 export function buildDraftSectionsFromIssue(issue: {
@@ -110,13 +110,14 @@ export function buildDraftSectionsFromIssue(issue: {
     executionPlan: "",
     verification: "",
     verificationResult: "",
+    lessonsLearned: "",
     attachments: ["Photo", "SOP", "Trend"]
   };
 }
 
 export function generateReportNumber(workspaceSlug: string): string {
   const prefix = workspaceSlug.split("-")[0]?.slice(0, 3).toUpperCase() ?? "INV";
-  const stamp = new Date().toISOString().slice(2, 10).replace(/-/g, "");
-  const seq = String(Date.now()).slice(-4);
-  return `${prefix}-${stamp}-${seq}`;
+  const year = new Date().getFullYear();
+  const seq = String(Date.now()).slice(-5);
+  return `INV-${year}-${seq}`;
 }

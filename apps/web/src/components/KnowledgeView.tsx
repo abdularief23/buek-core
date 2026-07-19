@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Workspace } from "../types.js";
 import {
   fetchBusinessRules,
+  fetchCompanyBrain,
   fetchConnectors,
   fetchCriticalAlerts,
   fetchKnowledgeDocuments,
@@ -11,6 +12,7 @@ import {
   uploadKnowledgeDocument,
   uploadKnowledgeFiles,
   type BusinessRule,
+  type CompanyBrainMachineNode,
   type CriticalAlert,
   type KnowledgeDocumentSummary,
   type KnowledgeSearchHit,
@@ -40,6 +42,8 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
   const [batchProgress, setBatchProgress] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lessons, setLessons] = useState<LessonLearned[]>([]);
+  const [brain, setBrain] = useState<CompanyBrainMachineNode[]>([]);
+  const [expandedMachine, setExpandedMachine] = useState<string | null>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const daily = workspace.dailyWorkspace;
@@ -71,14 +75,16 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
       fetchBusinessRules(workspace.id),
       fetchCriticalAlerts(workspace.id),
       fetchConnectors(workspace.id),
-      fetchLessonsLearned(workspace.id)
+      fetchLessonsLearned(workspace.id),
+      fetchCompanyBrain(workspace.id)
     ])
-      .then(([docsRes, rulesRes, alertsRes, connRes, lessonsRes]) => {
+      .then(([docsRes, rulesRes, alertsRes, connRes, lessonsRes, brainRes]) => {
         setDocuments(docsRes.documents);
         setRules(rulesRes.rules);
         setAlerts(alertsRes.alerts);
         setConnectorLabel(connRes.connectors[0]?.label ?? "Operational Connector");
         setLessons(lessonsRes.lessons);
+        setBrain(brainRes.machines);
       })
       .finally(() => setLoading(false));
   }, [workspace.id]);
@@ -202,6 +208,67 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
       </header>
 
       {loading ? <LoadingState label="Loading Company Brain..." /> : null}
+
+      {brain.length > 0 ? (
+        <section className="space-y-3 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
+          <h2 className="buek-card-title text-cyan-300">Machine → Issue → Technical Report</h2>
+          <p className="buek-small text-slate-500">Navigasi hierarki investigasi yang disetujui.</p>
+          <div className="space-y-2">
+            {brain.map((machine) => (
+              <div key={machine.code} className="rounded-xl border border-white/10">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedMachine((current) => (current === machine.code ? null : machine.code))
+                  }
+                  className="flex w-full items-center justify-between px-4 py-3 text-left"
+                >
+                  <span className="buek-body text-white">
+                    {machine.code} — {machine.name}
+                  </span>
+                  <span className="text-slate-500">{expandedMachine === machine.code ? "▼" : "▶"}</span>
+                </button>
+                {expandedMachine === machine.code ? (
+                  <div className="space-y-3 border-t border-white/10 px-4 py-3">
+                    {machine.issues.map((issue) => (
+                      <div key={issue.id} className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                        <p className="buek-body text-white">{issue.title}</p>
+                        <p className="buek-small text-slate-500">Issue #{issue.issueKey} · {issue.status}</p>
+                        {issue.reports.length ? (
+                          <div className="mt-2 space-y-1">
+                            <p className="buek-small text-cyan-400">Technical Reports</p>
+                            {issue.reports.map((report) => (
+                              <p key={report.id} className="buek-small text-slate-300">
+                                → {report.reportNumber}: {report.title} ({report.status})
+                              </p>
+                            ))}
+                          </div>
+                        ) : null}
+                        {issue.lessonsLearned.length ? (
+                          <div className="mt-2 space-y-1">
+                            <p className="buek-small text-emerald-400">Lessons Learned</p>
+                            {issue.lessonsLearned.map((lesson) => (
+                              <p key={lesson.id} className="buek-small text-slate-400">
+                                → {lesson.title}
+                              </p>
+                            ))}
+                          </div>
+                        ) : null}
+                        {issue.countermeasures.length ? (
+                          <div className="mt-2">
+                            <p className="buek-small text-amber-300">Countermeasure</p>
+                            <p className="buek-small text-slate-400">{issue.countermeasures[0]}</p>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <input
         ref={folderInputRef}

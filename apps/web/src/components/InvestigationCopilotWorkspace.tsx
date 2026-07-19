@@ -59,6 +59,7 @@ export function InvestigationCopilotWorkspace({
   const [verificationResult, setVerificationResult] = useState<"PASS" | "FAIL" | "">("");
   const [verificationNotes, setVerificationNotes] = useState("");
   const [lessonsLearned, setLessonsLearned] = useState("");
+  const [workOrderCreated, setWorkOrderCreated] = useState<string | null>(null);
 
   useEffect(() => {
     fetchIssueByKey(slug, issueKey).then((data) => setIssue(data.issue));
@@ -150,6 +151,9 @@ export function InvestigationCopilotWorkspace({
       };
 
       const result = await createDraftReport(slug, issueKey, userName, userRole, draft);
+      if (result.workOrder) {
+        setWorkOrderCreated(`${result.workOrder.number} — ${result.workOrder.title}`);
+      }
       onWorkspaceChange({ kind: "engineering-report", slug, reportId: result.report.id });
       onDataChange?.();
     } finally {
@@ -461,7 +465,13 @@ export function InvestigationCopilotWorkspace({
           ) : null}
 
           {engineerView ? (
-            <button
+            <>
+              {workOrderCreated ? (
+                <p className="buek-small text-emerald-400">
+                  ✓ Work Order created: {workOrderCreated} — pending supervisor approval
+                </p>
+              ) : null}
+              <button
               type="button"
               disabled={!canGenerate || creatingDraft}
               onClick={() => void handleGenerateReport()}
@@ -469,6 +479,7 @@ export function InvestigationCopilotWorkspace({
             >
               {creatingDraft ? "Generating Technical Report..." : "Generate Technical Investigation Report"}
             </button>
+            </>
           ) : null}
 
           {issue.investigation ? (

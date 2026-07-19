@@ -149,7 +149,7 @@ function engineerHome(workspaceId: string, daily: DailyWorkspace) {
           title: primary.title,
           detail: "Torque out of spec at EA-04",
           actionLabel: "Investigate",
-          prompt: "Bolt torque out of specification at EA-04 — root cause analysis",
+          prompt: "Bolt torque out of specification at EA-04 — technical investigation",
           contextLabel: "Station EA-04",
           action: "investigation",
           issueKey: primary.key
@@ -185,20 +185,25 @@ function engineerHome(workspaceId: string, daily: DailyWorkspace) {
       aiSuggestions: [
         {
           id: "s1",
-          title: "Root Cause Candidate",
+          title: "Possible Cause",
           candidate: "Torque Tool Drift",
           confidence: "84%",
           prompt: "Investigate EA-04 torque drift — 5 Why analysis with ASM-022"
         }
       ],
       workflowSteps: [
-        "Investigation",
-        "Evidence",
-        "Root Cause",
+        "Problem Created",
+        "Collect Evidence",
+        "Similar Cases",
+        "Review SOP",
+        "Possible Cause",
+        "Engineer Decision",
         "Countermeasure",
-        "Report",
+        "Execution Plan",
+        "Verification",
+        "Technical Report",
         "Approval",
-        "Closed"
+        "Lessons Learned"
       ]
     };
   }
@@ -225,7 +230,7 @@ function engineerHome(workspaceId: string, daily: DailyWorkspace) {
           title: secondary.title,
           detail: "Line held pending QA review",
           actionLabel: "Review",
-          prompt: "Packaging line P-03 stop — root cause and containment",
+          prompt: "Packaging line P-03 stop — investigation and containment",
           contextLabel: "Packaging",
           action: "investigation",
           issueKey: secondary.key
@@ -249,20 +254,25 @@ function engineerHome(workspaceId: string, daily: DailyWorkspace) {
       aiSuggestions: [
         {
           id: "s1",
-          title: "Root Cause Candidate",
+          title: "Possible Cause",
           candidate: "Supplier Packaging Lot",
           confidence: "76%",
           prompt: "Investigate metal detector alarm — HACCP-011 containment steps"
         }
       ],
       workflowSteps: [
-        "Detection",
-        "Containment",
-        "Root Cause",
-        "Corrective Action",
-        "CCP Verification",
-        "Release",
-        "Closed"
+        "Problem Created",
+        "Collect Evidence",
+        "Similar Cases",
+        "Review SOP",
+        "Possible Cause",
+        "Engineer Decision",
+        "Countermeasure",
+        "Execution Plan",
+        "Verification",
+        "Technical Report",
+        "Approval",
+        "Lessons Learned"
       ]
     };
   }
@@ -276,7 +286,7 @@ function engineerHome(workspaceId: string, daily: DailyWorkspace) {
         title: `${primary.title} +12%`,
         detail: "Compared with yesterday",
         actionLabel: "Investigate",
-        prompt: "Continue white streak investigation — root cause analysis",
+        prompt: "Continue white streak investigation — possible cause analysis",
         contextLabel: "White Streak",
         action: "investigation",
         issueKey: primary.key
@@ -312,20 +322,25 @@ function engineerHome(workspaceId: string, daily: DailyWorkspace) {
     aiSuggestions: [
       {
         id: "s1",
-        title: "Root Cause Candidate",
+        title: "Possible Cause",
         candidate: "Print Head Nozzle",
         confidence: "82%",
         prompt: "Investigate white streak — print head and ink filling 5 Why"
       }
     ],
     workflowSteps: [
-      "Investigation",
-      "Evidence",
-      "Root Cause",
+      "Problem Created",
+      "Collect Evidence",
+      "Similar Cases",
+      "Review SOP",
+      "Possible Cause",
+      "Engineer Decision",
       "Countermeasure",
-      "Report",
+      "Execution Plan",
+      "Verification",
+      "Technical Report",
       "Approval",
-      "Closed"
+      "Lessons Learned"
     ]
   };
 }
@@ -541,9 +556,6 @@ function personaConfig(
 ): { label: string; chatPersona: string; suggestions: Array<{ label: string; prompt: string }> } {
   const tenant = getTenantThemeOrDefault(workspaceId);
   const domainFocus = tenant.domainTerms.join(", ");
-  const forbidden = tenant.forbiddenTerms.length
-    ? `Jangan pernah membahas: ${tenant.forbiddenTerms.join(", ")}.`
-    : "";
 
   const rolePersonas: Record<RoleKey, { label: string; focus: string; suggestions: Array<{ label: string; prompt: string }> }> = {
     operator: {
@@ -558,7 +570,7 @@ function personaConfig(
     },
     engineer: {
       label: `${tenant.industry} Engineer AI`,
-      focus: `Fokus pada root cause analysis, investigasi teknis, dan referensi SOP untuk ${domainFocus}.`,
+      focus: `Fokus pada investigasi teknis, possible cause analysis, dan referensi SOP untuk ${domainFocus}. AI tidak menentukan root cause — engineer memilih.`,
       suggestions: [
         { label: "Explain Alarm", prompt: `Explain the current alarm related to ${domainFocus}` },
         { label: "Generate 5 Why", prompt: "Generate a 5 Why analysis for this issue" },
@@ -591,7 +603,7 @@ function personaConfig(
   const role = rolePersonas[roleKey];
   return {
     label: role.label,
-    chatPersona: `${tenant.aiPersonaIntro} ${role.focus} ${forbidden} Jika user bertanya "mesin bermasalah", tanyakan klarifikasi: ${tenant.aiClarifyingQuestions.join(" ")}`,
+    chatPersona: `${tenant.aiPersonaIntro} ${role.focus} Jika user bertanya "mesin bermasalah", tanyakan klarifikasi: ${tenant.aiClarifyingQuestions.join(" ")}`,
     suggestions: role.suggestions
   };
 }

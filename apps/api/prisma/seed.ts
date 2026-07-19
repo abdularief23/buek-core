@@ -2,6 +2,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { getTenantThemeOrDefault } from "../src/tenants/index.js";
+import { investigationStepsForProgress } from "../src/services/investigation-copilot.js";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -46,14 +47,6 @@ const WORKSPACES = [
     name: "Custom Workspace"
   }
 ] as const;
-
-const INVESTIGATION_STEPS = [
-  { key: "evidence", label: "Evidence", done: false },
-  { key: "root_cause", label: "Root Cause", done: false },
-  { key: "countermeasure", label: "Countermeasure", done: false },
-  { key: "approval", label: "Approval", done: false },
-  { key: "closed", label: "Closed", done: false }
-];
 
 function todayAt(hour: number, minute = 0): Date {
   const d = new Date();
@@ -244,25 +237,13 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     where: { issueId: primaryIssue.id },
     update: {
       progress: tenant.primaryIssue.progress,
-      steps: [
-        { key: "evidence", label: "Evidence", done: true },
-        { key: "root_cause", label: "Root Cause", done: tenant.primaryIssue.progress > 50 },
-        { key: "countermeasure", label: "Countermeasure", done: false },
-        { key: "approval", label: "Approval", done: false },
-        { key: "closed", label: "Closed", done: false }
-      ]
+      steps: investigationStepsForProgress(tenant.primaryIssue.progress)
     },
     create: {
       issueId: primaryIssue.id,
       status: "in_progress",
       progress: tenant.primaryIssue.progress,
-      steps: [
-        { key: "evidence", label: "Evidence", done: true },
-        { key: "root_cause", label: "Root Cause", done: tenant.primaryIssue.progress > 50 },
-        { key: "countermeasure", label: "Countermeasure", done: false },
-        { key: "approval", label: "Approval", done: false },
-        { key: "closed", label: "Closed", done: false }
-      ]
+      steps: investigationStepsForProgress(tenant.primaryIssue.progress)
     }
   });
 
@@ -290,10 +271,7 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
       issueId: secondaryIssue.id,
       status: "in_progress",
       progress: tenant.secondaryIssue.progress,
-      steps: INVESTIGATION_STEPS.map((step, idx) => ({
-        ...step,
-        done: idx === 0
-      }))
+      steps: investigationStepsForProgress(tenant.secondaryIssue.progress)
     }
   });
 
@@ -705,10 +683,10 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
       issueId: primaryIssue.id,
       title:
         config.slug === "toyota-plant"
-          ? "Torque EA-04 Root Cause Analysis"
+          ? "Torque EA-04 Technical Investigation"
           : config.slug === "nestle-factory"
             ? "Metal Detector Alarm Investigation"
-            : "White Streak Root Cause Analysis",
+            : "White Streak Technical Investigation",
       content:
         config.slug === "toyota-plant"
           ? "Preliminary analysis indicates torque tool drift at EA-04. Recommend recalibration per ASM-022."
@@ -769,7 +747,7 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
       timeline: [
         { time: "08:30", title: "Complaint Created" },
         { time: "09:10", title: "Engineer Assigned" },
-        { time: "10:20", title: "Root Cause Analysis Started" }
+        { time: "10:20", title: "Possible Cause Analysis Started" }
       ],
       attachments: ["Photo", "QC Report", "Trend"]
     }
@@ -828,7 +806,7 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
               : "Similar white streak defect occurred in Issue #202 — resolved by print head cleaning per SOP-014.",
         tags:
           config.slug === "toyota-plant"
-            ? ["torque", "history", "root_cause"]
+            ? ["torque", "history", "possible_cause"]
             : config.slug === "nestle-factory"
               ? ["haccp", "metal_detector", "history"]
               : ["quality", "similar_case"]

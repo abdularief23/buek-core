@@ -192,7 +192,7 @@ export async function enrichRoleHomeFromDb(
         icon: severityIcon(issue.severity),
         title: issue.machine ? `${issue.machine.name} ${issue.title}` : issue.title,
         detail: issue.description?.slice(0, 80) ?? `${issue.progress}% complete`,
-        actionLabel: issue.investigation ? "Root Cause" : "Investigate",
+        actionLabel: issue.investigation ? "Possible Cause" : "Investigate",
         prompt: `Continue ${issue.title} investigation`,
         contextLabel: issue.title,
         action: "investigation" as const,
