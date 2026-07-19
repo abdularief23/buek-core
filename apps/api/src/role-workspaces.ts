@@ -52,6 +52,13 @@ export interface RoleHomeData {
       issueKey?: string;
     }>;
     teamPerformance: Array<{ name: string; closed: number; pending: number }>;
+    pendingAnalyses?: Array<{
+      issueKey: string;
+      title: string;
+      engineerName: string;
+      rootCause: string;
+      submittedAt: string;
+    }>;
   };
   manager?: {
     factoryOverview: Array<{ label: string; value: string; status: "green" | "yellow" | "red" }>;

@@ -8,7 +8,7 @@ import {
   getTeamPerformance,
   getWeeklyTrend
 } from "./data-engine.js";
-import { getEngineerIssueMetrics } from "./engineering-analysis.js";
+import { getEngineerIssueMetrics, getPendingEngineeringAnalyses } from "./engineering-analysis.js";
 import { getOperatorChecklist } from "./workflow-data.js";
 
 function kpiToOverviewStatus(status: "green" | "yellow" | "red"): "green" | "yellow" | "red" {
@@ -27,11 +27,12 @@ export async function enrichRoleHomeFromDb(
 ): Promise<RoleHomeData> {
   try {
     if (roleHome.roleKey === "supervisor" && roleHome.supervisor) {
-      const [stats, issues, kpis, teamPerformance] = await Promise.all([
+      const [stats, issues, kpis, teamPerformance, pendingAnalyses] = await Promise.all([
         getSupervisorStats(workspaceSlug),
         getIssues(workspaceSlug, ["open", "investigating"]),
         getLiveKpis(workspaceSlug),
-        getTeamPerformance(workspaceSlug)
+        getTeamPerformance(workspaceSlug),
+        getPendingEngineeringAnalyses(workspaceSlug)
       ]);
 
       const overviewLabels = ["Production", "Quality", "Delivery"];
@@ -61,6 +62,11 @@ export async function enrichRoleHomeFromDb(
           overview: overviewFromKpis.length ? overviewFromKpis : roleHome.supervisor.overview,
           waitingApproval: [
             {
+              label: "Engineering Analysis",
+              count: pendingAnalyses.length,
+              action: "pending-analyses"
+            },
+            {
               label: "Work Orders",
               count: stats.pendingWorkOrders,
               action: "approval-queue"
@@ -77,6 +83,13 @@ export async function enrichRoleHomeFromDb(
             }
           ],
           openIssues: openIssues.length ? openIssues : roleHome.supervisor.openIssues,
+          pendingAnalyses: pendingAnalyses.map((item) => ({
+            issueKey: item.issueKey,
+            title: `${item.machineCode} — ${item.issueTitle}`,
+            engineerName: item.engineerName,
+            rootCause: item.rootCause ?? "—",
+            submittedAt: item.submittedAt ?? ""
+          })),
           teamPerformance: teamPerformance.length
             ? teamPerformance
             : roleHome.supervisor.teamPerformance

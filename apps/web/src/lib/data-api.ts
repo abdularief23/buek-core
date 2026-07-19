@@ -364,6 +364,7 @@ export interface EngineeringAnalysisData {
     lessonsLearned?: string;
   };
   submittedAt?: string;
+  submittedBy?: string;
   approvedAt?: string;
   approvedBy?: string;
   revisionNotes?: string;
