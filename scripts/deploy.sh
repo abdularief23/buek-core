@@ -7,10 +7,15 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-echo "==> Pulling latest main..."
-git fetch origin main
-git checkout main
-git pull origin main
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
+
+echo "==> Pulling latest ${DEPLOY_BRANCH}..."
+git fetch origin "${DEPLOY_BRANCH}"
+git checkout "${DEPLOY_BRANCH}"
+git pull origin "${DEPLOY_BRANCH}"
+
+export GIT_COMMIT="$(git rev-parse --short HEAD)"
+echo "==> Deploying build ${GIT_COMMIT}"
 
 if [[ ! -f .env ]]; then
   echo "ERROR: .env not found. Copy from .env.example and set WEB_PORT=127.0.0.1:8080"
@@ -32,7 +37,7 @@ echo "==> Rebuilding (host Nginx mode — web on 127.0.0.1:8080)..."
 $DOCKER compose up -d --build
 
 echo "==> Waiting for services..."
-sleep 5
+sleep 8
 
 echo "==> Container status:"
 $DOCKER compose ps
@@ -50,6 +55,21 @@ else
 fi
 
 echo ""
+echo "==> API feature check:"
+curl -sf http://127.0.0.1:8080/health | head -c 500 || true
+echo ""
+
+echo ""
 echo "==> Done. Verify: https://core.buekwebsite.com"
-echo "    Login: Enterprise AI Operating System"
-echo "    After login: Good morning + prompt + Today's Summary"
+echo "    Login page MUST show:"
+echo "      - Appearance panel (Light / Dark / Auto)"
+echo "      - Language panel (Indonesia / English / 日本語)"
+echo "      - Build footer with commit ${GIT_COMMIT}"
+echo "      - API Status: Connected + Engineering Analysis API: Ready"
+echo ""
+echo "    After login as Engineer:"
+echo "      - Home shows PPM metrics (not '89% complete')"
+echo "      - Investigation opens 5-step wizard (not Fishbone buttons)"
+echo ""
+echo "    To deploy a feature branch instead of main:"
+echo "      DEPLOY_BRANCH=cursor/product-design-engineering-copilot-e866 ./scripts/deploy.sh"

@@ -167,9 +167,20 @@ curl http://127.0.0.1:8080/health
 
 Verify the new UI loaded:
 
-- Login page title: **Enterprise AI Operating System** (not "Build AI Workers for Any Industry")
-- After login: **Good morning, Abdul** + prompt at top + Today's Summary + Continue Working
-- No dashboard, no Choose Company, no KPI grid
+- Login page shows **Appearance** (Light/Dark/Auto) and **Language** panels
+- Login footer shows **Build** commit hash and **API Status: Connected**
+- Login footer shows **Engineering Analysis API: Ready**
+- After login as Engineer: PPM metrics card (not `89% complete`)
+- Investigation opens **5-step wizard** (not `Generate 5 Why` / `Fishbone` buttons)
+
+If you still see `Enterprise AI Operating System`, `Demo Workspace`, or `Fishbone` buttons,
+the VPS is serving an **old frontend bundle**. Run `./scripts/deploy.sh` after merging PR #21.
+
+To deploy the feature branch before merge:
+
+```bash
+DEPLOY_BRANCH=cursor/product-design-engineering-copilot-e866 ./scripts/deploy.sh
+```
 
 Check bundle hash in page source — it should change after each deploy.
 

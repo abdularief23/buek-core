@@ -26,6 +26,7 @@ services:
     environment:
       NODE_ENV: production
       API_PORT: 4000
+      GIT_COMMIT: ${GIT_COMMIT:-dev}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://core.buekwebsite.com}
       DATABASE_URL: postgresql://${POSTGRES_USER:-buek}:${POSTGRES_PASSWORD:-buek}@postgres:5432/${POSTGRES_DB:-buek_core}?schema=public
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -38,6 +39,8 @@ services:
     build:
       context: .
       dockerfile: docker/web.Dockerfile
+      args:
+        VITE_APP_BUILD: ${GIT_COMMIT:-dev}
     depends_on:
       - api
     ports:

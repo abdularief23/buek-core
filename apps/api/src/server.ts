@@ -113,7 +113,12 @@ export async function createServer(env: ApiEnv): Promise<Express> {
     res.json({
       status: "ok",
       service: "buek-core-api",
-      environment: env.nodeEnv
+      environment: env.nodeEnv,
+      build: process.env.GIT_COMMIT ?? "dev",
+      features: {
+        engineeringAnalysis: true,
+        loginPreferences: true
+      }
     });
   });
 

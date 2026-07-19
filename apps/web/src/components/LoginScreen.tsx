@@ -1,5 +1,7 @@
 import { Button } from "@buek/ui";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { checkApiDiagnostics, type ApiDiagnostics } from "../lib/api-diagnostics.js";
+import { APP_BUILD_ID, APP_FEATURE_SET } from "../lib/build-info.js";
 import { applyTenantTheme } from "../lib/tenant-theme.js";
 import {
   type AppearanceMode,
@@ -35,7 +37,16 @@ const LOGIN_COPY = {
     comingSoon: "Segera Hadir",
     appearance: "Tampilan",
     language: "Bahasa",
-    aiUnderstands: "AI memahami"
+    aiUnderstands: "AI memahami",
+    buildLabel: "Build",
+    apiStatus: "Status API",
+    connected: "Terhubung",
+    disconnected: "Tidak terhubung",
+    analysisApi: "API Analisa Engineering",
+    metricsApi: "API Metrics Engineer",
+    ready: "Siap",
+    missing: "Belum tersedia",
+    deployHint: "Jika panel Tampilan/Bahasa tidak muncul, VPS masih menjalankan build lama. Merge PR #21 lalu jalankan ./scripts/deploy.sh"
   },
   en: {
     tagline: "One AI Core. Unlimited Industry Knowledge.",
@@ -50,7 +61,16 @@ const LOGIN_COPY = {
     comingSoon: "Coming Soon",
     appearance: "Appearance",
     language: "Language",
-    aiUnderstands: "AI understands"
+    aiUnderstands: "AI understands",
+    buildLabel: "Build",
+    apiStatus: "API Status",
+    connected: "Connected",
+    disconnected: "Disconnected",
+    analysisApi: "Engineering Analysis API",
+    metricsApi: "Engineer Metrics API",
+    ready: "Ready",
+    missing: "Not available",
+    deployHint: "If Appearance/Language panels are missing, the VPS is still on an old build. Merge PR #21 then run ./scripts/deploy.sh"
   },
   ja: {
     tagline: "ひとつのAIコア。無限の産業知識。",
@@ -65,7 +85,16 @@ const LOGIN_COPY = {
     comingSoon: "近日公開",
     appearance: "表示",
     language: "言語",
-    aiUnderstands: "AIが理解"
+    aiUnderstands: "AIが理解",
+    buildLabel: "ビルド",
+    apiStatus: "API状態",
+    connected: "接続済み",
+    disconnected: "未接続",
+    analysisApi: "エンジニアリング分析API",
+    metricsApi: "エンジニア指標API",
+    ready: "準備完了",
+    missing: "未対応",
+    deployHint: "表示/言語パネルがない場合、VPSは古いビルドです。PR #21をマージして ./scripts/deploy.sh を実行してください"
   }
 } as const;
 
@@ -168,6 +197,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appearance, setAppearance] = useState<AppearanceMode>(getAppearanceMode());
   const [language, setLanguage] = useState<AppLanguage>(getAppLanguage());
+  const [apiDiagnostics, setApiDiagnostics] = useState<ApiDiagnostics | null>(null);
 
   const copy = LOGIN_COPY[language];
 
@@ -175,6 +205,10 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
     () => workspaces.find((ws) => ws.id === selectedWorkspace)?.theme ?? null,
     [workspaces, selectedWorkspace]
   );
+
+  useEffect(() => {
+    checkApiDiagnostics().then(setApiDiagnostics).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     applyTenantTheme(selectedTheme);
@@ -424,6 +458,39 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
       </div>
 
       {loginError ? <p className="mt-6 text-center text-sm text-red-400">{loginError}</p> : null}
+
+      <footer className="login-diagnostics mt-10 space-y-2 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs text-slate-500">
+        <p>
+          {copy.buildLabel}: <span className="font-mono text-slate-400">{APP_BUILD_ID}</span> · {APP_FEATURE_SET}
+        </p>
+        <p>
+          {copy.apiStatus}:{" "}
+          <span className={apiDiagnostics?.apiReachable ? "text-emerald-400" : "text-red-400"}>
+            {apiDiagnostics?.apiReachable ? copy.connected : copy.disconnected}
+          </span>
+          {apiDiagnostics?.apiBuild ? (
+            <span className="text-slate-600"> · API {apiDiagnostics.apiBuild}</span>
+          ) : null}
+        </p>
+        {apiDiagnostics ? (
+          <>
+            <p>
+              {copy.analysisApi}:{" "}
+              <span className={apiDiagnostics.engineeringAnalysisApi ? "text-emerald-400" : "text-amber-400"}>
+                {apiDiagnostics.engineeringAnalysisApi ? copy.ready : copy.missing}
+              </span>
+            </p>
+            <p>
+              {copy.metricsApi}:{" "}
+              <span className={apiDiagnostics.engineerMetricsApi ? "text-emerald-400" : "text-amber-400"}>
+                {apiDiagnostics.engineerMetricsApi ? copy.ready : copy.missing}
+              </span>
+            </p>
+          </>
+        ) : null}
+        {apiDiagnostics?.error ? <p className="text-red-400">{apiDiagnostics.error}</p> : null}
+        <p className="text-slate-600">{copy.deployHint}</p>
+      </footer>
     </section>
   );
 }
