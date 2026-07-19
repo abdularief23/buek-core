@@ -117,7 +117,7 @@ export function AppShell({
         </header>
 
         <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full max-w-[1600px]">{children}</div>
+          <div key={activeView} className="buek-view-enter mx-auto w-full max-w-[1600px]">{children}</div>
         </main>
 
         <aside className="fixed inset-x-0 bottom-0 z-30 border-t border-white/5 bg-slate-950 lg:hidden">

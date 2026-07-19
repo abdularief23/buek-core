@@ -54,8 +54,10 @@ import {
 } from "./routes/data.js";
 import {
   handleKnowledgeDocuments,
+  handleKnowledgeFilesUpload,
   handleKnowledgeUpload,
-  handleUploadedKnowledgeSearch
+  handleUploadedKnowledgeSearch,
+  knowledgeFileUpload
 } from "./routes/knowledge.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
 import {
@@ -272,6 +274,11 @@ export async function createServer(env: ApiEnv): Promise<Express> {
 
   app.get("/api/knowledge/documents", (req, res) => void handleKnowledgeDocuments(req, res));
   app.post("/api/knowledge/upload", (req, res) => void handleKnowledgeUpload(req, res));
+  app.post(
+    "/api/knowledge/upload/files",
+    knowledgeFileUpload.array("files", 100),
+    (req, res) => void handleKnowledgeFilesUpload(req, res)
+  );
   app.get("/api/knowledge/uploaded/search", (req, res) => void handleUploadedKnowledgeSearch(req, res));
 
   app.get("/api/knowledge/search", (req, res) => {

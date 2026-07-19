@@ -304,6 +304,10 @@ export function reportExportUrl(slug: string, reportId: string, print = true) {
   return `${apiUrl}/api/data/${slug}/reports/${reportId}/export${printParam}`;
 }
 
+export function reportExportDocxUrl(slug: string, reportId: string) {
+  return `${apiUrl}/api/data/${slug}/reports/${reportId}/export?format=docx`;
+}
+
 export function fetchAiSuggestion(slug: string, issueKey: string) {
   return fetchJson<{ suggestion: AiSuggestion }>(`/api/data/${slug}/issues/${issueKey}/ai-suggestion`);
 }
@@ -428,6 +432,37 @@ export function uploadKnowledgeDocument(input: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input)
   });
+}
+
+export async function uploadKnowledgeFiles(
+  workspaceId: string,
+  files: FileList | File[]
+): Promise<{
+  documents: KnowledgeDocumentSummary[];
+  errors: Array<{ fileName: string; message: string }>;
+  message: string;
+}> {
+  const formData = new FormData();
+  formData.append("workspaceId", workspaceId);
+  const list = Array.from(files);
+  for (const file of list) {
+    formData.append("files", file);
+  }
+
+  const response = await fetch(`${apiUrl}/api/knowledge/upload/files`, {
+    method: "POST",
+    body: formData
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed (${response.status})`);
+  }
+
+  return (await response.json()) as {
+    documents: KnowledgeDocumentSummary[];
+    errors: Array<{ fileName: string; message: string }>;
+    message: string;
+  };
 }
 
 export interface CriticalAlert {

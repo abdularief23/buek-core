@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { LoadingState } from "@buek/ui";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Workspace } from "../types.js";
 import {
   fetchBusinessRules,
@@ -8,6 +9,7 @@ import {
   fetchLessonsLearned,
   searchKnowledge,
   uploadKnowledgeDocument,
+  uploadKnowledgeFiles,
   type BusinessRule,
   type CriticalAlert,
   type KnowledgeDocumentSummary,
@@ -35,8 +37,14 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
   const [uploadContent, setUploadContent] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [batchProgress, setBatchProgress] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [lessons, setLessons] = useState<LessonLearned[]>([]);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const daily = workspace.dailyWorkspace;
+
+  const supportedFormats = "PDF · Word (.docx) · Excel (.xlsx) · Text · Markdown · CSV";
 
   const knowledgeCategories = [
     "Policies",
@@ -49,22 +57,30 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
     "Lessons Learned"
   ];
 
-  const importSources = ["Upload Folder", "SharePoint", "Google Drive", "OneDrive", "Git Repository", "ZIP"];
+  const importSources = [
+    { id: "folder", label: "Upload Folder", hint: "PDF, Word, Excel, TXT" },
+    { id: "pdf", label: "PDF Documents", hint: ".pdf" },
+    { id: "word", label: "Word Documents", hint: ".docx" },
+    { id: "excel", label: "Excel Spreadsheets", hint: ".xlsx" }
+  ] as const;
 
   useEffect(() => {
+    setLoading(true);
     void Promise.all([
       fetchKnowledgeDocuments(workspace.id),
       fetchBusinessRules(workspace.id),
       fetchCriticalAlerts(workspace.id),
       fetchConnectors(workspace.id),
       fetchLessonsLearned(workspace.id)
-    ]).then(([docsRes, rulesRes, alertsRes, connRes, lessonsRes]) => {
-      setDocuments(docsRes.documents);
-      setRules(rulesRes.rules);
-      setAlerts(alertsRes.alerts);
-      setConnectorLabel(connRes.connectors[0]?.label ?? "Operational Connector");
-      setLessons(lessonsRes.lessons);
-    });
+    ])
+      .then(([docsRes, rulesRes, alertsRes, connRes, lessonsRes]) => {
+        setDocuments(docsRes.documents);
+        setRules(rulesRes.rules);
+        setAlerts(alertsRes.alerts);
+        setConnectorLabel(connRes.connectors[0]?.label ?? "Operational Connector");
+        setLessons(lessonsRes.lessons);
+      })
+      .finally(() => setLoading(false));
   }, [workspace.id]);
 
   async function runSearch(searchQuery: string) {
@@ -108,13 +124,63 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
     }
   }
 
+  async function handleBatchUpload(files: FileList | File[] | null, label: string) {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    setUploadMessage(null);
+    setBatchProgress(`${label}: 0/${files.length}`);
+    try {
+      const result = await uploadKnowledgeFiles(workspace.id, files);
+      setUploadMessage(result.message);
+      if (result.errors.length) {
+        setUploadMessage(
+          `${result.message} Errors: ${result.errors.map((e) => e.fileName).join(", ")}`
+        );
+      }
+      setBatchProgress(`${label}: ${result.documents.length}/${files.length} indexed`);
+      const docsRes = await fetchKnowledgeDocuments(workspace.id);
+      setDocuments(docsRes.documents);
+    } catch {
+      setUploadMessage("Batch upload failed. Please try again.");
+      setBatchProgress(null);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function triggerFolderPicker() {
+    folderInputRef.current?.click();
+  }
+
+  function triggerFilePicker(accept: string) {
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = accept;
+      fileInputRef.current.click();
+    }
+  }
+
+  function handleImportSource(sourceId: (typeof importSources)[number]["id"]) {
+    if (sourceId === "folder") {
+      triggerFolderPicker();
+      return;
+    }
+    if (sourceId === "pdf") triggerFilePicker(".pdf,application/pdf");
+    if (sourceId === "word") triggerFilePicker(".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    if (sourceId === "excel") triggerFilePicker(".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  }
+
   async function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    setUploadContent(text);
-    if (!uploadTitle) setUploadTitle(file.name.replace(/\.[^.]+$/, ""));
-    if (!uploadRef) setUploadRef(file.name);
+    const files = event.target.files;
+    if (!files?.length) return;
+    await handleBatchUpload(files, "File upload");
+    event.target.value = "";
+  }
+
+  async function handleFolderSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = event.target.files;
+    if (!files?.length) return;
+    await handleBatchUpload(files, "Folder import");
+    event.target.value = "";
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -135,22 +201,39 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
         </p>
       </header>
 
+      {loading ? <LoadingState label="Loading Company Brain..." /> : null}
+
+      <input
+        ref={folderInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        {...{ webkitdirectory: "", directory: "" }}
+        onChange={(e) => void handleFolderSelect(e)}
+      />
+      <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => void handleFileSelect(e)} />
+
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Import Knowledge</h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Drop a folder — not copy-paste one by one. AI classifies and indexes automatically.
+        <h2 className="buek-card-title text-slate-400">Import Knowledge</h2>
+        <p className="mt-2 buek-small text-slate-500">
+          Upload folder or files — {supportedFormats}. Parsed, chunked, and indexed automatically.
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {importSources.map((source) => (
             <button
-              key={source}
+              key={source.id}
               type="button"
-              className="rounded-xl border border-dashed border-white/20 px-4 py-6 text-center text-sm text-slate-400 hover:border-cyan-400/40 hover:text-cyan-300"
+              disabled={uploading}
+              onClick={() => handleImportSource(source.id)}
+              className="buek-card-hover rounded-xl border border-dashed border-white/20 px-4 py-5 text-left hover:border-tenant disabled:opacity-50"
             >
-              {source}
+              <p className="text-sm font-medium text-white">{source.label}</p>
+              <p className="mt-1 text-xs text-slate-500">{source.hint}</p>
             </button>
           ))}
         </div>
+        {batchProgress ? <p className="mt-3 text-sm text-tenant">{batchProgress}</p> : null}
+        {uploadMessage ? <p className="mt-2 text-sm text-green-400">{uploadMessage}</p> : null}
         <div className="mt-4 flex flex-wrap gap-2">
           {knowledgeCategories.map((cat) => (
             <span key={cat} className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400">
@@ -180,8 +263,8 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
           Quick Upload (single document)
         </h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Upload → OCR → Chunking → Embedding → Knowledge Base. Supports .txt, .md, .csv (PDF via OCR in production).
+        <p className="mt-2 buek-small text-slate-500">
+          Paste text for quick indexing, or use Import above for PDF / Word / Excel files.
         </p>
         <form onSubmit={(e) => void handleUpload(e)} className="mt-5 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -218,16 +301,7 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
             </select>
           </label>
           <label className="block text-sm text-slate-400">
-            File (.txt, .md, .csv)
-            <input
-              type="file"
-              accept=".txt,.md,.csv,.pdf,text/plain,text/markdown"
-              onChange={(e) => void handleFileSelect(e)}
-              className="mt-1 w-full text-sm text-slate-400"
-            />
-          </label>
-          <label className="block text-sm text-slate-400">
-            Content
+            Content (paste text)
             <textarea
               value={uploadContent}
               onChange={(e) => setUploadContent(e.target.value)}
@@ -239,11 +313,11 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
           <button
             type="submit"
             disabled={uploading}
-            className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+            className="btn-tenant rounded-xl px-6 py-3 font-semibold disabled:opacity-50"
           >
-            {uploading ? "Indexing..." : "Upload to Knowledge Base"}
+            {uploading ? "Indexing..." : "Upload Text to Knowledge Base"}
           </button>
-          {uploadMessage ? <p className="text-sm text-green-400">{uploadMessage}</p> : null}
+          {uploadMessage && !batchProgress ? <p className="text-sm text-green-400">{uploadMessage}</p> : null}
         </form>
       </section>
 
@@ -326,7 +400,7 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
         </div>
       </form>
 
-      {searching ? <p className="text-slate-500">Searching knowledge base...</p> : null}
+      {searching ? <LoadingState label="Searching knowledge base..." /> : null}
 
       {lastQuery && !searching ? (
         <section className="space-y-4">
@@ -344,7 +418,7 @@ export function KnowledgeView({ workspace, onSearch }: KnowledgeViewProps) {
                         `Explain ${hit.title}${hit.referenceId ? ` (${hit.referenceId})` : ""}: ${lastQuery}`
                       )
                     }
-                    className="buek-card w-full rounded-2xl border border-white/10 text-left hover:border-cyan-400/30"
+                    className="buek-card buek-card-hover w-full rounded-2xl border border-white/10 text-left hover:border-cyan-400/30"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <p className="buek-card-title text-white">{hit.title}</p>

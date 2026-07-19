@@ -1,3 +1,4 @@
+import { LoadingState } from "@buek/ui";
 import { useEffect, useMemo, useState } from "react";
 import { fetchWorkflows, type WorkflowItem } from "../lib/data-api.js";
 import { roleKey } from "../lib/roles.js";
@@ -96,7 +97,7 @@ export function WorkflowView({ workspaceSlug, userRole, onAsk, onOpenWorkspace }
       </header>
 
       {loading ? (
-        <p className="text-slate-500">Loading workflows...</p>
+        <LoadingState label="Loading workflows..." />
       ) : filteredWorkflows.length === 0 ? (
         <p className="text-slate-500">Tidak ada workflow aktif untuk role Anda saat ini.</p>
       ) : (
@@ -106,7 +107,7 @@ export function WorkflowView({ workspaceSlug, userRole, onAsk, onOpenWorkspace }
               <button
                 type="button"
                 onClick={() => handleSelect(workflow)}
-                className="flex w-full items-center justify-between rounded-2xl border border-white/10 px-6 py-5 text-left transition hover:border-cyan-400/30"
+                className="buek-card-hover flex w-full items-center justify-between rounded-2xl border border-white/10 px-6 py-5 text-left transition hover:border-cyan-400/30"
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-xs uppercase tracking-wide text-slate-500">

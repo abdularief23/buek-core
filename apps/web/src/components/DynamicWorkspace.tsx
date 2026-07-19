@@ -20,6 +20,7 @@ import {
   rejectReport,
   rejectWorkOrder,
   reportExportUrl,
+  reportExportDocxUrl,
   requestReportRevision,
   submitReportForApproval,
   updateReportSections,
@@ -1244,6 +1245,13 @@ function ReportDetailWorkspace({
         >
           Export PDF
         </button>
+        <a
+          href={reportExportDocxUrl(slug, report.id)}
+          download
+          className="rounded-xl border border-white/10 px-6 py-3 font-semibold text-white hover:bg-white/5"
+        >
+          Export DOCX
+        </a>
         <button
           type="button"
           onClick={() => onAskAi(`Review engineering report: ${report.title}`, report.title)}
