@@ -223,9 +223,16 @@ export interface OperatorChecklist {
   id: string;
   line: string;
   shift: string;
+  machineCode?: string;
   targetOutput: number;
   progress: number;
   items: Array<{ id: string; label: string; done: boolean }>;
+}
+
+export interface OperatorOptions {
+  lines: Array<{ id: string; name: string }>;
+  shifts: string[];
+  machines: Array<{ code: string; name: string; line: string }>;
 }
 
 export interface AiActionResult {
@@ -582,6 +589,22 @@ export function fetchComplaint(slug: string, complaintId: string) {
 
 export function fetchOperatorChecklist(slug: string) {
   return fetchJson<{ checklist: OperatorChecklist | null }>(`/api/data/${slug}/operator/checklist`);
+}
+
+export function fetchOperatorOptions(slug: string) {
+  return fetchJson<{ options: OperatorOptions }>(`/api/data/${slug}/operator/options`);
+}
+
+export function updateOperatorContext(
+  slug: string,
+  input: { line?: string; shift?: string; machineCode?: string },
+  role: string
+) {
+  return fetchJson<{ checklist: OperatorChecklist | null }>(`/api/data/${slug}/operator/context`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...input, role })
+  });
 }
 
 export function toggleChecklistItem(slug: string, itemId: string, role: string) {

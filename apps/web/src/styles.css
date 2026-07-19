@@ -147,6 +147,62 @@ body {
   color: #0f172a !important;
 }
 
+/* AI Copilot keeps dark panel styling in light mode */
+:root[data-appearance="light"] .ai-copilot-panel {
+  color: #f8fafc;
+}
+
+:root[data-appearance="light"] .ai-copilot-panel .text-white,
+:root[data-appearance="light"] .ai-copilot-panel .text-slate-100,
+:root[data-appearance="light"] .ai-copilot-panel .text-slate-200,
+:root[data-appearance="light"] .ai-copilot-panel .text-slate-300 {
+  color: #e2e8f0 !important;
+}
+
+:root[data-appearance="light"] .ai-copilot-panel .text-slate-400,
+:root[data-appearance="light"] .ai-copilot-panel .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+:root[data-appearance="light"] .ai-copilot-panel .text-cyan-300,
+:root[data-appearance="light"] .ai-copilot-panel .text-cyan-400 {
+  color: #67e8f9 !important;
+}
+
+:root[data-appearance="light"] .ai-copilot-panel .border-white\/5,
+:root[data-appearance="light"] .ai-copilot-panel .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+:root[data-appearance="light"] .ai-copilot-panel .bg-white\/5,
+:root[data-appearance="light"] .ai-copilot-panel .bg-white\/\[0\.02\],
+:root[data-appearance="light"] .ai-copilot-panel .bg-white\/\[0\.03\],
+:root[data-appearance="light"] .ai-copilot-panel .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+:root[data-appearance="light"] .ai-copilot-panel input {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:root[data-appearance="light"] .ai-copilot-panel input::placeholder {
+  color: #64748b !important;
+}
+
+:root[data-appearance="light"] select {
+  background-color: #fff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-appearance="light"] .operator-select,
+:root[data-appearance="light"] .operator-select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
 :root {
   --tenant-primary: #0891b2;
   --tenant-primary-light: #06b6d4;

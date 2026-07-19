@@ -42,6 +42,8 @@ import {
   getLessonsLearned,
   getMemories,
   getOperatorChecklist,
+  getOperatorOptions,
+  updateOperatorContext,
   getPendingReports,
   getPendingSopRevisions,
   getReportById,
@@ -656,6 +658,33 @@ export async function handleOperatorChecklist(req: Request, res: Response) {
     res.json({ checklist: await getOperatorChecklist(getSlug(req)) });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleOperatorOptions(req: Request, res: Response) {
+  try {
+    res.json({ options: await getOperatorOptions(getSlug(req)) });
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleUpdateOperatorContext(req: Request, res: Response) {
+  try {
+    const body = req.body as { line?: string; shift?: string; machineCode?: string; role?: string };
+    const checklist = await updateOperatorContext(
+      getSlug(req),
+      {
+        ...(body.line ? { line: body.line } : {}),
+        ...(body.shift ? { shift: body.shift } : {}),
+        ...(body.machineCode ? { machineCode: body.machineCode } : {})
+      },
+      body.role
+    );
+    res.json({ checklist });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 
