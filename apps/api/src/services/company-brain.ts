@@ -13,6 +13,8 @@ export interface CompanyBrainIssueNode {
   issueKey: string;
   title: string;
   status: string;
+  createdAt: string;
+  createdBy: string;
   reports: CompanyBrainReportNode[];
   lessonsLearned: Array<{ id: string; title: string; content: string }>;
   countermeasures: string[];
@@ -47,6 +49,7 @@ export async function getCompanyBrainHierarchy(slug: string): Promise<CompanyBra
     include: {
       issues: {
         include: {
+          owner: true,
           reports: {
             orderBy: { updatedAt: "desc" },
             take: 5
@@ -92,6 +95,8 @@ export async function getCompanyBrainHierarchy(slug: string): Promise<CompanyBra
             issueKey: issue.id.replace(`issue-${slug}-`, ""),
             title: issue.title,
             status: issue.status,
+            createdAt: issue.createdAt.toISOString(),
+            createdBy: issue.owner?.name ?? "System",
             reports,
             lessonsLearned: issue.lessonsLearned.map((lesson) => ({
               id: lesson.id,

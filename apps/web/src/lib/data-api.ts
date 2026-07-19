@@ -345,7 +345,9 @@ export interface EngineeringAnalysisData {
     trend: boolean;
     machineHistory: boolean;
     notes: string;
+    photos?: string[];
   };
+  analysisPhotos?: string[];
   selectedCause?: { label: string; confidence: number; isOther?: boolean };
   useHistoricalCountermeasure?: boolean;
   countermeasures: string[];
@@ -385,7 +387,13 @@ export interface EngineerIssueMetrics {
 export function fetchEngineeringAnalysis(slug: string, issueKey: string) {
   return fetchJson<{
     issueKey: string;
+    issueId: string;
     issueTitle: string;
+    issueMeta: {
+      createdAt: string;
+      createdBy: string;
+      reportedAt: string;
+    };
     metrics: EngineerIssueMetrics;
     analysis: EngineeringAnalysisData;
     copilot: InvestigationCopilot;
@@ -526,6 +534,8 @@ export interface CompanyBrainMachineNode {
     issueKey: string;
     title: string;
     status: string;
+    createdAt: string;
+    createdBy: string;
     reports: Array<{
       id: string;
       reportNumber: string;

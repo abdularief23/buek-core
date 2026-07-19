@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   approveEngineeringAnalysis,
+  fetchCompanyBrain,
   fetchEngineeringAnalysis,
   generateReportFromAnalysis,
   rejectEngineeringAnalysis,
   saveEngineeringAnalysis,
   submitEngineeringAnalysis,
   submitVerificationResult,
+  type CompanyBrainMachineNode,
   type EngineeringAnalysisData,
+  type InvestigationCopilot,
   type PossibleCause
 } from "../lib/data-api.js";
 import { isEngineer, isPlantManager, isSupervisor } from "../lib/roles.js";
@@ -29,6 +32,7 @@ interface Props {
   onClose: () => void;
   onDataChange?: () => void;
   onWorkspaceChange: (next: DynamicWorkspaceState) => void;
+  onOpenKnowledge?: () => void;
 }
 
 export function InvestigationCopilotWorkspace(props: Props) {
@@ -42,7 +46,8 @@ function EngineeringAnalysisWizard({
   userRole,
   onClose,
   onDataChange,
-  onWorkspaceChange
+  onWorkspaceChange,
+  onOpenKnowledge
 }: Props) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -50,6 +55,15 @@ function EngineeringAnalysisWizard({
   const [acting, setActing] = useState(false);
   const [step, setStep] = useState(0);
   const [issueTitle, setIssueTitle] = useState("");
+  const [issueMeta, setIssueMeta] = useState<{
+    createdAt: string;
+    createdBy: string;
+    reportedAt: string;
+  } | null>(null);
+  const [copilot, setCopilot] = useState<InvestigationCopilot | null>(null);
+  const [showProblemDb, setShowProblemDb] = useState(false);
+  const [problemDb, setProblemDb] = useState<CompanyBrainMachineNode[] | null>(null);
+  const [problemDbLoading, setProblemDbLoading] = useState(false);
   const [metrics, setMetrics] = useState<{
     machineCode: string;
     currentPpm: number;
@@ -80,6 +94,8 @@ function EngineeringAnalysisWizard({
       .then((data) => {
         if (cancelled) return;
         setIssueTitle(data.issueTitle);
+        setIssueMeta(data.issueMeta);
+        setCopilot(data.copilot);
         setMetrics({
           machineCode: data.metrics.machineCode,
           currentPpm: data.metrics.currentPpm,
@@ -111,6 +127,21 @@ function EngineeringAnalysisWizard({
       cancelled = true;
     };
   }, [slug, issueKey, reloadKey]);
+
+  async function loadProblemDatabase() {
+    if (problemDb) {
+      setShowProblemDb((open) => !open);
+      return;
+    }
+    setShowProblemDb(true);
+    setProblemDbLoading(true);
+    try {
+      const data = await fetchCompanyBrain(slug);
+      setProblemDb(data.machines);
+    } finally {
+      setProblemDbLoading(false);
+    }
+  }
 
   async function persistDraft(next: EngineeringAnalysisData) {
     setAnalysis(next);
@@ -251,6 +282,7 @@ function EngineeringAnalysisWizard({
   const editable = engineerView && (status === "draft" || status === "revision_requested");
   const waitingReview = status === "waiting_supervisor_review";
   const approved = status === "analysis_approved" || status === "verification_complete";
+  const submitted = status !== "draft" && status !== "revision_requested";
 
   return (
     <div className="space-y-6 pb-16">
@@ -258,11 +290,36 @@ function EngineeringAnalysisWizard({
         <div>
           <p className="buek-small text-slate-500">Engineering Analysis</p>
           <h1 className="buek-heading text-white">{issueTitle}</h1>
+          {issueMeta ? (
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 buek-small text-slate-500">
+              <span>Di-issue: {formatDateTime(issueMeta.reportedAt)}</span>
+              <span>Dibuat oleh: {issueMeta.createdBy}</span>
+              <span>Issue #{issueKey}</span>
+            </div>
+          ) : null}
         </div>
-        <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
-          ← Back
-        </button>
+        <div className="flex flex-col items-end gap-2">
+          <button type="button" onClick={onClose} className="buek-small text-slate-500 hover:text-white">
+            ← Back
+          </button>
+          <button
+            type="button"
+            onClick={() => void loadProblemDatabase()}
+            className="rounded-lg border border-cyan-500/30 px-3 py-1.5 buek-small text-cyan-300 hover:bg-cyan-500/10"
+          >
+            {showProblemDb ? "Tutup Database" : "Database Problem"}
+          </button>
+        </div>
       </header>
+
+      {showProblemDb ? (
+        <ProblemDatabasePanel
+          loading={problemDbLoading}
+          similarCases={copilot?.similarCases ?? []}
+          machines={problemDb ?? []}
+          {...(onOpenKnowledge ? { onOpenKnowledge } : {})}
+        />
+      ) : null}
 
       <section className="buek-card grid gap-4 rounded-2xl border border-white/10 p-6 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="Machine" value={metrics.machineCode} />
@@ -280,7 +337,29 @@ function EngineeringAnalysisWizard({
       ) : null}
 
       {waitingReview && engineerView ? (
-        <StatusBanner title="Engineering Analysis Completed" subtitle="Waiting Supervisor Review" />
+        <SubmittedAnalysisCard
+          analysis={analysis}
+          title="Analisa Terkirim — Menunggu Review Supervisor"
+          subtitle="Dokumen analisa engineering sudah dikirim. Preview di bawah."
+        />
+      ) : null}
+
+      {submitted && !waitingReview && !supervisorView ? (
+        <SubmittedAnalysisCard
+          analysis={analysis}
+          title={
+            approved
+              ? "Dokumen Analisa Engineering"
+              : status === "revision_requested"
+                ? "Analisa Sebelumnya"
+                : "Dokumen Analisa"
+          }
+          {...(analysis.submittedAt
+            ? {
+                subtitle: `Dikirim ${formatDateTime(analysis.submittedAt)}${analysis.submittedBy ? ` oleh ${analysis.submittedBy}` : ""}`
+              }
+            : {})}
+        />
       ) : null}
 
       {supervisorView && waitingReview ? (
@@ -401,6 +480,20 @@ function EngineeringAnalysisWizard({
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
                 placeholder="Catatan evidence..."
               />
+              <PhotoUploadField
+                label="Upload Foto Evidence"
+                photos={analysis.evidence.photos ?? []}
+                onChange={(photos) =>
+                  void persistDraft({
+                    ...analysis,
+                    evidence: {
+                      ...analysis.evidence,
+                      photos,
+                      photo: photos.length > 0 || analysis.evidence.photo
+                    }
+                  })
+                }
+              />
             </section>
           ) : null}
 
@@ -442,6 +535,11 @@ function EngineeringAnalysisWizard({
                   />
                 </label>
               </div>
+              <PhotoUploadField
+                label="Foto Pendukung Analisa Root Cause"
+                photos={analysis.analysisPhotos ?? []}
+                onChange={(photos) => void persistDraft({ ...analysis, analysisPhotos: photos })}
+              />
             </section>
           ) : null}
 
@@ -656,8 +754,24 @@ function AnalysisPreviewContent({
   return (
     <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
       {engineerName ? <ReviewRow label="Engineer" value={engineerName} /> : null}
+      {analysis.submittedBy ? <ReviewRow label="Dikirim oleh" value={analysis.submittedBy} /> : null}
+      {analysis.submittedAt ? (
+        <ReviewRow label="Waktu submit" value={formatDateTime(analysis.submittedAt)} />
+      ) : null}
       <ReviewRow label="Evidence" value={formatEvidence(analysis)} />
+      {analysis.evidence.photos?.length ? (
+        <div className="border-b border-white/5 pb-3">
+          <p className="buek-small text-slate-500">Foto Evidence</p>
+          <PhotoGallery photos={analysis.evidence.photos} />
+        </div>
+      ) : null}
       <ReviewRow label="Root Cause (engineer-selected)" value={analysis.selectedCause?.label ?? "—"} />
+      {analysis.analysisPhotos?.length ? (
+        <div className="border-b border-white/5 pb-3">
+          <p className="buek-small text-slate-500">Foto Analisa</p>
+          <PhotoGallery photos={analysis.analysisPhotos} />
+        </div>
+      ) : null}
       <ReviewRow
         label="Countermeasure"
         value={analysis.countermeasureNotes || analysis.countermeasures.join(", ") || "—"}
@@ -689,4 +803,217 @@ function formatEvidence(analysis: EngineeringAnalysisData) {
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+function formatDateTime(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function SubmittedAnalysisCard({
+  analysis,
+  title,
+  subtitle
+}: {
+  analysis: EngineeringAnalysisData;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <section className="buek-card space-y-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
+      <div>
+        <p className="buek-body font-semibold text-white">{title}</p>
+        {subtitle ? <p className="buek-small text-cyan-300">{subtitle}</p> : null}
+      </div>
+      <AnalysisPreviewContent analysis={analysis} />
+    </section>
+  );
+}
+
+function ProblemDatabasePanel({
+  loading,
+  similarCases,
+  machines,
+  onOpenKnowledge
+}: {
+  loading: boolean;
+  similarCases: Array<{ id: string; title: string; reference?: string }>;
+  machines: CompanyBrainMachineNode[];
+  onOpenKnowledge?: () => void;
+}) {
+  return (
+    <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="buek-card-title text-white">Database Problem</h2>
+          <p className="buek-small text-slate-500">
+            Kasus serupa dan riwayat issue per mesin — termasuk kapan di-issue dan siapa pembuatnya.
+          </p>
+        </div>
+        {onOpenKnowledge ? (
+          <button
+            type="button"
+            onClick={onOpenKnowledge}
+            className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 buek-small text-slate-300 hover:bg-white/5"
+          >
+            Buka Company Brain →
+          </button>
+        ) : null}
+      </div>
+
+      {similarCases.length > 0 ? (
+        <div className="space-y-2">
+          <p className="buek-small text-cyan-400">Kasus Serupa (AI)</p>
+          {similarCases.map((item) => (
+            <div key={item.id} className="rounded-lg border border-white/10 px-4 py-2">
+              <p className="buek-body text-slate-200">{item.title}</p>
+              {item.reference ? <p className="buek-small text-slate-500">Ref: {item.reference}</p> : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {loading ? <p className="buek-small text-slate-500">Memuat database problem...</p> : null}
+
+      {!loading && machines.length > 0 ? (
+        <div className="space-y-3">
+          <p className="buek-small text-emerald-400">Riwayat Issue per Mesin</p>
+          {machines.map((machine) => (
+            <div key={machine.code} className="rounded-xl border border-white/10 p-4">
+              <p className="buek-body font-medium text-white">
+                {machine.code} — {machine.name}
+              </p>
+              <div className="mt-2 space-y-2">
+                {machine.issues.map((issue) => (
+                  <div key={issue.id} className="rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+                    <p className="buek-body text-slate-200">{issue.title}</p>
+                    <p className="buek-small text-slate-500">
+                      #{issue.issueKey} · {issue.status} · {formatDateTime(issue.createdAt)} · oleh {issue.createdBy}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {!loading && machines.length === 0 && similarCases.length === 0 ? (
+        <p className="buek-small text-slate-500">Belum ada data problem di database.</p>
+      ) : null}
+    </section>
+  );
+}
+
+const MAX_PHOTOS = 5;
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+
+function PhotoUploadField({
+  label,
+  photos,
+  onChange
+}: {
+  label: string;
+  photos: string[];
+  onChange: (photos: string[]) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFiles(files: FileList | null) {
+    if (!files?.length) return;
+    const next = [...photos];
+    for (const file of Array.from(files)) {
+      if (next.length >= MAX_PHOTOS) break;
+      if (!file.type.startsWith("image/")) continue;
+      if (file.size > MAX_PHOTO_BYTES) continue;
+      const dataUrl = await readFileAsDataUrl(file);
+      next.push(dataUrl);
+    }
+    onChange(next);
+  }
+
+  function removePhoto(index: number) {
+    onChange(photos.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="space-y-3 border-t border-white/10 pt-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="buek-small text-slate-400">{label}</p>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={photos.length >= MAX_PHOTOS}
+          className="rounded-lg border border-white/10 px-3 py-1.5 buek-small text-cyan-300 hover:bg-white/5 disabled:opacity-40"
+        >
+          + Tambah Foto
+        </button>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          void handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      {photos.length > 0 ? <PhotoGallery photos={photos} editable onRemove={removePhoto} /> : null}
+      <p className="buek-small text-slate-600">Maks {MAX_PHOTOS} foto, 2MB per file.</p>
+    </div>
+  );
+}
+
+function PhotoGallery({
+  photos,
+  editable,
+  onRemove
+}: {
+  photos: string[];
+  editable?: boolean;
+  onRemove?: (index: number) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-3">
+      {photos.map((src, index) => (
+        <div key={`${index}-${src.slice(0, 32)}`} className="relative">
+          <img
+            src={src}
+            alt={`Foto ${index + 1}`}
+            className="h-24 w-24 rounded-lg border border-white/10 object-cover"
+          />
+          {editable && onRemove ? (
+            <button
+              type="button"
+              onClick={() => onRemove(index)}
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs text-white"
+              aria-label="Hapus foto"
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }
