@@ -1,18 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="buekMarkGrad" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#38BDF8"/>
-      <stop offset="0.5" stop-color="#3B82F6"/>
-      <stop offset="1" stop-color="#7C3AED"/>
+    <linearGradient id="buekPrimary" x1="126" y1="78" x2="406" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0EA5FF"/>
+      <stop offset="0.46" stop-color="#1747E8"/>
+      <stop offset="1" stop-color="#7C2DF6"/>
     </linearGradient>
-    <clipPath id="buekMarkClip">
-      <path d="M32 0C14.327 0 0 14.327 0 32s14.327 32 32 32 32-14.327 32-32S49.673 0 32 0z"/>
-    </clipPath>
+    <linearGradient id="buekCube" x1="216" y1="210" x2="304" y2="314" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#20C7FF"/>
+      <stop offset="0.55" stop-color="#095BE8"/>
+      <stop offset="1" stop-color="#14189D"/>
+    </linearGradient>
+    <filter id="softShadow" x="72" y="48" width="368" height="416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#101E72" flood-opacity="0.18"/>
+    </filter>
   </defs>
-  <g clip-path="url(#buekMarkClip)">
-    <rect width="64" height="64" fill="url(#buekMarkGrad)"/>
-    <path d="M18 14h12c6.627 0 12 5.373 12 12s-5.373 12-12 12H26v14H18V14zm8 8v8h4c2.21 0 4-1.79 4-4s-1.79-4-4-4h-4z" fill="#fff"/>
-    <rect x="30" y="30" width="8" height="8" rx="1.5" fill="#fff" opacity="0.95"/>
-    <path d="M44 18h3v2h-3v-2zm6 4h3v2h-3v-2zm-8 4h3v2h-3v-2z" fill="#fff" opacity="0.85"/>
+
+  <g filter="url(#softShadow)">
+    <path d="M132 88C132 67.9 154.3 55.8 171.2 66.7L208.5 90.8C215.7 95.4 220 103.4 220 112V178.5L280.2 142.8C289.9 137 302.1 137.2 311.7 143.1L392.5 192.9C407.1 201.9 416 217.8 416 235V362.6C416 379.6 407.2 395.4 392.8 404.4L311.8 455.1C302 461.2 289.6 461.3 279.8 455.2L158.8 380.6C142.1 370.3 132 352.1 132 332.5V88Z" fill="url(#buekPrimary)"/>
+    <path d="M132 88C132 67.9 154.3 55.8 171.2 66.7L208.5 90.8C215.7 95.4 220 103.4 220 112V323.4C220 343.8 197.5 356.2 180.3 345.1L153.8 327.9C140.2 319.1 132 304 132 287.8V88Z" fill="#078AF4"/>
+    <path d="M192 255.7L256 216L320 255.7V333.1L256 372.8L192 333.1V255.7Z" fill="white"/>
+    <path d="M232 278.7L256 264L280 278.7V308.1L256 322.8L232 308.1V278.7Z" fill="url(#buekCube)"/>
+    <path d="M256 264L280 278.7L256 293.4L232 278.7L256 264Z" fill="#22C7FF"/>
+    <path d="M256 293.4L280 278.7V308.1L256 322.8V293.4Z" fill="#091EA8" opacity="0.76"/>
+  </g>
+
+  <g stroke-linecap="round" stroke-linejoin="round" stroke-width="13">
+    <path d="M340 154L377 117" stroke="#1D4DFF"/>
+    <circle cx="389" cy="105" r="15" fill="white" stroke="#1D4DFF"/>
+    <path d="M359 185L391 153H425" stroke="#6534F2"/>
+    <circle cx="449" cy="153" r="15" fill="white" stroke="#6534F2"/>
+    <path d="M373 220L405 188H455" stroke="#5927DC"/>
+    <circle cx="477" cy="188" r="15" fill="white" stroke="#5927DC"/>
   </g>
 </svg>

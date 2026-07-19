@@ -1,58 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" fill="none">
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="heroIconGrad" x1="120" y1="40" x2="280" y2="280" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#38BDF8"/>
-      <stop offset="0.45" stop-color="#3B82F6"/>
-      <stop offset="1" stop-color="#7C3AED"/>
+    <linearGradient id="buekPrimary" x1="126" y1="78" x2="406" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0EA5FF"/>
+      <stop offset="0.46" stop-color="#1747E8"/>
+      <stop offset="1" stop-color="#7C2DF6"/>
     </linearGradient>
-    <linearGradient id="heroCoreGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop stop-color="#2563EB"/>
-      <stop offset="1" stop-color="#7C3AED"/>
+    <linearGradient id="buekCube" x1="216" y1="210" x2="304" y2="314" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#20C7FF"/>
+      <stop offset="0.55" stop-color="#095BE8"/>
+      <stop offset="1" stop-color="#14189D"/>
     </linearGradient>
-    <linearGradient id="heroLineGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop stop-color="#38BDF8" stop-opacity="0.3"/>
-      <stop offset="0.5" stop-color="#6366F1"/>
-      <stop offset="1" stop-color="#7C3AED" stop-opacity="0.3"/>
+    <linearGradient id="wordGradient" x1="462" y1="425" x2="1060" y2="425" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D4FF0"/>
+      <stop offset="1" stop-color="#7A2AF7"/>
     </linearGradient>
-    <filter id="heroShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#3B82F6" flood-opacity="0.15"/>
+    <filter id="softShadow" x="72" y="48" width="368" height="416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#101E72" flood-opacity="0.18"/>
     </filter>
   </defs>
 
-  <!-- White background -->
-  <rect width="800" height="360" fill="#FFFFFF"/>
+  <rect width="1200" height="630" fill="#FFFFFF"/>
 
-  <!-- Logo mark (stylized b with cube + circuit traces) -->
-  <g transform="translate(200, 50)" filter="url(#heroShadow)">
-    <rect width="200" height="200" rx="44" fill="url(#heroIconGrad)"/>
-    <!-- b letterform -->
-    <path d="M56 40h38c22.09 0 40 17.91 40 40s-17.91 40-40 40H82v50H56V40zm16 16v48h22c13.255 0 24-10.745 24-24s-10.745-24-24-24H72z" fill="#fff"/>
-    <!-- core cube -->
-    <rect x="94" y="94" width="26" height="26" rx="5" fill="#fff" opacity="0.95"/>
+  <g transform="translate(442, 58) scale(0.6171875)">
+    <g filter="url(#softShadow)">
+      <path d="M132 88C132 67.9 154.3 55.8 171.2 66.7L208.5 90.8C215.7 95.4 220 103.4 220 112V178.5L280.2 142.8C289.9 137 302.1 137.2 311.7 143.1L392.5 192.9C407.1 201.9 416 217.8 416 235V362.6C416 379.6 407.2 395.4 392.8 404.4L311.8 455.1C302 461.2 289.6 461.3 279.8 455.2L158.8 380.6C142.1 370.3 132 352.1 132 332.5V88Z" fill="url(#buekPrimary)"/>
+      <path d="M132 88C132 67.9 154.3 55.8 171.2 66.7L208.5 90.8C215.7 95.4 220 103.4 220 112V323.4C220 343.8 197.5 356.2 180.3 345.1L153.8 327.9C140.2 319.1 132 304 132 287.8V88Z" fill="#078AF4"/>
+      <path d="M192 255.7L256 216L320 255.7V333.1L256 372.8L192 333.1V255.7Z" fill="white"/>
+      <path d="M232 278.7L256 264L280 278.7V308.1L256 322.8L232 308.1V278.7Z" fill="url(#buekCube)"/>
+      <path d="M256 264L280 278.7L256 293.4L232 278.7L256 264Z" fill="#22C7FF"/>
+      <path d="M256 293.4L280 278.7V308.1L256 322.8V293.4Z" fill="#091EA8" opacity="0.76"/>
+    </g>
+    <g stroke-linecap="round" stroke-linejoin="round" stroke-width="13">
+      <path d="M340 154L377 117" stroke="#1D4DFF"/>
+      <circle cx="389" cy="105" r="15" fill="white" stroke="#1D4DFF"/>
+      <path d="M359 185L391 153H425" stroke="#6534F2"/>
+      <circle cx="449" cy="153" r="15" fill="white" stroke="#6534F2"/>
+      <path d="M373 220L405 188H455" stroke="#5927DC"/>
+      <circle cx="477" cy="188" r="15" fill="white" stroke="#5927DC"/>
+    </g>
   </g>
-  <!-- circuit traces -->
-  <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.9">
-    <path d="M388 78h28" stroke="#38BDF8"/>
-    <circle cx="420" cy="78" r="5" fill="#38BDF8" stroke="none"/>
-    <path d="M400 98h36" stroke="#60A5FA"/>
-    <circle cx="440" cy="98" r="5" fill="#60A5FA" stroke="none"/>
-    <path d="M392 118h24" stroke="#818CF8"/>
-    <circle cx="420" cy="118" r="5" fill="#818CF8" stroke="none"/>
-  </g>
 
-  <!-- Brand wordmark -->
-  <text x="400" y="295" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="800" letter-spacing="2">
-    <tspan fill="#0F172A">BUEK </tspan>
-    <tspan fill="url(#heroCoreGrad)">CORE</tspan>
-  </text>
-
-  <!-- Divider with hexagon -->
-  <line x1="200" y1="318" x2="378" y2="318" stroke="url(#heroLineGrad)" stroke-width="2"/>
-  <polygon points="400,310 408,318 400,326 392,318" fill="#3B82F6"/>
-  <line x1="422" y1="318" x2="600" y2="318" stroke="url(#heroLineGrad)" stroke-width="2"/>
-
-  <!-- Tagline -->
-  <text x="400" y="348" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#334155" letter-spacing="4.5">
-    BUILD AI WORKERS FOR ANY INDUSTRY
-  </text>
+  <text x="140" y="456" fill="#071341" font-family="Inter, Arial, Helvetica, sans-serif" font-size="104" font-weight="900" letter-spacing="4">BUEK</text>
+  <text x="535" y="456" fill="url(#wordGradient)" font-family="Inter, Arial, Helvetica, sans-serif" font-size="104" font-weight="900" letter-spacing="4">CORE</text>
+  <line x1="206" y1="508" x2="520" y2="508" stroke="#0E5BFF" stroke-width="6" stroke-linecap="round"/>
+  <rect x="586" y="496" width="24" height="24" rx="5" transform="rotate(45 586 496)" fill="#075DFF"/>
+  <line x1="660" y1="508" x2="994" y2="508" stroke="#6D2BF4" stroke-width="6" stroke-linecap="round"/>
+  <text x="207" y="572" fill="#162044" font-family="Inter, Arial, Helvetica, sans-serif" font-size="34" font-weight="700" letter-spacing="16">BUILD AI WORKERS FOR ANY INDUSTRY</text>
 </svg>
