@@ -28,6 +28,7 @@ import {
   generateReportFromAnalysis,
   getEngineerIssueMetrics,
   getEngineeringAnalysis,
+  getAnalysisDocumentPreviewHtml,
   getPendingEngineeringAnalyses,
   rejectEngineeringAnalysis,
   saveEngineeringAnalysis,
@@ -524,6 +525,20 @@ export async function handleGetEngineeringAnalysis(req: Request, res: Response) 
       return;
     }
     res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleAnalysisDocumentExport(req: Request, res: Response) {
+  try {
+    const html = await getAnalysisDocumentPreviewHtml(getSlug(req), String(req.params.issueKey));
+    if (!html) {
+      res.status(404).json({ error: { message: "Analysis document not available" } });
+      return;
+    }
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(html);
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

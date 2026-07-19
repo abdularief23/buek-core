@@ -15,6 +15,7 @@ import {
 } from "../lib/data-api.js";
 import { isEngineer, isPlantManager, isSupervisor } from "../lib/roles.js";
 import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
+import { EngineeringAnalysisDocumentPreview } from "./EngineeringAnalysisDocumentPreview.js";
 
 const WIZARD_STEPS = [
   "Evidence",
@@ -338,7 +339,12 @@ function EngineeringAnalysisWizard({
 
       {waitingReview && engineerView ? (
         <SubmittedAnalysisCard
+          slug={slug}
+          issueKey={issueKey}
+          issueTitle={issueTitle}
+          metrics={metrics}
           analysis={analysis}
+          {...(issueMeta ? { issueMeta } : {})}
           title="Analisa Terkirim — Menunggu Review Supervisor"
           subtitle="Dokumen analisa engineering sudah dikirim. Preview di bawah."
         />
@@ -346,7 +352,12 @@ function EngineeringAnalysisWizard({
 
       {submitted && !waitingReview && !supervisorView ? (
         <SubmittedAnalysisCard
+          slug={slug}
+          issueKey={issueKey}
+          issueTitle={issueTitle}
+          metrics={metrics}
           analysis={analysis}
+          {...(issueMeta ? { issueMeta } : {})}
           title={
             approved
               ? "Dokumen Analisa Engineering"
@@ -363,7 +374,17 @@ function EngineeringAnalysisWizard({
       ) : null}
 
       {supervisorView && waitingReview ? (
-        <SupervisorReviewPanel analysis={analysis} acting={acting} onApprove={() => void handleApprove()} onReject={() => void handleReject()} />
+        <SupervisorReviewPanel
+          slug={slug}
+          issueKey={issueKey}
+          issueTitle={issueTitle}
+          metrics={metrics}
+          analysis={analysis}
+          {...(issueMeta ? { issueMeta } : {})}
+          acting={acting}
+          onApprove={() => void handleApprove()}
+          onReject={() => void handleReject()}
+        />
       ) : null}
 
       {approved && engineerView ? (
@@ -631,6 +652,15 @@ function EngineeringAnalysisWizard({
                 Periksa ringkasan analisa sebelum dikirim ke supervisor.
               </p>
               <AnalysisPreviewContent analysis={analysis} engineerName={userName} />
+              <EngineeringAnalysisDocumentPreview
+                slug={slug}
+                issueKey={issueKey}
+                issueTitle={issueTitle}
+                metrics={metrics}
+                analysis={analysis}
+                {...(issueMeta ? { issueMeta } : {})}
+                showExport={false}
+              />
               <button
                 type="button"
                 disabled={acting || !analysis.selectedCause}
@@ -705,12 +735,29 @@ function StatusBanner({ title, subtitle }: { title: string; subtitle: string }) 
 }
 
 function SupervisorReviewPanel({
+  slug,
+  issueKey,
+  issueTitle,
+  metrics,
   analysis,
+  issueMeta,
   acting,
   onApprove,
   onReject
 }: {
+  slug: string;
+  issueKey: string;
+  issueTitle: string;
+  metrics: {
+    machineCode: string;
+    currentPpm: number;
+    targetPpm: number;
+    increasePercent: number;
+    priority: string;
+    dueLabel: string;
+  };
   analysis: EngineeringAnalysisData;
+  issueMeta?: { createdAt: string; createdBy: string };
   acting: boolean;
   onApprove: () => void;
   onReject: () => void;
@@ -722,6 +769,14 @@ function SupervisorReviewPanel({
         <p className="buek-small text-slate-500">Dikirim oleh: {analysis.submittedBy}</p>
       ) : null}
       <AnalysisPreviewContent analysis={analysis} />
+      <EngineeringAnalysisDocumentPreview
+        slug={slug}
+        issueKey={issueKey}
+        issueTitle={issueTitle}
+        metrics={metrics}
+        analysis={analysis}
+        {...(issueMeta ? { issueMeta } : {})}
+      />
       <div className="flex flex-wrap gap-3 pt-2">
         <button
           type="button"
@@ -820,11 +875,28 @@ function formatDateTime(iso: string) {
 }
 
 function SubmittedAnalysisCard({
+  slug,
+  issueKey,
+  issueTitle,
+  metrics,
   analysis,
+  issueMeta,
   title,
   subtitle
 }: {
+  slug: string;
+  issueKey: string;
+  issueTitle: string;
+  metrics: {
+    machineCode: string;
+    currentPpm: number;
+    targetPpm: number;
+    increasePercent: number;
+    priority: string;
+    dueLabel: string;
+  };
   analysis: EngineeringAnalysisData;
+  issueMeta?: { createdAt: string; createdBy: string };
   title: string;
   subtitle?: string;
 }) {
@@ -835,6 +907,14 @@ function SubmittedAnalysisCard({
         {subtitle ? <p className="buek-small text-cyan-300">{subtitle}</p> : null}
       </div>
       <AnalysisPreviewContent analysis={analysis} />
+      <EngineeringAnalysisDocumentPreview
+        slug={slug}
+        issueKey={issueKey}
+        issueTitle={issueTitle}
+        metrics={metrics}
+        analysis={analysis}
+        {...(issueMeta ? { issueMeta } : {})}
+      />
     </section>
   );
 }

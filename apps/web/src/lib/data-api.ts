@@ -513,6 +513,11 @@ export function submitReportForApproval(
   });
 }
 
+export function analysisDocumentExportUrl(slug: string, issueKey: string, print = true) {
+  const printParam = print ? "?print=1" : "";
+  return `${apiUrl}/api/data/${slug}/issues/${issueKey}/analysis/document${printParam}`;
+}
+
 export function reportExportUrl(slug: string, reportId: string, print = true) {
   const printParam = print ? "?print=1" : "";
   return `${apiUrl}/api/data/${slug}/reports/${reportId}/export${printParam}`;
