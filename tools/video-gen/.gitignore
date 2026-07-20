@@ -1,4 +1,6 @@
 output/
+node_modules/
+package-lock.json
 .env
 .venv/
 input/*.jpg
