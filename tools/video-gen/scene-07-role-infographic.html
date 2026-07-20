@@ -93,10 +93,10 @@
       inset: 0;
       background: linear-gradient(135deg, rgba(7,19,65,0.55) 0%, rgba(13,79,240,0.25) 100%);
     }
-    .card-1 .card-bg { background-image: url("https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&q=80"); }
-    .card-2 .card-bg { background-image: url("https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&q=80"); }
-    .card-3 .card-bg { background-image: url("https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=1200&q=80"); }
-    .card-4 .card-bg { background-image: url("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&q=80"); }
+    .card-1 .card-bg { background-image: url("input/role-references/01-operator.jpg"), url("https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&q=80"); }
+    .card-2 .card-bg { background-image: url("input/role-references/02-engineer.jpg"), url("https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&q=80"); }
+    .card-3 .card-bg { background-image: url("input/role-references/03-supervisor.jpg"), url("https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=1200&q=80"); }
+    .card-4 .card-bg { background-image: url("input/role-references/04-plant-manager.jpg"), url("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&q=80"); }
     .card-inner {
       position: relative;
       z-index: 1;
@@ -467,5 +467,23 @@
       </div>
     </footer>
   </div>
+  <script>
+    (async () => {
+      const PHOTOS = [
+        [".card-1 .card-bg", "input/role-references/01-operator.jpg", "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&q=80"],
+        [".card-2 .card-bg", "input/role-references/02-engineer.jpg", "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&q=80"],
+        [".card-3 .card-bg", "input/role-references/03-supervisor.jpg", "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=1200&q=80"],
+        [".card-4 .card-bg", "input/role-references/04-plant-manager.jpg", "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&q=80"],
+      ];
+      await Promise.all(PHOTOS.map(([sel, local, remote]) => new Promise((resolve) => {
+        const el = document.querySelector(sel);
+        if (!el) return resolve();
+        const img = new Image();
+        img.onload = () => { el.style.backgroundImage = `url("${local}")`; resolve(); };
+        img.onerror = () => { el.style.backgroundImage = `url("${remote}")`; resolve(); };
+        img.src = local;
+      })));
+    })();
+  </script>
 </body>
 </html>

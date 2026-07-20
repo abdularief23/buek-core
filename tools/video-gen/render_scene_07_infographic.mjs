@@ -32,6 +32,14 @@ const FRAMES_DIR = path.join(OUTPUT_DIR, "frames-scene-07-infographic");
 const OUTPUT_MP4 = path.join(OUTPUT_DIR, "scene-07-role-infographic.mp4");
 
 function serveStatic(rootDir) {
+  const mime = {
+    ".html": "text/html",
+    ".css": "text/css",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+  };
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       const safePath = path.normalize(req.url.split("?")[0]).replace(/^(\.\.[/\\])+/, "");
@@ -41,7 +49,8 @@ function serveStatic(rootDir) {
         res.end("Not found");
         return;
       }
-      res.writeHead(200, { "Content-Type": "text/html" });
+      const ext = path.extname(filePath).toLowerCase();
+      res.writeHead(200, { "Content-Type": mime[ext] ?? "application/octet-stream" });
       fs.createReadStream(filePath).pipe(res);
     });
     server.listen(0, "127.0.0.1", () => resolve(server));
@@ -76,6 +85,7 @@ async function main() {
     await page.setViewport({ width: WIDTH, height: HEIGHT, deviceScaleFactor: 1 });
     console.log(`Loading ${pageUrl} (waiting for photos)...`);
     await page.goto(pageUrl, { waitUntil: "networkidle0", timeout: 120000 });
+    await page.waitForFunction(() => document.querySelector(".card-1 .card-bg")?.style?.backgroundImage?.length > 0, { timeout: 15000 }).catch(() => undefined);
     await sleep(1500);
 
     console.log(`Rendering ${DURATION}s @ ${FPS}fps`);

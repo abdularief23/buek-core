@@ -105,6 +105,46 @@
         }
       ],
       "notes": "Screen recordings per role + optional Veo B-roll composited in CapCut. For communicative 2×2 infographic: node render_scene_07_infographic.mjs"
+    },
+    {
+      "id": "role-photo-operator",
+      "duration_seconds": 6,
+      "method": "veo-still-or-video",
+      "output_image": "input/role-references/01-operator.jpg",
+      "prompt": "Cinematic medium profile shot. East Asian woman factory operator age 26, blue baseball cap and blue industrial work jacket with white OPERATOR patch on sleeve. She stands at a modern assembly line touching a large rugged industrial touchscreen on a metal arm. Green stack light on monitor stand is lit. Screen shows dark sidebar and white Operator Dashboard with production target progress bar, defect count, line status Running, Quality Check and Report Problem buttons. Printer assembly hardware in blue tray on conveyor. Bright clean factory background soft focus. Photorealistic Apple commercial style. Never looking at camera. No watermark.",
+      "negative_prompt": "cartoon, anime, blurry, watermark, facing camera, unsafe behavior, illegible gibberish text",
+      "aspect_ratio": "16:9",
+      "resolution": "720p"
+    },
+    {
+      "id": "role-photo-engineer",
+      "duration_seconds": 6,
+      "method": "veo-still-or-video",
+      "output_image": "input/role-references/02-engineer.jpg",
+      "prompt": "Cinematic medium shot. East Asian male manufacturing engineer age 32 with thin rectangular glasses, navy blue uniform with ENGINEERING shoulder patch. He sits at desk in factory control room with thoughtful pose hand on chin. Laptop shows Buek Core Investigation Overview White Streak on Print with Open Investigation button. Second monitor shows Root Cause Analysis with AI suggested causes ranked by confidence. Whiteboard behind lists Key Issues. Desk has SOP Manual binders, open troubleshooting guide with printer diagram, Buek Core coffee mug, yellow sticky note. Large window shows bright factory floor behind. Photorealistic. Never looking at camera.",
+      "negative_prompt": "cartoon, blurry, watermark, facing camera, unreadable screen chaos",
+      "aspect_ratio": "16:9",
+      "resolution": "720p"
+    },
+    {
+      "id": "role-photo-supervisor",
+      "duration_seconds": 6,
+      "method": "veo-still-or-video",
+      "output_image": "input/role-references/03-supervisor.jpg",
+      "prompt": "Cinematic medium profile shot. East Asian male production supervisor age 42 in navy work jacket with white SUPERVISOR patch on upper arm. He sits at desk in factory control room reviewing laptop. Screen shows Buek Core dark sidebar and Pending Approvals list with orange Pending and blue Review tags, investigation summary panel with root cause and risk. Desk has Buek Core mug, handheld radio, notepad, Production Supervisor Handbook with Toyota Manufacturing logo. Glass window behind shows factory floor with digital andon display showing Target Output Defect Status and green-yellow-red stack lights. Photorealistic sharp focus on subject and screen. Never looking at camera.",
+      "negative_prompt": "cartoon, blurry, watermark, facing camera",
+      "aspect_ratio": "16:9",
+      "resolution": "720p"
+    },
+    {
+      "id": "role-photo-plant-manager",
+      "duration_seconds": 6,
+      "method": "veo-still-or-video",
+      "output_image": "input/role-references/04-plant-manager.jpg",
+      "prompt": "Cinematic medium-wide shot. East Asian male plant manager age 50 in dark suit and glasses sitting at modern desk in dim executive office overlooking factory through large glass window. Wall-mounted large monitor displays Buek Core Executive Dashboard Plant Manager Overview with OEE gauge 87 percent, production trend charts, defect PPM, top issues White Streak on Print, AI insights panel, production status Running. Laptop and tablet on desk sync same dashboard. Buek Core mug, notebook, pen on desk. Contemplative professional mood, cool blue lighting. Photorealistic. Never looking at camera.",
+      "negative_prompt": "cartoon, blurry, watermark, facing camera, cluttered UI",
+      "aspect_ratio": "16:9",
+      "resolution": "720p"
     }
   ]
 }
