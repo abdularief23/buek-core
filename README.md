@@ -3,24 +3,28 @@
 </p>
 
 <p align="center">
-  <a href="https://core.buekwebsite.com"><strong>Live Demo</strong></a>
+  <a href="https://core.buekwebsite.com"><strong>🌐 Live Demo</strong></a>
   &nbsp;·&nbsp;
-  <a href="#how-we-used-codex-and-gpt-56"><strong>Codex + GPT-5.6</strong></a>
+  <a href="https://github.com/abdularief23/buek-core"><strong>GitHub</strong></a>
   &nbsp;·&nbsp;
-  <a href="docs/architecture.md"><strong>Architecture</strong></a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/OpenAI-GPT--5.6-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI GPT-5.6" />
-  <img src="docs/images/badges/codex-dev-assist.svg" alt="Codex Dev Assist" height="28" />
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <a href="docs/voiceover-script.md"><strong>Demo Video Script</strong></a>
 </p>
 
 ---
 
-**Buek Core** is a multi-tenant platform for **AI Workers** — role-based digital teammates for manufacturing operations. Operators report issues, engineers run guided investigations, supervisors approve, and plant managers track KPIs — all on one platform with a shared Company Brain.
+## The problem
+
+Manufacturing teams lose **hours every day** investigating production issues.
+
+Before an engineer can even start solving a problem, they search through SOPs, historical reports, and scattered company knowledge — while the production line waits.
+
+## Our approach
+
+Most AI applications are built for a single industry.
+
+**Buek Core** takes a different approach: we built **one reusable AI platform** where industry knowledge is added as independent modules. **Manufacturing is our first domain** — healthcare, construction, and retail come next.
+
+Buek Core turns that fragmented workflow into one AI-powered platform where **Operators, Engineers, Supervisors, and Plant Managers** work together — with GPT-5.6 as the reasoning layer and a shared **Company Brain** that gets smarter over time.
 
 **Try it now (no install):** [core.buekwebsite.com](https://core.buekwebsite.com)
 
@@ -28,90 +32,142 @@
 
 ## What we built
 
-| Feature | What it does |
-|---------|--------------|
-| **Role workspaces** | Operator, Engineer, Supervisor, Plant Manager — each gets a tailored home screen |
-| **5-step investigation wizard** | Evidence → root cause → countermeasure → execution plan → submit |
-| **AI Copilot** | Streaming assistant powered by **GPT-5.6** with live factory data + SOP knowledge |
-| **Company Brain** | Completed investigations become searchable organizational memory |
-| **Multi-tenant demo** | Epson, Toyota, Nestlé — each with realistic sample issues |
+| Problem | Buek Core solution |
+|---------|-------------------|
+| Production issues are hard to investigate | AI-guided **5-step investigation wizard** |
+| Knowledge is scattered across SOPs and reports | **Company Brain** — searchable organizational memory |
+| Different roles use different tools | **Unified role-based workspaces** for every user |
+| Engineering reports take hours | **GPT-5.6-assisted** report drafting and analysis |
+| Each industry needs its own AI rebuild | **Pluggable domain modules** on one AI Core |
+
+<p align="center">
+  <img src="docs/images/screenshots/engineer-dashboard.png" alt="Engineer dashboard — today's investigations and KPIs" width="720" />
+  <br /><em>Engineer workspace — investigations, KPIs, and AI copilot</em>
+</p>
 
 ---
 
-## How we used Codex and GPT-5.6
+## Quick demo
+
+```
+Epson Indonesia → Engineer → Launch Demo → White Streak → 5-step wizard → Supervisor → Approve → PDF report
+```
+
+1. Open **[core.buekwebsite.com](https://core.buekwebsite.com)**
+2. Pick **Epson Indonesia** → **Engineer** → **Launch Demo**
+3. Open **White Streak on Print** → walk the wizard
+4. Switch to **Supervisor** → approve → download the engineering report
+
+No install needed. AI Copilot is live on the demo server.
+
+<p align="center">
+  <img src="docs/images/screenshots/investigation-wizard.png" alt="5-step investigation wizard" width="720" />
+  <br /><em>Investigation wizard — evidence through execution plan</em>
+</p>
+
+---
+
+## How GPT-5.6 powers the workflow
+
+<p align="center">
+  <img src="docs/images/workflow-gpt56.svg" alt="Operator → Engineer → GPT-5.6 → Company Brain → Supervisor → Plant Manager" width="600" />
+</p>
+
+GPT-5.6 runs inside the live app via the OpenAI Responses API:
+
+| Step | What GPT-5.6 does |
+|------|-------------------|
+| **Analyze** | Ranks possible root causes from evidence — engineer always decides |
+| **Retrieve** | Pulls relevant SOPs, work instructions, and similar past cases |
+| **Draft** | Helps write investigation reports and countermeasure plans |
+| **Assist** | AI Copilot answers in plain language — summarize, search, draft |
+
+**Try it:** launch demo → click ✨ copilot → *"What are the possible causes for white streak?"*
+
+<p align="center">
+  <img src="docs/images/screenshots/company-brain.png" alt="Company Brain knowledge base" width="720" />
+  <br /><em>Company Brain — every closed investigation makes the factory smarter</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/screenshots/executive-dashboard.png" alt="Plant Manager executive dashboard" width="720" />
+  <br /><em>Plant Manager — executive KPIs and critical issues at a glance</em>
+</p>
+
+---
+
+## How we built it with Codex
 
 <a id="how-we-used-codex-and-gpt-56"></a>
 
-### Codex — how we built the project
-
-We used **Codex** (Desktop / CLI) as our primary development partner throughout Build Week:
+**Codex accelerated development** by generating scaffolding, refactoring code, implementing features, fixing bugs, and assisting deployment throughout the project.
 
 | Area | What Codex helped build |
 |------|-------------------------|
 | **Full-stack app** | React 19 UI, Express API, Prisma schema, PostgreSQL seed data |
 | **Role-based UX** | Operator / Engineer / Supervisor / Manager homes, mobile field layout |
 | **Investigation flow** | 5-step wizard, approval workflow, PDF/DOCX report export |
-| **AI integration** | OpenAI Responses API wiring, SSE streaming, guardrails, knowledge retrieval |
+| **AI integration** | OpenAI Responses API, SSE streaming, guardrails, knowledge retrieval |
 | **Infrastructure** | Docker Compose, Nginx deploy, GitHub Actions, VPS recovery scripts |
-| **Demo assets** | Video scene renderers (`tools/video-gen/`), production storyboard |
+| **Demo assets** | Video scene renderers, voiceover script, README screenshots |
 
-Codex handled scaffolding, refactors, bug fixes, and deployment — we steered product decisions and validated each flow on the live demo.
-
-> **Codex Session ID:** run `/feedback` inside Codex on this repo and paste the Session ID into the Devpost form.
-
-### GPT-5.6 — how it powers the product
-
-GPT-5.6 runs inside the live app via the **OpenAI Responses API** (`apps/api/src/chat.ts`):
-
-| Use case | How GPT-5.6 is used |
-|----------|---------------------|
-| **AI Copilot** | Role-aware chat assistant (summarize, analyze, search, draft) |
-| **Root cause analysis** | Ranks possible causes — engineer always makes the final call |
-| **Knowledge retrieval** | Answers grounded in seeded SOPs, work instructions, and issue history |
-| **Report drafting** | Helps engineers draft investigation reports from workflow context |
-| **Live data grounding** | Each request includes a database snapshot so answers stay factual |
-
-Model config: `OPENAI_MODEL=gpt-5.6` (default in `apps/api/src/config/env.ts`).
-
-**Where to see it in the app:** launch any tenant → open the ✨ copilot (bottom-right) → ask e.g. *"What are the possible causes for white streak?"* or *"Summarize today's open issues."*
+> **Codex Session ID:** run `/feedback` inside Codex on this repo → paste into Devpost form.
 
 ---
 
-## Quick demo (judges)
+## Architecture
 
-1. Go to [core.buekwebsite.com](https://core.buekwebsite.com)
-2. Pick **Epson Indonesia** → role **Engineer** → **Launch Demo**
-3. Open today's investigation (**White Streak on Print**)
-4. Walk through the 5-step wizard; try the AI Copilot on any step
-5. Switch to **Supervisor** → approve → download the engineering report
+<p align="center">
+  <img src="docs/images/architecture-diagram.svg" alt="Users → Buek Core → AI Core + Domain Modules → Knowledge + Database" width="720" />
+</p>
 
-No API key needed to explore the UI. Copilot requires `OPENAI_API_KEY` on the server (already configured on the live demo).
+```text
+Users (Operator · Engineer · Supervisor · Manager)
+        ↓
+Buek Core Platform (React + Express API)
+        ↓
+   ┌────┴────┐
+AI Core     Domain Modules
+(GPT-5.6)   (Manufacturing → future verticals)
+   └────┬────┘
+Company Knowledge + PostgreSQL
+```
+
+One AI Core. Unlimited industries. Details: [docs/architecture.md](docs/architecture.md)
 
 ---
 
-## Setup (local)
+## For judges
+
+| Resource | Link |
+|----------|------|
+| **Live demo** | [core.buekwebsite.com](https://core.buekwebsite.com) |
+| **Demo video script** | [docs/voiceover-script.md](docs/voiceover-script.md) |
+| **Voiceover audio** | `tools/video-gen/voiceover/voiceover-full.mp3` |
+| **Repo access** (if private) | `testing@devpost.com` · `build-week-event@openai.com` |
+
+---
+
+## Tech stack
+
+React 19 · TypeScript · Vite · Node.js · Express · Prisma · PostgreSQL · **OpenAI GPT-5.6** · **Codex** (development) · Docker Compose
+
+---
+
+## Local setup
+
+<details>
+<summary><strong>Run locally (optional)</strong></summary>
 
 **Requirements:** Node.js 22+, pnpm 10+, PostgreSQL 16+, `OPENAI_API_KEY`
 
 ```bash
 git clone https://github.com/abdularief23/buek-core.git
 cd buek-core
-pnpm install
-cp .env.example .env
-```
+pnpm install && cp .env.example .env
+# Set OPENAI_API_KEY and OPENAI_MODEL=gpt-5.6
 
-Edit `.env`:
-
-```bash
-DATABASE_URL=postgresql://buek:buek@localhost:5432/buek_core?schema=public
-OPENAI_API_KEY=sk-...          # required for AI Copilot
-OPENAI_MODEL=gpt-5.6
-```
-
-Start database, migrate, seed sample data, run:
-
-```bash
-docker compose up -d postgres    # or use your own Postgres
+docker compose up -d postgres
 pnpm db:generate && pnpm db:migrate && pnpm db:seed
 pnpm dev
 ```
@@ -121,46 +177,9 @@ pnpm dev
 | Web | http://localhost:5173 |
 | API | http://localhost:4000 |
 
-### Sample data (seed)
+**Sample data:** `pnpm db:seed` loads Epson, Toyota, and Nestlé tenants with realistic issues, SOPs, and investigation history.
 
-`pnpm db:seed` loads three demo tenants with realistic manufacturing data:
-
-| Tenant | Sample issue |
-|--------|--------------|
-| Epson Indonesia | White Streak defect on printer line |
-| Toyota Indonesia | Torque drift on assembly station EA-04 |
-| Nestlé Indonesia | Metal detector alarm on packaging line |
-
-Each tenant includes SOPs, work instructions, KPIs, notifications, and investigation history.
-
----
-
-## Repo access (judges)
-
-If this repo is **private**, it is shared with:
-
-- `testing@devpost.com`
-- `build-week-event@openai.com`
-
----
-
-## Project layout
-
-```text
-apps/web/              React UI — role homes, wizard, AI copilot
-apps/api/              Express API — chat, workflows, reports
-packages/ai-core/      Reusable AI platform (OpenAI client, registry)
-domains/manufacturing/ First domain module (SOPs, tools, prompts)
-tools/video-gen/       Demo video render pipeline
-```
-
-More detail: [docs/architecture.md](docs/architecture.md) · [docs/deployment.md](docs/deployment.md) · [docs/voiceover-script.md](docs/voiceover-script.md) (demo video voiceover + MP3)
-
----
-
-## Tech stack
-
-React 19 · TypeScript · Vite · Tailwind v4 · Node.js · Express · Prisma · PostgreSQL · OpenAI API (GPT-5.6) · Docker Compose
+</details>
 
 ---
 
