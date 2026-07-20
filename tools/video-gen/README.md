@@ -152,14 +152,43 @@ and characters the same. Cinematic, realistic, morning light.
 
 ---
 
+## Scene 4 — Logo reveal (HTML → MP4)
+
+Scene 4 tidak perlu Veo — pakai animasi HTML lalu render ke MP4.
+
+### Preview di browser
+
+Buka `tools/video-gen/scene-04-logo.html` di Chrome (1920×1080).
+
+### Render otomatis
+
+```bash
+cd tools/video-gen
+npm install puppeteer-core --no-save   # sekali saja
+node render_scene_04.mjs             # default: 2.5 detik @ 30fps
+```
+
+Output: `tools/video-gen/output/scene-04-logo.mp4`
+
+Opsi:
+```bash
+node render_scene_04.mjs --duration 2 --fps 30
+```
+
+Animasi: cube pop → hex logo → circuit traces → **BUEK CORE** → divider → tagline.
+
+---
+
 ## Workflow lengkap
 
 ```
 Vertex AI generate (Scene 1-3)
         ↓
+HTML logo reveal (Scene 4) — render_scene_04.mjs
+        ↓
 Screen record core.buekwebsite.com (Scene 5-12)
         ↓
-Canva logo + infographic (Scene 4, 6, 13, 14)
+Canva infographic (Scene 6, 13, 14)
         ↓
 CapCut + voiceover
         ↓

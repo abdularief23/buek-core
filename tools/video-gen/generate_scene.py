@@ -38,6 +38,21 @@ def load_config() -> dict:
         return json.load(f)
 
 
+def get_vertex_credentials():
+    try:
+        import google.auth
+
+        credentials, _ = google.auth.default()
+        return credentials, "ADC"
+    except Exception:
+        import subprocess
+
+        from google.oauth2.credentials import Credentials
+
+        token = subprocess.check_output(["gcloud", "auth", "print-access-token"], text=True).strip()
+        return Credentials(token=token), "gcloud token"
+
+
 def get_client():
     load_dotenv(ROOT / ".env")
 
@@ -49,11 +64,13 @@ def get_client():
         if not project:
             print("ERROR: Set GOOGLE_CLOUD_PROJECT in tools/video-gen/.env")
             sys.exit(1)
-        print(f"Auth: Vertex AI ADC | project={project} | location={location}")
+        credentials, auth_mode = get_vertex_credentials()
+        print(f"Auth: Vertex AI ({auth_mode}) | project={project} | location={location}")
         return genai.Client(
             vertexai=True,
             project=project,
             location=location,
+            credentials=credentials,
             http_options={"api_version": "v1"},
         )
 
@@ -82,7 +99,13 @@ def download_vertex_video(client, generated, out_file: Path) -> None:
             print(f"Downloaded from GCS: {uri}")
             return
         except Exception as error:
-            print(f"GCS download failed ({error}), trying SDK download...")
+            print(f"GCS SDK download failed ({error}), trying gsutil...")
+
+        import subprocess
+
+        subprocess.run(["gsutil", "cp", uri, str(out_file)], check=True)
+        print(f"Downloaded via gsutil: {uri}")
+        return
 
     client.files.download(file=video)
     video.save(str(out_file))

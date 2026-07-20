@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>BUEK CORE — Scene 4 Logo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #ffffff;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+    .stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .glow {
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.24) 0%, rgba(124, 58, 237, 0.14) 45%, transparent 72%);
+      opacity: 0;
+      transform: scale(0.7);
+      animation: glowIn 1.6s ease-out forwards;
+    }
+    .logo-wrap {
+      position: relative;
+      z-index: 2;
+      opacity: 0;
+      transform: scale(0.8);
+      animation: logoIn 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
+    }
+    .logo-wrap svg { width: 280px; height: 280px; display: block; overflow: visible; }
+    .cube-group {
+      transform-origin: 256px 294px;
+      animation: cubePop 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+    }
+    .hex-group {
+      opacity: 0;
+      animation: fadeIn 0.45s ease-out 0.18s forwards;
+    }
+    .circuit-line {
+      stroke-dasharray: 120;
+      stroke-dashoffset: 120;
+      animation: drawLine 0.38s ease-out forwards;
+    }
+    .circuit-line.line-1 { animation-delay: 0.42s; }
+    .circuit-line.line-2 { animation-delay: 0.52s; }
+    .circuit-line.line-3 { animation-delay: 0.62s; }
+    .circuit-node {
+      opacity: 0;
+      transform-origin: center;
+      animation: nodeIn 0.22s ease-out forwards;
+    }
+    .circuit-node.node-1 { animation-delay: 0.62s; }
+    .circuit-node.node-2 { animation-delay: 0.72s; }
+    .circuit-node.node-3 { animation-delay: 0.82s; }
+    .brand {
+      margin-top: 28px;
+      font-size: 92px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      line-height: 1;
+      opacity: 0;
+      transform: translateY(18px);
+      animation: textIn 0.55s ease-out 0.72s forwards;
+    }
+    .brand .buek { color: #071341; }
+    .brand .core {
+      background: linear-gradient(90deg, #0d4ff0 0%, #7a2af7 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .divider {
+      margin-top: 22px;
+      width: 0;
+      height: 4px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: lineGrow 0.45s ease-out 0.95s forwards;
+    }
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 4px;
+      flex: 1;
+      border-radius: 999px;
+    }
+    .divider::before { background: linear-gradient(90deg, transparent, #0e5bff); margin-right: 10px; }
+    .divider::after { background: linear-gradient(90deg, #6d2bf4, transparent); margin-left: 10px; }
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      transform: rotate(45deg) scale(0.4);
+      background: #075dff;
+      opacity: 0;
+      animation: dotIn 0.28s ease-out 1.05s forwards;
+    }
+    .tagline {
+      margin-top: 18px;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 8px;
+      color: #162044;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: textIn 0.45s ease-out 1.1s forwards;
+    }
+    @keyframes glowIn {
+      0% { opacity: 0; transform: scale(0.7); }
+      35% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0.88; transform: scale(1.05); }
+    }
+    @keyframes logoIn {
+      0% { opacity: 0; transform: scale(0.8); filter: blur(8px); }
+      100% { opacity: 1; transform: scale(1); filter: blur(0); }
+    }
+    @keyframes cubePop {
+      0% { opacity: 0; transform: scale(0.35) rotate(-18deg); }
+      70% { opacity: 1; transform: scale(1.06) rotate(4deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes drawLine { to { stroke-dashoffset: 0; } }
+    @keyframes nodeIn {
+      0% { opacity: 0; transform: scale(0.4); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes textIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes lineGrow {
+      to { width: 520px; }
+    }
+    @keyframes dotIn {
+      to { opacity: 1; transform: rotate(45deg) scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="logo-wrap">
+      <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="buekPrimary" x1="126" y1="78" x2="406" y2="424" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0EA5FF"/>
+            <stop offset="0.46" stop-color="#1747E8"/>
+            <stop offset="1" stop-color="#7C2DF6"/>
+          </linearGradient>
+          <linearGradient id="buekCube" x1="216" y1="210" x2="304" y2="314" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#20C7FF"/>
+            <stop offset="0.55" stop-color="#095BE8"/>
+            <stop offset="1" stop-color="#14189D"/>
+          </linearGradient>
+          <filter id="softShadow" x="72" y="48" width="368" height="416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+            <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#101E72" flood-opacity="0.18"/>
+          </filter>
+        </defs>
+        <g class="hex-group" filter="url(#softShadow)">
+          <path d="M132 88C132 67.9 154.3 55.8 171.2 66.7L208.5 90.8C215.7 95.4 220 103.4 220 112V178.5L280.2 142.8C289.9 137 302.1 137.2 311.7 143.1L392.5 192.9C407.1 201.9 416 217.8 416 235V362.6C416 379.6 407.2 395.4 392.8 404.4L311.8 455.1C302 461.2 289.6 461.3 279.8 455.2L158.8 380.6C142.1 370.3 132 352.1 132 332.5V88Z" fill="url(#buekPrimary)"/>
+          <path d="M132 88C132 67.9 154.3 55.8 171.2 66.7L208.5 90.8C215.7 95.4 220 103.4 220 112V323.4C220 343.8 197.5 356.2 180.3 345.1L153.8 327.9C140.2 319.1 132 304 132 287.8V88Z" fill="#078AF4"/>
+        </g>
+        <g class="cube-group">
+          <path d="M192 255.7L256 216L320 255.7V333.1L256 372.8L192 333.1V255.7Z" fill="white"/>
+          <path d="M232 278.7L256 264L280 278.7V308.1L256 322.8L232 308.1V278.7Z" fill="url(#buekCube)"/>
+          <path d="M256 264L280 278.7L256 293.4L232 278.7L256 264Z" fill="#22C7FF"/>
+          <path d="M256 293.4L280 278.7V308.1L256 322.8V293.4Z" fill="#091EA8" opacity="0.76"/>
+        </g>
+        <g stroke-linecap="round" stroke-linejoin="round" stroke-width="13">
+          <path class="circuit-line line-1" d="M340 154L377 117" stroke="#1D4DFF" fill="none"/>
+          <circle class="circuit-node node-1" cx="389" cy="105" r="15" fill="white" stroke="#1D4DFF"/>
+          <path class="circuit-line line-2" d="M359 185L391 153H425" stroke="#6534F2" fill="none"/>
+          <circle class="circuit-node node-2" cx="449" cy="153" r="15" fill="white" stroke="#6534F2"/>
+          <path class="circuit-line line-3" d="M373 220L405 188H455" stroke="#5927DC" fill="none"/>
+          <circle class="circuit-node node-3" cx="477" cy="188" r="15" fill="white" stroke="#5927DC"/>
+        </g>
+      </svg>
+    </div>
+    <div class="brand"><span class="buek">BUEK </span><span class="core">CORE</span></div>
+    <div class="divider"><span class="dot"></span></div>
+    <p class="tagline">BUILD AI WORKERS FOR ANY INDUSTRY</p>
+  </div>
+</body>
+</html>
