@@ -52,6 +52,16 @@
       "method": "html-animation",
       "render": "node render_scene_06.mjs --duration 10 --fps 30",
       "notes": "Infographic: AI CORE → Knowledge → 4 industries, stagger 0.8s"
+    },
+    {
+      "id": "scene-07-login",
+      "time": "0:45-1:10",
+      "duration_seconds": 25,
+      "voice": "Every user starts with a workspace built for their role...",
+      "method": "screen-record",
+      "url": "https://core.buekwebsite.com",
+      "render": "node render_scene_07.mjs --duration 25 --fps 30",
+      "notes": "Demo credentials → Toyota Indonesia → Engineer → Launch Demo → dashboard"
     }
   ]
 }

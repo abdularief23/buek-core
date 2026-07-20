@@ -215,6 +215,24 @@ gsutil cp output/scene-06-platform-vision.mp4 gs://buek-core-video-output/scenes
 
 ---
 
+## Scene 7 — Login & demo launch
+
+Screen record alur login demo: kredensial → Toyota Indonesia → Engineer → Launch Demo → dashboard.
+
+```bash
+cd tools/video-gen
+node render_scene_07.mjs --duration 25 --fps 30
+```
+
+Output: `output/scene-07-login.mp4`
+
+Upload ke GCS:
+```bash
+gsutil cp output/scene-07-login.mp4 gs://buek-core-video-output/scenes/scene-07-login/scene-07-login.mp4
+```
+
+---
+
 ## Workflow lengkap
 
 ```
