@@ -124,7 +124,7 @@ GPT-5.6 runs inside the live app via the OpenAI Responses API:
 ## Architecture
 
 <p align="center">
-  <img src="docs/images/architecture-diagram.svg" alt="Users → Buek Core → AI Core + Domain Modules → Knowledge + Database" width="720" />
+  <img src="docs/images/screenshots/architecture-diagram.png" alt="Users to Buek Core to AI Core and Domain Modules to Knowledge and Database" width="720" />
 </p>
 
 ```text

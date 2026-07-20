@@ -1,40 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-label="Buek Core architecture diagram">
   <defs>
     <linearGradient id="core" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0d4ff0"/>
       <stop offset="100%" stop-color="#7a2af7"/>
     </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0d4ff0" flood-opacity="0.15"/>
-    </filter>
   </defs>
   <rect width="960" height="420" fill="#f8faff"/>
-  <!-- Row 1: Users -->
-  <rect x="300" y="24" width="360" height="52" rx="12" fill="#fff" stroke="#c7d7fe" stroke-width="2" filter="url(#shadow)"/>
-  <text x="480" y="56" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700" fill="#162044">Users  Operator · Engineer · Supervisor · Manager</text>
+  <rect x="300" y="24" width="360" height="52" rx="12" fill="#ffffff" stroke="#c7d7fe" stroke-width="2"/>
+  <text x="480" y="56" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#162044">Users - Operator, Engineer, Supervisor, Manager</text>
   <path d="M480 76 V108" stroke="#0d4ff0" stroke-width="3" fill="none"/>
-  <!-- Row 2: Buek Core -->
-  <rect x="280" y="108" width="400" height="56" rx="14" fill="url(#core)" filter="url(#shadow)"/>
-  <text x="480" y="142" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800" fill="#fff">Buek Core Platform (React + Express API)</text>
+  <rect x="280" y="108" width="400" height="56" rx="14" fill="url(#core)"/>
+  <text x="480" y="142" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="800" fill="#ffffff">Buek Core Platform (React + Express API)</text>
   <path d="M480 164 V196" stroke="#0d4ff0" stroke-width="3" fill="none"/>
-  <!-- Row 3: AI Core + Domain -->
-  <rect x="80" y="196" width="240" height="56" rx="12" fill="#fff" stroke="#0d4ff0" stroke-width="2" filter="url(#shadow)"/>
-  <text x="200" y="222" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" fill="#0d4ff0">AI Core</text>
-  <text x="200" y="242" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="12" fill="#4a5580">GPT-5.6 · Agents · Memory</text>
-  <rect x="640" y="196" width="240" height="56" rx="12" fill="#fff" stroke="#7a2af7" stroke-width="2" filter="url(#shadow)"/>
-  <text x="760" y="222" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" fill="#7a2af7">Domain Modules</text>
-  <text x="760" y="242" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="12" fill="#4a5580">Manufacturing (first)</text>
+  <rect x="80" y="196" width="240" height="56" rx="12" fill="#ffffff" stroke="#0d4ff0" stroke-width="2"/>
+  <text x="200" y="222" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#0d4ff0">AI Core</text>
+  <text x="200" y="242" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#4a5580">GPT-5.6, Agents, Memory</text>
+  <rect x="640" y="196" width="240" height="56" rx="12" fill="#ffffff" stroke="#7a2af7" stroke-width="2"/>
+  <text x="760" y="222" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#7a2af7">Domain Modules</text>
+  <text x="760" y="242" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#4a5580">Manufacturing (first)</text>
   <path d="M480 196 H200 V252" stroke="#0d4ff0" stroke-width="2.5" fill="none"/>
   <path d="M480 196 H760 V252" stroke="#7a2af7" stroke-width="2.5" fill="none"/>
   <path d="M200 252 V288" stroke="#0d4ff0" stroke-width="3" fill="none"/>
   <path d="M760 252 V288" stroke="#7a2af7" stroke-width="3" fill="none"/>
-  <!-- Row 4: Knowledge + DB -->
-  <rect x="80" y="288" width="240" height="52" rx="12" fill="#fff" stroke="#c7d7fe" stroke-width="2"/>
-  <text x="200" y="320" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" fill="#162044">Company Knowledge</text>
-  <rect x="640" y="288" width="240" height="52" rx="12" fill="#fff" stroke="#c7d7fe" stroke-width="2"/>
-  <text x="760" y="320" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" fill="#162044">PostgreSQL Database</text>
+  <rect x="80" y="288" width="240" height="52" rx="12" fill="#ffffff" stroke="#c7d7fe" stroke-width="2"/>
+  <text x="200" y="320" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#162044">Company Knowledge</text>
+  <rect x="640" y="288" width="240" height="52" rx="12" fill="#ffffff" stroke="#c7d7fe" stroke-width="2"/>
+  <text x="760" y="320" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#162044">PostgreSQL Database</text>
   <path d="M200 340 V372" stroke="#94a3b8" stroke-width="2" fill="none"/>
   <path d="M760 340 V372" stroke="#94a3b8" stroke-width="2" fill="none"/>
   <rect x="300" y="372" width="360" height="36" rx="10" fill="#e0e7ff"/>
-  <text x="480" y="396" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600" fill="#3730a3">SOPs · Investigations · Reports · Company Brain</text>
+  <text x="480" y="396" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="600" fill="#3730a3">SOPs, Investigations, Reports, Company Brain</text>
 </svg>

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" role="img" aria-label="Buek Core workflow powered by GPT-5.6">
   <defs>
     <linearGradient id="ai" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -6,30 +7,23 @@
     </linearGradient>
   </defs>
   <rect width="800" height="200" fill="#f8faff" rx="12"/>
-  <g font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">
-    <!-- Operator -->
+  <g font-family="Arial,sans-serif" text-anchor="middle">
     <rect x="20" y="70" width="110" height="60" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
     <text x="75" y="98" font-size="13" font-weight="700" fill="#162044">Operator</text>
     <text x="75" y="116" font-size="10" fill="#64748b">reports defect</text>
-    <!-- Engineer -->
     <rect x="160" y="70" width="110" height="60" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
     <text x="215" y="98" font-size="13" font-weight="700" fill="#162044">Engineer</text>
     <text x="215" y="116" font-size="10" fill="#64748b">investigates</text>
-    <!-- GPT-5.6 -->
     <rect x="310" y="60" width="130" height="80" rx="12" fill="url(#ai)"/>
     <text x="375" y="96" font-size="14" font-weight="800" fill="#ffffff">GPT-5.6</text>
-    <text x="375" y="116" font-size="10" fill="#e0e7ff">analyze · rank · draft</text>
-    <!-- Company Brain -->
+    <text x="375" y="116" font-size="10" fill="#e0e7ff">analyze, rank, draft</text>
     <rect x="480" y="70" width="130" height="60" rx="10" fill="#ffffff" stroke="#0d4ff0" stroke-width="2"/>
     <text x="545" y="105" font-size="13" font-weight="700" fill="#0d4ff0">Company Brain</text>
-    <!-- Supervisor -->
     <rect x="650" y="40" width="120" height="50" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
     <text x="710" y="70" font-size="13" font-weight="700" fill="#162044">Supervisor</text>
-    <!-- Plant Manager -->
     <rect x="650" y="110" width="120" height="50" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
     <text x="710" y="140" font-size="13" font-weight="700" fill="#162044">Plant Manager</text>
   </g>
-  <!-- arrows as simple lines + triangles -->
   <line x1="130" y1="100" x2="158" y2="100" stroke="#64748b" stroke-width="2"/>
   <polygon points="158,100 152,97 152,103" fill="#64748b"/>
   <line x1="270" y1="100" x2="308" y2="100" stroke="#0d4ff0" stroke-width="2.5"/>
