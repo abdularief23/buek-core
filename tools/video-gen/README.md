@@ -1,0 +1,176 @@
+# Vertex AI Veo — Setup Video Buek Core
+
+Generate video Scene 1–3 dengan **Vertex AI + ADC** (tanpa API key — cocok kalau organisasi memblokir API keys).
+
+---
+
+## Tentang "Free Tier"
+
+| Yang gratis | Yang tidak |
+|-------------|------------|
+| Trial credit GCP **Rp5.376.601** (90 hari) | Veo **tidak** benar-benar $0 tanpa billing |
+| Model **veo-3.1-lite** (paling murah) | Perlu billing account aktif |
+| ADC auth (tanpa API key) | Perlu enable Vertex AI API |
+
+**Kesimpulan:** Pakai **trial credit** Anda — itu yang dimaksud "free" di GCP. Billing tetap harus diaktifkan, tapi tidak langsung charge kartu selama credit masih ada.
+
+---
+
+## Opsi A: Vertex AI + ADC (DISARANKAN untuk Anda)
+
+Cocok karena organisasi Anda memblokir API keys (*"API keys are disallowed"*).
+
+### Langkah 1 — Install Google Cloud CLI
+
+Download: [cloud.google.com/sdk/docs/install](https://cloud.google.com/sdk/docs/install)
+
+### Langkah 2 — Jalankan setup otomatis
+
+```bash
+cd tools/video-gen
+chmod +x setup-vertex.sh
+./setup-vertex.sh
+```
+
+Script ini akan:
+1. Login via browser (`gcloud auth application-default login`)
+2. Enable **Vertex AI API** + **Cloud Storage API**
+3. Buat bucket GCS untuk output video
+4. Generate file `.env`
+
+### Langkah 3 — Aktifkan billing (wajib)
+
+1. [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
+2. Hubungkan project **My First Project** (`project-c5cf1cf2-7957-4efb-a33`)
+3. Trial credit Rp5.3 juta akan dipakai otomatis
+
+### Langkah 4 — Generate video
+
+```bash
+pip install -r requirements.txt
+python generate_scene.py --scene scene-01-opening-factory --dry-run
+python generate_scene.py --scene scene-01-opening-factory
+```
+
+Output: `tools/video-gen/output/scene-01-opening-factory.mp4`
+
+### Setup manual (kalau script gagal)
+
+```bash
+# 1. Login
+gcloud auth application-default login
+gcloud config set project project-c5cf1cf2-7957-4efb-a33
+
+# 2. Enable APIs
+gcloud services enable aiplatform.googleapis.com storage.googleapis.com
+
+# 3. Buat bucket
+gsutil mb -l us-central1 gs://buek-core-video-output
+
+# 4. Copy config
+cp .env.example .env
+# Edit .env — pastikan USE_VERTEX_AI=true
+```
+
+Isi `.env`:
+```
+USE_VERTEX_AI=true
+GOOGLE_CLOUD_PROJECT=project-c5cf1cf2-7957-4efb-a33
+GOOGLE_CLOUD_LOCATION=us-central1
+GCS_OUTPUT_URI=gs://buek-core-video-output/scenes
+VEO_MODEL=veo-3.1-lite-generate-preview
+OUTPUT_DIR=./output
+```
+
+---
+
+## Opsi B: Google AI Studio (browser, tanpa script)
+
+Kalau Vertex ribet, coba langsung di browser:
+
+1. [aistudio.google.com/models/veo-3](https://aistudio.google.com/models/veo-3)
+2. Upload gambar pabrik → image-to-video
+3. Model: **Veo 3.1 Lite** atau **Fast**
+4. Download MP4
+
+---
+
+## Opsi C: Gemini API key (jika tidak diblokir)
+
+Hanya jika organisasi mengizinkan API key (`AIza...`):
+
+```
+USE_VERTEX_AI=false
+GEMINI_API_KEY=AIza...
+```
+
+---
+
+## Model & biaya (perkiraan)
+
+| Model | Kualitas | Biaya estimasi / 6 detik |
+|-------|----------|--------------------------|
+| `veo-3.1-lite-generate-preview` | Cukup untuk demo | ~$0.04–0.15 |
+| `veo-3.1-fast-generate-preview` | Lebih bagus | ~$0.50–1.00 |
+| `veo-3.1-generate-001` | Terbaik | ~$2–4 |
+
+3 scene (20 detik total) dengan **Lite** ≈ **Rp5.000–30.000** dari trial credit.
+
+---
+
+## Image-to-video (gambar pabrik Anda)
+
+```bash
+# Simpan gambar sebagai input/scene-01.jpg
+python generate_from_image.py --image input/scene-01.jpg --scene scene-01-opening-factory
+```
+
+---
+
+## Troubleshooting
+
+| Error | Solusi |
+|-------|--------|
+| `API keys are disallowed` | Pakai **Vertex AI + ADC** (Opsi A), bukan API key |
+| `429 quota exceeded` | Aktifkan billing di GCP |
+| `RESOURCE_PROJECT_INVALID` | Cek `GOOGLE_CLOUD_PROJECT` di `.env` |
+| `Permission denied` | Jalankan `gcloud auth application-default login` lagi |
+| `output_gcs_uri required` | Set `GCS_OUTPUT_URI` di `.env` dan buat bucket |
+
+---
+
+## Prompt siap pakai
+
+Lihat `prompts.json` atau `docs/video-production-guide.md`.
+
+### Scene 1 (image-to-video)
+```
+Animate this factory scene with slow dolly forward. Conveyors move slowly,
+operators continue working, robotic arms move gently. Keep composition
+and characters the same. Cinematic, realistic, morning light.
+```
+
+---
+
+## Workflow lengkap
+
+```
+Vertex AI generate (Scene 1-3)
+        ↓
+Screen record core.buekwebsite.com (Scene 5-12)
+        ↓
+Canva logo + infographic (Scene 4, 6, 13, 14)
+        ↓
+CapCut + voiceover
+        ↓
+Upload YouTube → link di README
+```
+
+---
+
+## Link penting
+
+- [Vertex AI Video Docs](https://cloud.google.com/vertex-ai/generative-ai/docs/video/overview)
+- [GCP Billing](https://console.cloud.google.com/billing)
+- [Cloud Storage](https://console.cloud.google.com/storage)
+- [gcloud install](https://cloud.google.com/sdk/docs/install)

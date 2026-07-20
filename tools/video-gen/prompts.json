@@ -1,0 +1,38 @@
+{
+  "character_block": "CHARACTER CONSISTENCY: East Asian woman operator age 25 in light blue factory uniform and blue safety cap. East Asian male engineer age 30 with thin rectangular glasses and navy blue engineer uniform. Never looking at camera. Photorealistic Apple commercial style, clean modern manufacturing, soft natural morning light, 16:9 cinematic, no text overlays, no logos, no watermarks.",
+  "scenes": [
+    {
+      "id": "scene-01-opening-factory",
+      "time": "0:00-0:06",
+      "duration_seconds": 6,
+      "voice": "Every day... manufacturing teams face production issues that demand fast decisions.",
+      "prompt": "Wide cinematic slow dolly forward shot of a modern inkjet printer manufacturing factory. Clean white and gray production floor, multiple parallel conveyor belts with white and black inkjet printers at assembly stages. Six to eight operators in light blue uniforms working at stations. One engineer in navy blue uniform walking down the center aisle away from camera. White robotic arms on the right. Large windows on the left with bright morning sunlight, polished reflective floor, deep depth of field.",
+      "negative_prompt": "cartoon, anime, blurry, low quality, text, watermark, logo, people looking at camera, unsafe behavior",
+      "aspect_ratio": "16:9",
+      "resolution": "720p",
+      "camera": "slow dolly forward"
+    },
+    {
+      "id": "scene-02-engineer-looking",
+      "time": "0:06-0:12",
+      "duration_seconds": 6,
+      "voice": "Engineers spend valuable time... searching through SOPs... historical reports... and company knowledge...",
+      "prompt": "Over-the-shoulder cinematic shot from behind a manufacturing engineer sitting at a modern desk inside a factory office. Three monitors: left shows quality dashboard with charts, center shows PDF SOP technical document, right shows Excel spreadsheet with historical defect data. Engineer has hand on chin thinking with slightly concerned expression. Glass partition behind shows blurred factory floor. Warm office lighting with cool monitor glow. Slow zoom in.",
+      "negative_prompt": "cartoon, blurry, text on screen readable, watermark, logo, facing camera",
+      "aspect_ratio": "16:9",
+      "resolution": "720p",
+      "camera": "over shoulder slow zoom"
+    },
+    {
+      "id": "scene-03-production-waiting",
+      "time": "0:12-0:20",
+      "duration_seconds": 8,
+      "voice": "Before they can even begin solving the problem... While production waits... Every minute matters. What if AI could become another engineer on your team?",
+      "prompt": "Close-up cinematic shot of a stopped inkjet printer production line. White inkjet printer still on conveyor belt. Yellow warning light blinking on nearby control panel. Two operators in blue uniforms beside the line looking at each other with concerned expressions. Engineer in navy blue uniform in background with hand on head thinking. Tense atmosphere, slightly dimmer lighting, shallow depth of field. Slow horizontal pan.",
+      "negative_prompt": "cartoon, blurry, watermark, logo, people looking at camera, chaos",
+      "aspect_ratio": "16:9",
+      "resolution": "720p",
+      "camera": "close up slow pan"
+    }
+  ]
+}
