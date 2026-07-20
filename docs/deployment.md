@@ -52,7 +52,7 @@ API_HOST_PORT=127.0.0.1:4000
 POSTGRES_HOST_PORT=127.0.0.1:5432
 CORS_ORIGIN=https://core.buekwebsite.com
 OPENAI_API_KEY=<your-openai-api-key>
-OPENAI_MODEL=gpt-4.1-mini
+OPENAI_MODEL=gpt-5.6
 BUEK_DOMAIN_MODULES=@buek/domain-manufacturing
 ```
 

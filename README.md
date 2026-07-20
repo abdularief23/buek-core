@@ -165,7 +165,7 @@ Official Engineering Report (PDF/DOCX)
 Stored in Company Brain → smarter next time
 ```
 
-Default model: `gpt-4.1-mini` via OpenAI API · configurable per deployment.
+Default model: `gpt-5.6` via OpenAI API (Codex + GPT 5.6) · configurable per deployment with `OPENAI_MODEL`.
 
 ---
 
