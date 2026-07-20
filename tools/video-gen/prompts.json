@@ -43,6 +43,15 @@
       "url": "https://core.buekwebsite.com",
       "render": "node render_scene_05.mjs --duration 13 --fps 30",
       "notes": "Hero + slow scroll, English UI, not logged in"
+    },
+    {
+      "id": "scene-06-platform-vision",
+      "time": "0:35-0:45",
+      "duration_seconds": 10,
+      "voice": "Instead of creating a different AI for every business... Buek Core separates AI reasoning... from domain knowledge.",
+      "method": "html-animation",
+      "render": "node render_scene_06.mjs --duration 10 --fps 30",
+      "notes": "Infographic: AI CORE → Knowledge → 4 industries, stagger 0.8s"
     }
   ]
 }

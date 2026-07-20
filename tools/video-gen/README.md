@@ -197,6 +197,24 @@ gsutil cp output/scene-05-website.mp4 gs://buek-core-video-output/scenes/scene-0
 
 ---
 
+## Scene 6 — Platform vision infographic
+
+Animasi diagram: **AI CORE** → **Knowledge** → Manufacturing / Healthcare / Construction / Retail.
+
+```bash
+cd tools/video-gen
+node render_scene_06.mjs --duration 10 --fps 30
+```
+
+Output: `output/scene-06-platform-vision.mp4`
+
+Upload ke GCS:
+```bash
+gsutil cp output/scene-06-platform-vision.mp4 gs://buek-core-video-output/scenes/scene-06-platform-vision/scene-06-platform-vision.mp4
+```
+
+---
+
 ## Workflow lengkap
 
 ```
