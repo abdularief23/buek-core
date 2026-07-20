@@ -1,0 +1,5 @@
+output/
+.env
+.venv/
+input/*.jpg
+input/*.png
