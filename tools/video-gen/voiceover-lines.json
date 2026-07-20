@@ -1,0 +1,77 @@
+{
+  "voice": "en-US-GuyNeural",
+  "rate": "+5%",
+  "scenes": [
+    {
+      "id": "scene-01",
+      "file": "scene-01-opening.mp3",
+      "text": "Every day, manufacturing teams face production issues that need fast, clear decisions."
+    },
+    {
+      "id": "scene-02",
+      "file": "scene-02-engineer.mp3",
+      "text": "Engineers lose hours digging through SOPs, old reports, and scattered company knowledge."
+    },
+    {
+      "id": "scene-03",
+      "file": "scene-03-waiting.mp3",
+      "text": "Meanwhile, the line is down. Every minute costs money. What if AI could work like another engineer on your team?"
+    },
+    {
+      "id": "scene-04",
+      "file": "scene-04-logo.mp3",
+      "text": "",
+      "silent": true
+    },
+    {
+      "id": "scene-05",
+      "file": "scene-05-website.mp3",
+      "text": "This is Buek Core. We built it during OpenAI Build Week — using Codex to ship the full platform, from UI to API to deployment."
+    },
+    {
+      "id": "scene-06",
+      "file": "scene-06-vision.mp3",
+      "text": "And GPT-5.6 powers the reasoning inside — one AI engine, your domain knowledge, starting with manufacturing."
+    },
+    {
+      "id": "scene-07",
+      "file": "scene-07-roles.mp3",
+      "text": "Every role gets its own workspace. Operators keep the line running. Engineers investigate root causes. Supervisors approve corrective actions. Plant managers track KPIs in real time."
+    },
+    {
+      "id": "scene-08",
+      "file": "scene-08-investigation.mp3",
+      "text": "When a defect is reported — like this white streak on print — the engineer opens a guided five-step investigation."
+    },
+    {
+      "id": "scene-09",
+      "file": "scene-09-analysis.mp3",
+      "text": "GPT-5.6 analyzes the evidence, retrieves relevant SOPs, and ranks possible causes. The engineer always makes the final call."
+    },
+    {
+      "id": "scene-10",
+      "file": "scene-10-countermeasure.mp3",
+      "text": "It recommends countermeasures and helps draft an execution plan — ready for supervisor review."
+    },
+    {
+      "id": "scene-11",
+      "file": "scene-11-brain.mp3",
+      "text": "Every completed investigation becomes part of the Company Brain. The next case starts smarter."
+    },
+    {
+      "id": "scene-12",
+      "file": "scene-12-copilot.mp3",
+      "text": "In the AI Copilot, GPT-5.6 answers in plain language — search similar defects, summarize open issues, draft investigation reports."
+    },
+    {
+      "id": "scene-13",
+      "file": "scene-13-future.mp3",
+      "text": "Manufacturing is our first domain. The same AI Core plugs into healthcare, construction, and more — without rebuilding from scratch."
+    },
+    {
+      "id": "scene-14",
+      "file": "scene-14-closing.mp3",
+      "text": "Buek Core — built with Codex, powered by GPT-5.6. Build AI workers for any industry. core.buekwebsite.com"
+    }
+  ]
+}
