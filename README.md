@@ -6,8 +6,14 @@
   <a href="https://core.buekwebsite.com"><strong>🌐 Live Demo</strong></a>
   &nbsp;·&nbsp;
   <a href="https://github.com/abdularief23/buek-core"><strong>GitHub</strong></a>
-  &nbsp;·&nbsp;
-  <a href="docs/voiceover-script.md"><strong>Demo Video Script</strong></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/OpenAI-GPT--5.6-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI GPT-5.6" />
+  <img src="docs/images/badges/codex-dev-assist.svg" alt="Codex Dev Assist" height="28" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
 </p>
 
 ---
@@ -70,7 +76,7 @@ No install needed. AI Copilot is live on the demo server.
 ## How GPT-5.6 powers the workflow
 
 <p align="center">
-  <img src="docs/images/workflow-gpt56.svg" alt="Operator → Engineer → GPT-5.6 → Company Brain → Supervisor → Plant Manager" width="600" />
+  <img src="docs/images/screenshots/workflow-gpt56.png" alt="Workflow: Operator → Engineer → GPT-5.6 → Company Brain → Supervisor → Plant Manager" width="720" />
 </p>
 
 GPT-5.6 runs inside the live app via the OpenAI Responses API:
@@ -139,12 +145,7 @@ One AI Core. Unlimited industries. Details: [docs/architecture.md](docs/architec
 
 ## For judges
 
-| Resource | Link |
-|----------|------|
-| **Live demo** | [core.buekwebsite.com](https://core.buekwebsite.com) |
-| **Demo video script** | [docs/voiceover-script.md](docs/voiceover-script.md) |
-| **Voiceover audio** | `tools/video-gen/voiceover/voiceover-full.mp3` |
-| **Repo access** (if private) | `testing@devpost.com` · `build-week-event@openai.com` |
+**Live demo:** [core.buekwebsite.com](https://core.buekwebsite.com)
 
 ---
 
