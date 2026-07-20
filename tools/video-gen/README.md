@@ -208,6 +208,16 @@ Output:
 
 Veo prompts ada di `prompts.json` → `scene-07-role-workspaces.shots[1-4]`
 
+### Versi infografis 2×2 (lebih komunikatif)
+
+Layout foto + mockup UI per role + flow diagram — seperti storyboard referensi:
+
+```bash
+node render_scene_07_infographic.mjs --duration 20 --fps 30
+```
+
+Output: `output/scene-07-role-infographic.mp4`
+
 Upload GCS:
 ```bash
 gsutil -m cp output/scene-07-*.mp4 gs://buek-core-video-output/scenes/scene-07-role-workspaces/

@@ -104,7 +104,7 @@
           "screen_overlay": "scene-07-shot5-manager.mp4"
         }
       ],
-      "notes": "Screen recordings per role + optional Veo B-roll composited in CapCut"
+      "notes": "Screen recordings per role + optional Veo B-roll composited in CapCut. For communicative 2×2 infographic: node render_scene_07_infographic.mjs"
     }
   ]
 }

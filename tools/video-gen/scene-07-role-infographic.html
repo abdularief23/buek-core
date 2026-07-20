@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>BUEK CORE — Role-Based Workspace</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #f4f7fc;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: #071341;
+    }
+    .page {
+      width: 100%;
+      height: 100%;
+      padding: 36px 48px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0;
+      animation: fadeUp 0.6s ease-out forwards;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0ea5ff, #1747e8 50%, #7c2df6);
+    }
+    .brand h1 {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 3px;
+    }
+    .brand h1 span {
+      background: linear-gradient(90deg, #0d4ff0, #7a2af7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .header-tag {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: #4a5580;
+      text-transform: uppercase;
+    }
+    .grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 20px;
+      min-height: 0;
+    }
+    .card {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #0f172a;
+      box-shadow: 0 16px 40px rgba(7, 19, 65, 0.14);
+      opacity: 0;
+      transform: translateY(28px) scale(0.97);
+      animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .card-1 { animation-delay: 0.35s; }
+    .card-2 { animation-delay: 0.75s; }
+    .card-3 { animation-delay: 1.15s; }
+    .card-4 { animation-delay: 1.55s; }
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.72) saturate(1.05);
+    }
+    .card-bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(7,19,65,0.55) 0%, rgba(13,79,240,0.25) 100%);
+    }
+    .card-1 .card-bg { background-image: url("https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&q=80"); }
+    .card-2 .card-bg { background-image: url("https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&q=80"); }
+    .card-3 .card-bg { background-image: url("https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=1200&q=80"); }
+    .card-4 .card-bg { background-image: url("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&q=80"); }
+    .card-inner {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      padding: 22px 24px;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 18px;
+      align-items: center;
+    }
+    .card-3 .card-inner,
+    .card-4 .card-inner {
+      grid-template-columns: 1fr 340px;
+    }
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .role-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0d4ff0, #7a2af7);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .role-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    .role-sub {
+      font-size: 15px;
+      font-weight: 600;
+      color: #7dd3fc;
+      margin-bottom: 12px;
+    }
+    .role-caption {
+      font-size: 14px;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.88);
+      max-width: 420px;
+    }
+    .screen {
+      background: #0b1220;
+      border-radius: 14px;
+      border: 2px solid rgba(255,255,255,0.12);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+      overflow: hidden;
+      height: 100%;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+    }
+    .screen-bar {
+      height: 28px;
+      background: #111827;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 6px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-r { background: #ef4444; }
+    .dot-y { background: #f59e0b; }
+    .dot-g { background: #22c55e; }
+    .screen-body {
+      flex: 1;
+      padding: 12px;
+      font-size: 11px;
+      color: #e2e8f0;
+    }
+    .ui-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .ui-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .ui-kpi {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .ui-kpi .label { font-size: 9px; color: #94a3b8; }
+    .ui-kpi .val { font-size: 16px; font-weight: 700; color: #22d3ee; margin-top: 2px; }
+    .ui-kpi .val.warn { color: #fbbf24; }
+    .ui-btn {
+      display: block;
+      width: 100%;
+      margin-top: 6px;
+      padding: 7px;
+      border-radius: 8px;
+      border: none;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .ui-btn-primary { background: #06b6d4; color: #0f172a; }
+    .ui-btn-red { background: rgba(239,68,68,0.9); color: #fff; }
+    .ui-list { list-style: none; }
+    .ui-list li {
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 4px;
+      font-size: 9px;
+    }
+    .ui-list .hi { color: #fbbf24; font-weight: 700; }
+    .ui-chart {
+      height: 48px;
+      border-radius: 6px;
+      background: linear-gradient(180deg, rgba(6,182,212,0.25), transparent);
+      border: 1px solid rgba(6,182,212,0.2);
+      margin-top: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .ui-chart::before {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60%;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60' preserveAspectRatio='none'%3E%3Cpath d='M0 50 L30 42 L60 45 L90 28 L120 32 L150 18 L180 22 L200 8' fill='none' stroke='%2322d3ee' stroke-width='2'/%3E%3C/svg%3E") bottom/100% 100% no-repeat;
+    }
+    .company-pick {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .company-opt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 10px;
+    }
+    .company-opt.active {
+      border-color: #22d3ee;
+      background: rgba(6,182,212,0.12);
+    }
+    .company-opt .sel {
+      font-size: 8px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #0d4ff0;
+      color: #fff;
+    }
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 14px 24px;
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid rgba(13,79,240,0.12);
+      box-shadow: 0 8px 24px rgba(13,79,240,0.06);
+      opacity: 0;
+      animation: fadeUp 0.6s ease-out 2.1s forwards;
+    }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 20px;
+    }
+    .flow-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e8f0ff, #f0e8ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .flow-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #162044;
+      line-height: 1.3;
+    }
+    .flow-arrow {
+      font-size: 22px;
+      color: #0d4ff0;
+      font-weight: 300;
+      padding: 0 4px;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <h1>BUEK <span>CORE</span></h1>
+      </div>
+      <p class="header-tag">One Platform · Different Roles · Working Together</p>
+    </header>
+
+    <div class="grid">
+      <!-- 1 OPERATOR -->
+      <article class="card card-1">
+        <div class="card-bg"></div>
+        <div class="card-inner">
+          <div>
+            <div class="role-badge">
+              <span class="role-num">1</span>
+              <span class="role-title">Operator</span>
+            </div>
+            <p class="role-sub">Focus on Production</p>
+            <p class="role-caption">Operator accesses from the production line to monitor tasks and update production status.</p>
+          </div>
+          <div class="screen">
+            <div class="screen-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+            <div class="screen-body">
+              <p class="ui-title">Shift Dashboard</p>
+              <div class="ui-kpi-row">
+                <div class="ui-kpi"><p class="label">Target</p><p class="val">380</p></div>
+                <div class="ui-kpi"><p class="label">Output</p><p class="val">142</p></div>
+                <div class="ui-kpi"><p class="label">Machine</p><p class="val" style="font-size:12px">EA-04</p></div>
+                <div class="ui-kpi"><p class="label">Defects</p><p class="val warn">3</p></div>
+              </div>
+              <button class="ui-btn ui-btn-primary">Quality Check</button>
+              <button class="ui-btn ui-btn-red">Report Problem</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 2 ENGINEER -->
+      <article class="card card-2">
+        <div class="card-bg"></div>
+        <div class="card-inner">
+          <div>
+            <div class="role-badge">
+              <span class="role-num">2</span>
+              <span class="role-title">Engineer</span>
+            </div>
+            <p class="role-sub">Investigate Issues</p>
+            <p class="role-caption">Engineers access from their desk to investigate issues and create reports.</p>
+          </div>
+          <div class="screen">
+            <div class="screen-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+            <div class="screen-body">
+              <p class="ui-title">Open Investigation</p>
+              <ul class="ui-list">
+                <li><span class="hi">White Streak</span> · PPM +12% · Priority High</li>
+                <li>Torque EA-04 · Out of spec</li>
+              </ul>
+              <div class="ui-chart"></div>
+              <button class="ui-btn ui-btn-primary" style="margin-top:8px">Open Investigation →</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 3 SUPERVISOR -->
+      <article class="card card-3">
+        <div class="card-bg"></div>
+        <div class="card-inner">
+          <div>
+            <div class="role-badge">
+              <span class="role-num">3</span>
+              <span class="role-title">Supervisor</span>
+            </div>
+            <p class="role-sub">Review and Approve</p>
+            <p class="role-caption">Supervisors review reports and approve actions to ensure quality and compliance.</p>
+          </div>
+          <div class="screen">
+            <div class="screen-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+            <div class="screen-body">
+              <p class="ui-title">Pending Approvals</p>
+              <ul class="ui-list">
+                <li><strong>White Streak Analysis</strong><br/>From: Engineer · 2d ago</li>
+                <li><strong>Root Cause:</strong> Print Head Nozzle<br/><strong>CM:</strong> Replace nozzle assy</li>
+              </ul>
+              <button class="ui-btn ui-btn-primary">Approve</button>
+              <button class="ui-btn" style="background:rgba(255,255,255,0.1);color:#94a3b8;margin-top:4px">Request Revision</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 4 PLANT MANAGER -->
+      <article class="card card-4">
+        <div class="card-bg"></div>
+        <div class="card-inner">
+          <div>
+            <div class="role-badge">
+              <span class="role-num">4</span>
+              <span class="role-title">Plant Manager</span>
+            </div>
+            <p class="role-sub">Monitor Operations</p>
+            <p class="role-caption">Plant Managers monitor company KPIs through executive insights in real time.</p>
+          </div>
+          <div class="screen">
+            <div class="screen-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+            <div class="screen-body">
+              <p class="ui-title">Executive Insights</p>
+              <div class="ui-kpi-row">
+                <div class="ui-kpi"><p class="label">Output</p><p class="val" style="font-size:11px">128,540</p></div>
+                <div class="ui-kpi"><p class="label">Quality</p><p class="val">98.7%</p></div>
+                <div class="ui-kpi"><p class="label">OEE</p><p class="val">94%</p></div>
+                <div class="ui-kpi"><p class="label">Downtime</p><p class="val warn">2.1%</p></div>
+              </div>
+              <div class="ui-chart"></div>
+              <ul class="ui-list" style="margin-top:6px">
+                <li>⚠ White Streak Issue</li>
+                <li>Top defect trend ↑ 12%</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <footer class="flow">
+      <div class="flow-step">
+        <div class="flow-icon">👤</div>
+        <p class="flow-text">Right<br/>Workspace</p>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">
+        <div class="flow-icon">📋</div>
+        <p class="flow-text">Right<br/>Information</p>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">
+        <div class="flow-icon">📊</div>
+        <p class="flow-text">Right<br/>Decisions</p>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">
+        <div class="flow-icon">🎯</div>
+        <p class="flow-text">Better<br/>Performance</p>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
