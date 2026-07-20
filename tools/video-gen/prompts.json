@@ -104,7 +104,7 @@
           "screen_overlay": "scene-07-shot5-manager.mp4"
         }
       ],
-      "notes": "Screen recordings per role + optional Veo B-roll composited in CapCut. For communicative 2×2 infographic: node render_scene_07_infographic.mjs"
+      "notes": "Primary: per-role full-screen cinematic (node render_scene_07_per_role.mjs). Optional: screen recordings (render_scene_07.mjs) + Veo B-roll in CapCut. Legacy 2×2 grid: render_scene_07_infographic.mjs"
     },
     {
       "id": "role-photo-operator",

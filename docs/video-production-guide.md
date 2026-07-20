@@ -154,22 +154,34 @@ Manufacturing Healthcare Construction Retail
 **Voice:**  
 *"Every user has a dedicated workspace based on their role. Operators focus on keeping production running. Engineers investigate production issues and identify root causes. Supervisors review findings and approve corrective actions. Plant Managers monitor operational performance through real-time executive insights. One platform... Different roles... Working together."*
 
-**Durasi:** 20 detik (5 shot × 4 detik)
+**Format rekomendasi:** Satu video full-screen per role (foto besar + UI panel kanan) — **bukan** grid 2×2.
 
-| Shot | Waktu | Visual | Render |
-|------|-------|--------|--------|
-| 1 | 0:40–0:44 | Login → Toyota → Engineer → Launch Demo | `node render_scene_07.mjs --shot 1` |
-| 2 | 0:44–0:48 | Operator workspace (production + report) | `--shot 2` + Veo B-roll operator |
-| 3 | 0:48–0:52 | Engineer opens investigation | `--shot 3` + Veo B-roll engineer |
-| 4 | 0:52–0:56 | Supervisor review & Approve | `--shot 4` + Veo B-roll supervisor |
-| 5 | 0:56–1:00 | Plant Manager executive KPI dashboard | `--shot 5` + Veo B-roll manager |
+**Durasi:** 20 detik total (4 role × 5 detik), atau potong per role di CapCut.
 
-**Render full scene:**
+| Role | Waktu (saran) | Visual | Output |
+|------|---------------|--------|--------|
+| Operator | 0:40–0:45 | Foto operator di line + Operator Dashboard | `scene-07-role-operator.mp4` |
+| Engineer | 0:45–0:50 | Foto engineer OTS + Investigation workspace | `scene-07-role-engineer.mp4` |
+| Supervisor | 0:50–0:55 | Foto supervisor + Review & Approve | `scene-07-role-supervisor.mp4` |
+| Plant Manager | 0:55–1:00 | Foto manager + Executive KPI dashboard | `scene-07-role-plant-manager.mp4` |
+
+**Render (per role):**
 ```bash
-cd tools/video-gen && node render_scene_07.mjs --shot-duration 4 --fps 30
+cd tools/video-gen
+node render_scene_07_per_role.mjs --duration 5 --fps 30
 ```
 
-**CapCut:** Overlay screen recording di device (touchscreen/laptop/tablet) pada Veo B-roll shots 2–5. Shot 1 full screen.
+Satu role saja: `node render_scene_07_per_role.mjs --role engineer`
+
+**GCS:** `gs://buek-core-video-output/scenes/scene-07-role-workspaces/scene-07-role-*.mp4`
+
+**Foto referensi:** Taruh di `tools/video-gen/input/role-references/` (`01-operator.jpg` … `04-plant-manager.jpg`), lalu re-render.
+
+**Alternatif — screen record live site (5 shot × 4 detik):**
+```bash
+node render_scene_07.mjs --shot-duration 4 --fps 30
+```
+CapCut: overlay screen recording di device (touchscreen/laptop/tablet) pada Veo B-roll shots 2–5.
 
 **Flow penonton:** Operator laporkan → Engineer investigasi → Supervisor approve → Plant Manager lihat KPI.
 

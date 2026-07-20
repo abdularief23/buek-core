@@ -208,19 +208,9 @@ Output:
 
 Veo prompts ada di `prompts.json` → `scene-07-role-workspaces.shots[1-4]`
 
-### Versi infografis 2×2 (lebih komunikatif)
+### Versi per scene (rekomendasi — satu role = satu video full screen)
 
-Layout foto + mockup UI per role + flow diagram — seperti storyboard referensi:
-
-```bash
-node render_scene_07_infographic.mjs --duration 20 --fps 30
-```
-
-Output: `output/scene-07-role-infographic.mp4`
-
-### Versi per scene (satu role = satu video full screen)
-
-Lebih cinematic — foto besar + UI panel kanan, **bukan** grid 2×2:
+Cinematic — foto besar + UI panel kanan, **bukan** grid 2×2:
 
 ```bash
 node render_scene_07_per_role.mjs --duration 5 --fps 30
@@ -234,6 +224,16 @@ Output per role:
 - `scene-07-roles-full.mp4` (gabungan 20 detik)
 
 Satu role saja: `node render_scene_07_per_role.mjs --role engineer`
+
+### Versi infografis 2×2 (legacy)
+
+Layout 4 role sekaligus dalam grid — gunakan hanya jika perlu satu file ringkas:
+
+```bash
+node render_scene_07_infographic.mjs --duration 20 --fps 30
+```
+
+Output: `output/scene-07-role-infographic.mp4`
 
 Upload GCS:
 ```bash
