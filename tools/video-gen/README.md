@@ -218,6 +218,23 @@ node render_scene_07_infographic.mjs --duration 20 --fps 30
 
 Output: `output/scene-07-role-infographic.mp4`
 
+### Versi per scene (satu role = satu video full screen)
+
+Lebih cinematic — foto besar + UI panel kanan, **bukan** grid 2×2:
+
+```bash
+node render_scene_07_per_role.mjs --duration 5 --fps 30
+```
+
+Output per role:
+- `scene-07-role-operator.mp4`
+- `scene-07-role-engineer.mp4`
+- `scene-07-role-supervisor.mp4`
+- `scene-07-role-plant-manager.mp4`
+- `scene-07-roles-full.mp4` (gabungan 20 detik)
+
+Satu role saja: `node render_scene_07_per_role.mjs --role engineer`
+
 Upload GCS:
 ```bash
 gsutil -m cp output/scene-07-*.mp4 gs://buek-core-video-output/scenes/scene-07-role-workspaces/
