@@ -1,191 +1,176 @@
-# Gemini Veo — Setup Video Buek Core
+# Vertex AI Veo — Setup Video Buek Core
 
-Panduan setup untuk generate video Scene 1–3 dengan **Google Gemini Veo**, lalu edit di CapCut.
-
----
-
-## Opsi A: Google AI Studio (paling mudah — tanpa coding)
-
-Cocok kalau mau coba cepat di browser.
-
-### Langkah 1 — Aktifkan billing
-
-Veo adalah fitur **berbayar** (paid preview). Trial credit GCP Anda (~Rp5.3 juta) bisa dipakai.
-
-1. Buka [Google AI Studio](https://aistudio.google.com/)
-2. Login dengan akun Google yang sama dengan GCP
-3. Klik ikon **Key** (kanan atas) → pilih project **My First Project**
-4. Jika diminta, aktifkan **Paid tier** / billing di [Google Cloud Console](https://console.cloud.google.com/billing)
-
-### Langkah 2 — Buat API Key
-
-1. Buka [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-2. Klik **Create API key**
-3. Pilih project GCP Anda
-4. Salin key — simpan aman, jangan commit ke GitHub
-
-### Langkah 3 — Generate video di browser
-
-1. Buka [Veo 3.1 di AI Studio](https://aistudio.google.com/models/veo-3)
-2. Pilih model **Veo 3.1 Fast** (lebih cepat & murah)
-3. Paste prompt dari `prompts.json` (lihat bawah)
-4. Setting:
-   - **Aspect ratio:** 16:9
-   - **Duration:** 6 detik (Scene 1 & 2) atau 8 detik (Scene 3)
-   - **Resolution:** 720p (cukup untuk CapCut)
-5. Klik Generate → tunggu 1–3 menit
-6. Download MP4
-
-### Image-to-video (gunakan gambar Scene 1 Anda)
-
-Di AI Studio Veo, upload gambar pabrik yang sudah Anda punya, lalu prompt:
-
-```
-Animate this factory scene with slow dolly forward. Conveyors move slowly,
-operators continue working, robotic arms move gently. Keep composition
-and characters the same as the source image. Cinematic, realistic.
-```
+Generate video Scene 1–3 dengan **Vertex AI + ADC** (tanpa API key — cocok kalau organisasi memblokir API keys).
 
 ---
 
-## Opsi B: Script Python (batch generate)
+## Tentang "Free Tier"
 
-Cocok kalau mau generate banyak scene sekaligus dari terminal.
+| Yang gratis | Yang tidak |
+|-------------|------------|
+| Trial credit GCP **Rp5.376.601** (90 hari) | Veo **tidak** benar-benar $0 tanpa billing |
+| Model **veo-3.1-lite** (paling murah) | Perlu billing account aktif |
+| ADC auth (tanpa API key) | Perlu enable Vertex AI API |
 
-### Langkah 1 — Install
+**Kesimpulan:** Pakai **trial credit** Anda — itu yang dimaksud "free" di GCP. Billing tetap harus diaktifkan, tapi tidak langsung charge kartu selama credit masih ada.
+
+---
+
+## Opsi A: Vertex AI + ADC (DISARANKAN untuk Anda)
+
+Cocok karena organisasi Anda memblokir API keys (*"API keys are disallowed"*).
+
+### Langkah 1 — Install Google Cloud CLI
+
+Download: [cloud.google.com/sdk/docs/install](https://cloud.google.com/sdk/docs/install)
+
+### Langkah 2 — Jalankan setup otomatis
 
 ```bash
 cd tools/video-gen
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
+chmod +x setup-vertex.sh
+./setup-vertex.sh
 ```
 
-### Langkah 2 — Isi API key
+Script ini akan:
+1. Login via browser (`gcloud auth application-default login`)
+2. Enable **Vertex AI API** + **Cloud Storage API**
+3. Buat bucket GCS untuk output video
+4. Generate file `.env`
 
-Edit `.env`:
+### Langkah 3 — Aktifkan billing (wajib)
 
-```
-GEMINI_API_KEY=AIza...your_key_here
-VEO_MODEL=veo-3.1-fast-generate-preview
-OUTPUT_DIR=./output
-```
-
-### Langkah 3 — Cek prompt (tanpa bayar)
-
-```bash
-python generate_scene.py --list
-python generate_scene.py --scene scene-01-opening-factory --dry-run
-```
+1. [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
+2. Hubungkan project **My First Project** (`project-c5cf1cf2-7957-4efb-a33`)
+3. Trial credit Rp5.3 juta akan dipakai otomatis
 
 ### Langkah 4 — Generate video
 
 ```bash
-# Satu scene
+pip install -r requirements.txt
+python generate_scene.py --scene scene-01-opening-factory --dry-run
 python generate_scene.py --scene scene-01-opening-factory
-
-# Semua scene GPT (1-3)
-python generate_scene.py --all
 ```
 
-Output ada di `tools/video-gen/output/`.
+Output: `tools/video-gen/output/scene-01-opening-factory.mp4`
 
-### Image-to-video dari gambar Anda
-
-Simpan gambar pabrik sebagai `tools/video-gen/input/scene-01.jpg`, lalu:
+### Setup manual (kalau script gagal)
 
 ```bash
+# 1. Login
+gcloud auth application-default login
+gcloud config set project project-c5cf1cf2-7957-4efb-a33
+
+# 2. Enable APIs
+gcloud services enable aiplatform.googleapis.com storage.googleapis.com
+
+# 3. Buat bucket
+gsutil mb -l us-central1 gs://buek-core-video-output
+
+# 4. Copy config
+cp .env.example .env
+# Edit .env — pastikan USE_VERTEX_AI=true
+```
+
+Isi `.env`:
+```
+USE_VERTEX_AI=true
+GOOGLE_CLOUD_PROJECT=project-c5cf1cf2-7957-4efb-a33
+GOOGLE_CLOUD_LOCATION=us-central1
+GCS_OUTPUT_URI=gs://buek-core-video-output/scenes
+VEO_MODEL=veo-3.1-lite-generate-preview
+OUTPUT_DIR=./output
+```
+
+---
+
+## Opsi B: Google AI Studio (browser, tanpa script)
+
+Kalau Vertex ribet, coba langsung di browser:
+
+1. [aistudio.google.com/models/veo-3](https://aistudio.google.com/models/veo-3)
+2. Upload gambar pabrik → image-to-video
+3. Model: **Veo 3.1 Lite** atau **Fast**
+4. Download MP4
+
+---
+
+## Opsi C: Gemini API key (jika tidak diblokir)
+
+Hanya jika organisasi mengizinkan API key (`AIza...`):
+
+```
+USE_VERTEX_AI=false
+GEMINI_API_KEY=AIza...
+```
+
+---
+
+## Model & biaya (perkiraan)
+
+| Model | Kualitas | Biaya estimasi / 6 detik |
+|-------|----------|--------------------------|
+| `veo-3.1-lite-generate-preview` | Cukup untuk demo | ~$0.04–0.15 |
+| `veo-3.1-fast-generate-preview` | Lebih bagus | ~$0.50–1.00 |
+| `veo-3.1-generate-001` | Terbaik | ~$2–4 |
+
+3 scene (20 detik total) dengan **Lite** ≈ **Rp5.000–30.000** dari trial credit.
+
+---
+
+## Image-to-video (gambar pabrik Anda)
+
+```bash
+# Simpan gambar sebagai input/scene-01.jpg
 python generate_from_image.py --image input/scene-01.jpg --scene scene-01-opening-factory
-```
-
----
-
-## Estimasi biaya
-
-| Model | Per detik video | Scene 6 detik |
-|-------|-----------------|---------------|
-| Veo 3.1 Fast | ~$0.15–0.40/s | ~$1–2.4 |
-| Veo 3.1 (full) | ~$0.75/s | ~$4.5 |
-
-3 scene (6+6+8 = 20 detik) ≈ **$3–15** tergantung model. Trial credit GCP Anda lebih dari cukup.
-
----
-
-## Prompt siap paste (AI Studio)
-
-### Scene 1 — Opening Factory (6 detik)
-
-```
-Wide cinematic slow dolly forward shot of a modern inkjet printer manufacturing factory. Clean white and gray production floor, multiple parallel conveyor belts with white and black inkjet printers at assembly stages. Six to eight operators in light blue uniforms working at stations. One engineer in navy blue uniform walking down the center aisle away from camera. White robotic arms on the right. Large windows on the left with bright morning sunlight, polished reflective floor.
-
-CHARACTER CONSISTENCY: East Asian woman operator age 25 in light blue factory uniform and blue safety cap. East Asian male engineer age 30 with thin rectangular glasses and navy blue engineer uniform. Never looking at camera. Photorealistic Apple commercial style, 16:9 cinematic, no text, no logos.
-```
-
-### Scene 2 — Engineer Looking (6 detik)
-
-```
-Over-the-shoulder cinematic shot from behind a manufacturing engineer sitting at a modern desk inside a factory office. Three monitors: left shows quality dashboard with charts, center shows PDF SOP technical document, right shows Excel spreadsheet with historical defect data. Engineer has hand on chin thinking. Glass partition behind shows blurred factory floor. Slow zoom in.
-
-Same engineer character: East Asian man age 30, thin rectangular glasses, navy blue engineer uniform. Never looking at camera. Photorealistic, 16:9, no readable text on screens.
-```
-
-### Scene 3 — Production Waiting (8 detik)
-
-```
-Close-up cinematic shot of a stopped inkjet printer production line. White inkjet printer still on conveyor. Yellow warning light blinking on control panel. Two operators in blue uniforms looking concerned. Engineer in background with hand on head thinking. Tense atmosphere, shallow depth of field. Slow horizontal pan.
-
-Same characters as previous scenes. Never looking at camera. Photorealistic factory, 16:9, no logos.
-```
-
----
-
-## Scene yang TIDAK perlu Veo
-
-| Scene | Cara |
-|-------|------|
-| 4 Logo | Pakai `docs/images/buek-core-hero.svg` di Canva |
-| 5, 7, 8, 10, 12 | Screen record `core.buekwebsite.com` |
-| 6, 13 | Infografis Canva |
-| 11 | Ilustrasi brain/network di Canva |
-| 14 | Logo + URL di Canva |
-
----
-
-## Workflow lengkap
-
-```
-Gemini Veo (Scene 1-3)
-        ↓
-   Download MP4
-        ↓
-CapCut + Screen record (Scene 5-12)
-        ↓
-Canva animasi (Scene 4, 6, 13, 14)
-        ↓
-Voiceover + musik di CapCut
-        ↓
-Export 1080p → YouTube (unlisted) → link di README
 ```
 
 ---
 
 ## Troubleshooting
 
-| Masalah | Solusi |
-|---------|--------|
-| `API key invalid` | Buat key baru di AI Studio, pastikan billing aktif |
-| `Veo not available` | Pastikan pakai paid tier, bukan free tier |
-| `Quota exceeded` | Tunggu atau upgrade limit di Cloud Console |
-| Karakter tidak konsisten | Pakai image-to-video dari Scene 1 sebagai reference |
-| Video terlalu pendek | Veo max 4/6/8 detik — extend di CapCut dengan slow-mo |
+| Error | Solusi |
+|-------|--------|
+| `API keys are disallowed` | Pakai **Vertex AI + ADC** (Opsi A), bukan API key |
+| `429 quota exceeded` | Aktifkan billing di GCP |
+| `RESOURCE_PROJECT_INVALID` | Cek `GOOGLE_CLOUD_PROJECT` di `.env` |
+| `Permission denied` | Jalankan `gcloud auth application-default login` lagi |
+| `output_gcs_uri required` | Set `GCS_OUTPUT_URI` di `.env` dan buat bucket |
+
+---
+
+## Prompt siap pakai
+
+Lihat `prompts.json` atau `docs/video-production-guide.md`.
+
+### Scene 1 (image-to-video)
+```
+Animate this factory scene with slow dolly forward. Conveyors move slowly,
+operators continue working, robotic arms move gently. Keep composition
+and characters the same. Cinematic, realistic, morning light.
+```
+
+---
+
+## Workflow lengkap
+
+```
+Vertex AI generate (Scene 1-3)
+        ↓
+Screen record core.buekwebsite.com (Scene 5-12)
+        ↓
+Canva logo + infographic (Scene 4, 6, 13, 14)
+        ↓
+CapCut + voiceover
+        ↓
+Upload YouTube → link di README
+```
 
 ---
 
 ## Link penting
 
-- [Google AI Studio](https://aistudio.google.com/)
-- [API Keys](https://aistudio.google.com/apikey)
-- [Veo 3.1 Model](https://aistudio.google.com/models/veo-3)
-- [Veo API Docs](https://ai.google.dev/gemini-api/docs/video)
+- [Vertex AI Video Docs](https://cloud.google.com/vertex-ai/generative-ai/docs/video/overview)
 - [GCP Billing](https://console.cloud.google.com/billing)
+- [Cloud Storage](https://console.cloud.google.com/storage)
+- [gcloud install](https://cloud.google.com/sdk/docs/install)
