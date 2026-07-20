@@ -51,7 +51,7 @@
       "voice": "Instead of creating a different AI for every business... Buek Core separates AI reasoning... from domain knowledge.",
       "method": "html-animation",
       "render": "node render_scene_06.mjs --duration 10 --fps 30",
-      "notes": "Infographic: AI CORE → Knowledge → 4 industries, stagger 0.8s"
+      "notes": "Infographic: Buek Core → Knowledge → 4 industries, stagger 0.8s"
     },
     {
       "id": "scene-07-role-workspaces",

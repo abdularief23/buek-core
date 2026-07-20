@@ -262,7 +262,7 @@ gsutil cp output/scene-05-website.mp4 gs://buek-core-video-output/scenes/scene-0
 
 ## Scene 6 — Platform vision infographic
 
-Animasi diagram: **AI CORE** → **Knowledge** → Manufacturing / Healthcare / Construction / Retail.
+Animasi diagram: **Buek Core** → **Knowledge** → Manufacturing / Healthcare / Construction / Retail.
 
 ```bash
 cd tools/video-gen

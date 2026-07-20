@@ -134,7 +134,7 @@ Close-up cinematic shot of an inkjet printer production line that has stopped. A
 
 ```
         ┌─────────────┐
-        │   AI CORE   │  ← gradient biru-ungu
+        │  Buek Core  │  ← gradient biru-ungu
         └──────┬──────┘
                │
         ┌──────▼──────┐
