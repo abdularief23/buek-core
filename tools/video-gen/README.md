@@ -179,6 +179,24 @@ Animasi: cube pop → hex logo → circuit traces → **BUEK CORE** → divider 
 
 ---
 
+## Scene 5 — Website screen record
+
+Rekam landing page `core.buekwebsite.com` (hero + scroll pelan ke demo industri).
+
+```bash
+cd tools/video-gen
+node render_scene_05.mjs --duration 13 --fps 30
+```
+
+Output: `tools/video-gen/output/scene-05-website.mp4`
+
+Upload ke GCS (opsional):
+```bash
+gsutil cp output/scene-05-website.mp4 gs://buek-core-video-output/scenes/scene-05-website/scene-05-website.mp4
+```
+
+---
+
 ## Workflow lengkap
 
 ```

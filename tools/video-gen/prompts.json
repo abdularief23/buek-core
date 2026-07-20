@@ -33,6 +33,16 @@
       "aspect_ratio": "16:9",
       "resolution": "720p",
       "camera": "close up slow pan"
+    },
+    {
+      "id": "scene-05-website",
+      "time": "0:22-0:35",
+      "duration_seconds": 13,
+      "voice": "Meet Buek Core. A platform designed to build AI Workers... for any industry.",
+      "method": "screen-record",
+      "url": "https://core.buekwebsite.com",
+      "render": "node render_scene_05.mjs --duration 13 --fps 30",
+      "notes": "Hero + slow scroll, English UI, not logged in"
     }
   ]
 }
