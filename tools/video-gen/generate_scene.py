@@ -88,7 +88,6 @@ def generate_video(scene_id: str, dry_run: bool = False) -> None:
             aspect_ratio=scene.get("aspect_ratio", "16:9"),
             resolution=scene.get("resolution", "720p"),
             negative_prompt=scene.get("negative_prompt"),
-            enhance_prompt=True,
         ),
     )
 
