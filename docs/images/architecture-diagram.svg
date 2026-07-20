@@ -12,7 +12,7 @@
   <!-- Row 1: Users -->
   <rect x="300" y="24" width="360" height="52" rx="12" fill="#fff" stroke="#c7d7fe" stroke-width="2" filter="url(#shadow)"/>
   <text x="480" y="56" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700" fill="#162044">Users  Operator · Engineer · Supervisor · Manager</text>
-  <path d="M480 76 V108" stroke="#0d4ff0" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <path d="M480 76 V108" stroke="#0d4ff0" stroke-width="3" fill="none"/>
   <!-- Row 2: Buek Core -->
   <rect x="280" y="108" width="400" height="56" rx="14" fill="url(#core)" filter="url(#shadow)"/>
   <text x="480" y="142" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800" fill="#fff">Buek Core Platform (React + Express API)</text>
