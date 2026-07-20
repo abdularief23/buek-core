@@ -54,14 +54,57 @@
       "notes": "Infographic: AI CORE → Knowledge → 4 industries, stagger 0.8s"
     },
     {
-      "id": "scene-07-login",
-      "time": "0:45-1:10",
-      "duration_seconds": 25,
-      "voice": "Every user starts with a workspace built for their role...",
-      "method": "screen-record",
-      "url": "https://core.buekwebsite.com",
-      "render": "node render_scene_07.mjs --duration 25 --fps 30",
-      "notes": "Demo credentials → Toyota Indonesia → Engineer → Launch Demo → dashboard"
+      "id": "scene-07-role-workspaces",
+      "time": "0:40-1:00",
+      "duration_seconds": 20,
+      "voice": "Every user has a dedicated workspace based on their role. Operators focus on keeping production running. Engineers investigate production issues and identify root causes. Supervisors review findings and approve corrective actions. Plant Managers monitor operational performance through real-time executive insights.",
+      "method": "screen-record + veo-broll",
+      "render": "node render_scene_07.mjs --shot-duration 4 --fps 30",
+      "shots": [
+        {
+          "id": "shot1-login",
+          "time": "0:40-0:44",
+          "method": "screen-record",
+          "notes": "Toyota Indonesia → Engineer → Launch Demo"
+        },
+        {
+          "id": "shot2-operator-broll",
+          "time": "0:44-0:48",
+          "method": "veo",
+          "duration_seconds": 4,
+          "prompt": "Medium cinematic shot at a modern automotive assembly line. East Asian woman operator age 26 in light blue factory uniform, blue safety cap, white gloves, standing beside a conveyor with car parts. She interacts with an industrial touchscreen panel showing production dashboard metrics. She taps Quality Check on screen. Soft morning factory light, slow pan right. Photorealistic, never looking at camera, no logos, no readable text on screen.",
+          "negative_prompt": "cartoon, blurry, watermark, logo, facing camera, unsafe behavior",
+          "screen_overlay": "scene-07-shot2-operator.mp4"
+        },
+        {
+          "id": "shot3-engineer-broll",
+          "time": "0:48-0:52",
+          "method": "veo",
+          "duration_seconds": 4,
+          "prompt": "Over-the-shoulder cinematic shot of East Asian male manufacturing engineer age 32 with thin rectangular glasses, navy blue engineering uniform, sitting at desk in factory office. Laptop shows engineering investigation workspace with charts and SOP documents. Production floor visible through glass behind him. Slow push in toward laptop. Coffee cup and notebook on desk. Never looking at camera. Photorealistic Apple commercial style.",
+          "negative_prompt": "cartoon, blurry, readable screen text, watermark, logo, facing camera",
+          "screen_overlay": "scene-07-shot3-engineer.mp4"
+        },
+        {
+          "id": "shot4-supervisor-broll",
+          "time": "0:52-0:56",
+          "method": "veo",
+          "duration_seconds": 4,
+          "prompt": "Close-up cinematic shot of East Asian male production supervisor age 42 in supervisor uniform holding tablet in factory office area. Tablet shows investigation approval dashboard. His finger taps Approve button. Focus on hands and tablet. Blurred production floor in background. Professional lighting, shallow depth of field. Never looking at camera.",
+          "negative_prompt": "cartoon, blurry, readable text, watermark, logo, facing camera",
+          "screen_overlay": "scene-07-shot4-supervisor.mp4"
+        },
+        {
+          "id": "shot5-manager-broll",
+          "time": "0:56-1:00",
+          "method": "veo",
+          "duration_seconds": 4,
+          "prompt": "Wide cinematic shot of executive meeting room in manufacturing plant. East Asian male plant manager age 50 in white shirt and dark blue blazer stands before large wall display showing executive KPI dashboard with production charts. He gestures while discussing with engineer in background. Slow dolly in. Professional, confident mood. Never looking at camera. Photorealistic.",
+          "negative_prompt": "cartoon, blurry, readable dashboard text, watermark, logo, facing camera",
+          "screen_overlay": "scene-07-shot5-manager.mp4"
+        }
+      ],
+      "notes": "Screen recordings per role + optional Veo B-roll composited in CapCut"
     }
   ]
 }

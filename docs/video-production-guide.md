@@ -149,20 +149,29 @@ Manufacturing Healthcare Construction Retail
 
 ---
 
-## SCENE 7 — Login (0:45–1:10)
+## SCENE 7 — Role-Based Workspace (0:40–1:00)
 
 **Voice:**  
-*"Every user starts with a workspace built for their role..."*
+*"Every user has a dedicated workspace based on their role. Operators focus on keeping production running. Engineers investigate production issues and identify root causes. Supervisors review findings and approve corrective actions. Plant Managers monitor operational performance through real-time executive insights. One platform... Different roles... Working together."*
 
-**Screen recording script:**
-1. Halaman login → tunjukkan info akun demo
-2. Scroll ke **Demo Industri**
-3. Klik **Toyota Indonesia**
-4. Pilih role **Engineer**
-5. Klik **Luncurkan Demo**
-6. Tunggu loading selesai
+**Durasi:** 20 detik (5 shot × 4 detik)
 
-**CapCut:** Tambah callout arrow ke setiap klik. Pause 1 detik setelah setiap aksi.
+| Shot | Waktu | Visual | Render |
+|------|-------|--------|--------|
+| 1 | 0:40–0:44 | Login → Toyota → Engineer → Launch Demo | `node render_scene_07.mjs --shot 1` |
+| 2 | 0:44–0:48 | Operator workspace (production + report) | `--shot 2` + Veo B-roll operator |
+| 3 | 0:48–0:52 | Engineer opens investigation | `--shot 3` + Veo B-roll engineer |
+| 4 | 0:52–0:56 | Supervisor review & Approve | `--shot 4` + Veo B-roll supervisor |
+| 5 | 0:56–1:00 | Plant Manager executive KPI dashboard | `--shot 5` + Veo B-roll manager |
+
+**Render full scene:**
+```bash
+cd tools/video-gen && node render_scene_07.mjs --shot-duration 4 --fps 30
+```
+
+**CapCut:** Overlay screen recording di device (touchscreen/laptop/tablet) pada Veo B-roll shots 2–5. Shot 1 full screen.
+
+**Flow penonton:** Operator laporkan → Engineer investigasi → Supervisor approve → Plant Manager lihat KPI.
 
 ---
 

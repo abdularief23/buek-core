@@ -179,6 +179,42 @@ Animasi: cube pop → hex logo → circuit traces → **BUEK CORE** → divider 
 
 ---
 
+## Scene 7 — Role-Based Workspace (revised)
+
+**Waktu:** 0:40–1:00 (20 detik) — 5 shot × 4 detik
+
+**Voice:** Every user has a dedicated workspace based on their role...
+
+### Render screen recordings
+
+```bash
+cd tools/video-gen
+node render_scene_07.mjs --shot-duration 4 --fps 30
+```
+
+Output:
+- `output/scene-07-role-workspaces.mp4` — full scene (screen only)
+- `output/scene-07-shot1-login.mp4` … `shot5-manager.mp4` — per-shot untuk CapCut
+
+### Compositing di CapCut
+
+| Shot | Screen record | Veo B-roll (opsional) |
+|------|---------------|----------------------|
+| 1 | Login → Launch | — |
+| 2 | Operator dashboard | Operator di line + touchscreen |
+| 3 | Engineer investigation | Engineer OTS laptop |
+| 4 | Supervisor approve | Supervisor + tablet |
+| 5 | Plant Manager KPI | Executive meeting room |
+
+Veo prompts ada di `prompts.json` → `scene-07-role-workspaces.shots[1-4]`
+
+Upload GCS:
+```bash
+gsutil -m cp output/scene-07-*.mp4 gs://buek-core-video-output/scenes/scene-07-role-workspaces/
+```
+
+---
+
 ## Scene 5 — Website screen record
 
 Rekam landing page `core.buekwebsite.com` (hero + scroll pelan ke demo industri).
