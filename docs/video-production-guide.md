@@ -281,7 +281,7 @@ Setiap item: icon + label, fade in dari bawah, warna berbeda tipis tapi palette 
 ## CapCut Assembly Checklist
 
 1. **Timeline:** 1920×1080, 30fps
-2. **Voiceover:** Rekam di CapCut atau ElevenLabs. Pace: ~130 kata/menit
+2. **Voiceover:** Script di [docs/voiceover-script.md](../docs/voiceover-script.md). Audio TTS: `python3 generate_voiceover.py` → `output/voiceover/scene-*.mp3` + `voiceover-full.mp3`. Atau rekam manual di CapCut/ElevenLabs.
 3. **Music:** Epidemic Sound / CapCut library — "corporate inspiring", -18dB di bawah voice
 4. **Transitions:** Cut keras untuk screen record; dissolve 0.5s untuk scene GPT
 5. **Subtitles:** Aktifkan auto-caption, koreksi manual untuk istilah teknis (SOP, Buek Core)

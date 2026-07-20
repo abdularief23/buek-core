@@ -154,7 +154,7 @@ domains/manufacturing/ First domain module (SOPs, tools, prompts)
 tools/video-gen/       Demo video render pipeline
 ```
 
-More detail: [docs/architecture.md](docs/architecture.md) · [docs/deployment.md](docs/deployment.md)
+More detail: [docs/architecture.md](docs/architecture.md) · [docs/deployment.md](docs/deployment.md) · [docs/voiceover-script.md](docs/voiceover-script.md) (demo video voiceover + MP3)
 
 ---
 
