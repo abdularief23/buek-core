@@ -179,6 +179,69 @@ Animasi: cube pop → hex logo → circuit traces → **BUEK CORE** → divider 
 
 ---
 
+## Scene 7 — Role-Based Workspace (revised)
+
+**Waktu:** 0:40–1:00 (20 detik) — 5 shot × 4 detik
+
+**Voice:** Every user has a dedicated workspace based on their role...
+
+### Render screen recordings
+
+```bash
+cd tools/video-gen
+node render_scene_07.mjs --shot-duration 4 --fps 30
+```
+
+Output:
+- `output/scene-07-role-workspaces.mp4` — full scene (screen only)
+- `output/scene-07-shot1-login.mp4` … `shot5-manager.mp4` — per-shot untuk CapCut
+
+### Compositing di CapCut
+
+| Shot | Screen record | Veo B-roll (opsional) |
+|------|---------------|----------------------|
+| 1 | Login → Launch | — |
+| 2 | Operator dashboard | Operator di line + touchscreen |
+| 3 | Engineer investigation | Engineer OTS laptop |
+| 4 | Supervisor approve | Supervisor + tablet |
+| 5 | Plant Manager KPI | Executive meeting room |
+
+Veo prompts ada di `prompts.json` → `scene-07-role-workspaces.shots[1-4]`
+
+### Versi per scene (rekomendasi — satu role = satu video full screen)
+
+Cinematic — foto besar + UI panel kanan, **bukan** grid 2×2:
+
+```bash
+node render_scene_07_per_role.mjs --duration 5 --fps 30
+```
+
+Output per role:
+- `scene-07-role-operator.mp4`
+- `scene-07-role-engineer.mp4`
+- `scene-07-role-supervisor.mp4`
+- `scene-07-role-plant-manager.mp4`
+- `scene-07-roles-full.mp4` (gabungan 20 detik)
+
+Satu role saja: `node render_scene_07_per_role.mjs --role engineer`
+
+### Versi infografis 2×2 (legacy)
+
+Layout 4 role sekaligus dalam grid — gunakan hanya jika perlu satu file ringkas:
+
+```bash
+node render_scene_07_infographic.mjs --duration 20 --fps 30
+```
+
+Output: `output/scene-07-role-infographic.mp4`
+
+Upload GCS:
+```bash
+gsutil -m cp output/scene-07-*.mp4 gs://buek-core-video-output/scenes/scene-07-role-workspaces/
+```
+
+---
+
 ## Scene 5 — Website screen record
 
 Rekam landing page `core.buekwebsite.com` (hero + scroll pelan ke demo industri).
@@ -199,7 +262,7 @@ gsutil cp output/scene-05-website.mp4 gs://buek-core-video-output/scenes/scene-0
 
 ## Scene 6 — Platform vision infographic
 
-Animasi diagram: **AI CORE** → **Knowledge** → Manufacturing / Healthcare / Construction / Retail.
+Animasi diagram: **Buek Core** → **Knowledge** → Manufacturing / Healthcare / Construction / Retail.
 
 ```bash
 cd tools/video-gen
@@ -211,6 +274,24 @@ Output: `output/scene-06-platform-vision.mp4`
 Upload ke GCS:
 ```bash
 gsutil cp output/scene-06-platform-vision.mp4 gs://buek-core-video-output/scenes/scene-06-platform-vision/scene-06-platform-vision.mp4
+```
+
+---
+
+## Scene 7 — Login & demo launch
+
+Screen record alur login demo: kredensial → Toyota Indonesia → Engineer → Launch Demo → dashboard.
+
+```bash
+cd tools/video-gen
+node render_scene_07.mjs --duration 25 --fps 30
+```
+
+Output: `output/scene-07-login.mp4`
+
+Upload ke GCS:
+```bash
+gsutil cp output/scene-07-login.mp4 gs://buek-core-video-output/scenes/scene-07-login/scene-07-login.mp4
 ```
 
 ---

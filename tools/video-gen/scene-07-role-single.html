@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>BUEK CORE — Role Scene</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background: #0b1220;
+      color: #fff;
+    }
+    .scene {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .photo {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.06);
+      animation: kenBurns 5s ease-out forwards;
+    }
+    .photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(7,19,65,0.15) 0%, rgba(7,19,65,0.55) 52%, rgba(11,18,32,0.92) 68%, #0b1220 100%);
+    }
+    .topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 36px 48px;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-out 0.1s forwards;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #0ea5ff, #1747e8 50%, #7c2df6);
+    }
+    .brand h1 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: #fff;
+    }
+    .brand h1 span {
+      background: linear-gradient(90deg, #38bdf8, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .role-pill {
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .content {
+      position: absolute;
+      z-index: 2;
+      right: 48px;
+      top: 120px;
+      bottom: 200px;
+      width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      opacity: 0;
+      transform: translateX(40px);
+      animation: slideIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+    }
+    .ui-frame {
+      flex: 1;
+      background: #111827;
+      border-radius: 20px;
+      border: 2px solid rgba(255,255,255,0.1);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.45);
+      overflow: hidden;
+      display: flex;
+      min-height: 0;
+    }
+    .sidebar {
+      width: 72px;
+      background: #0a0f1a;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+    .sidebar .logo-mini {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0d4ff0, #7a2af7);
+      margin-bottom: 8px;
+    }
+    .nav-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      opacity: 0.5;
+    }
+    .nav-dot.active {
+      background: rgba(6,182,212,0.2);
+      border: 1px solid rgba(34,211,238,0.4);
+      opacity: 1;
+    }
+    .ui-main {
+      flex: 1;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 28px 32px;
+      overflow: hidden;
+    }
+    .ui-main h2 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .ui-main .sub {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .kpi {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .kpi .label { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi .val { font-size: 28px; font-weight: 800; margin-top: 4px; color: #0d4ff0; }
+    .kpi .val.green { color: #059669; }
+    .kpi .val.amber { color: #d97706; }
+    .kpi .val.red { color: #dc2626; }
+    .ui-list { list-style: none; }
+    .ui-list li {
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .ui-list .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-left: 8px;
+    }
+    .tag-pending { background: #fef3c7; color: #b45309; }
+    .tag-review { background: #dbeafe; color: #1d4ed8; }
+    .ui-btn {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+    }
+    .btn-primary { background: #0d4ff0; color: #fff; }
+    .btn-cyan { background: #06b6d4; color: #0f172a; }
+    .btn-red { background: #ef4444; color: #fff; margin-left: 10px; }
+    .gauge {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 10px solid #e2e8f0;
+      border-top-color: #0d4ff0;
+      border-right-color: #22c55e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      color: #0d4ff0;
+      margin-bottom: 16px;
+    }
+    .chart-bar {
+      height: 80px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(13,79,240,0.15), transparent);
+      border: 1px solid #e2e8f0;
+      margin-top: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-bar::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 55%;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 80' preserveAspectRatio='none'%3E%3Cpath d='M0 60 L40 45 L80 50 L120 30 L160 35 L200 20 L240 25 L280 12 L300 8' fill='none' stroke='%230d4ff0' stroke-width='3'/%3E%3C/svg%3E") bottom/100% 100% no-repeat;
+    }
+    .copy {
+      position: absolute;
+      z-index: 3;
+      left: 48px;
+      bottom: 48px;
+      max-width: 680px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.6s ease-out 0.7s forwards;
+    }
+    .copy .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0d4ff0, #7a2af7);
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .copy h2 {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+    .copy .sub {
+      font-size: 22px;
+      font-weight: 600;
+      color: #7dd3fc;
+      margin-bottom: 14px;
+    }
+    .copy p {
+      font-size: 18px;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.88);
+    }
+    @keyframes kenBurns {
+      from { transform: scale(1.1); }
+      to { transform: scale(1.02); }
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene"></div>
+  <script>
+    const ROLES = {
+      operator: {
+        num: 1,
+        title: "Operator",
+        sub: "Focus on Production",
+        caption: "Operator accesses from the production line to monitor tasks and update production status.",
+        photo: "input/role-references/01-operator.jpg",
+        fallback: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1600&q=80",
+        nav: ["📊", "🏭", "✓", "📋", "⚙"],
+        activeNav: 1,
+        uiTitle: "Operator Dashboard",
+        uiSub: "Toyota Manufacturing · Shift B · EA Line",
+        body: `
+          <div class="kpi-grid">
+            <div class="kpi"><p class="label">Production Target</p><p class="val">1,200 / 1,500</p></div>
+            <div class="kpi"><p class="label">Current Output</p><p class="val green">960 Units</p></div>
+            <div class="kpi"><p class="label">Defect Count</p><p class="val amber">21 PPM</p></div>
+            <div class="kpi"><p class="label">Line Status</p><p class="val green">Running</p></div>
+          </div>
+          <button class="ui-btn btn-cyan">Quality Check</button>
+          <button class="ui-btn btn-red">Report Problem</button>
+        `,
+      },
+      engineer: {
+        num: 2,
+        title: "Engineer",
+        sub: "Investigate Issues",
+        caption: "Engineers access from their desk to investigate issues and create reports.",
+        photo: "input/role-references/02-engineer.jpg",
+        fallback: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1600&q=80",
+        nav: ["📊", "🔍", "📋", "📚", "⚙"],
+        activeNav: 1,
+        uiTitle: "Investigation Overview",
+        uiSub: "White Streak on Print · In Progress",
+        body: `
+          <ul class="ui-list">
+            <li><strong>White Streak on Print</strong> <span class="tag tag-review">Medium</span><br/>PPM +12% · Evidence photos attached</li>
+            <li><strong>AI Root Cause:</strong> Print Head Nozzle Clogging <span style="color:#0d4ff0;font-weight:700">85%</span></li>
+            <li><strong>SOP:</strong> SOP-PRN-003 Print Head Cleaning</li>
+          </ul>
+          <button class="ui-btn btn-primary">Open Investigation →</button>
+        `,
+      },
+      supervisor: {
+        num: 3,
+        title: "Supervisor",
+        sub: "Review and Approve",
+        caption: "Supervisors review reports and approve actions to ensure quality and compliance.",
+        photo: "input/role-references/03-supervisor.jpg",
+        fallback: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=1600&q=80",
+        nav: ["📊", "✓", "📋", "📑", "⚙"],
+        activeNav: 1,
+        uiTitle: "Pending Approvals",
+        uiSub: "3 analyses waiting for review",
+        body: `
+          <ul class="ui-list">
+            <li><strong>White Streak Analysis</strong> <span class="tag tag-pending">Pending</span><br/>Engineer: Abdul · Root Cause: Print Head Nozzle</li>
+            <li><strong>Countermeasure:</strong> Replace nozzle assembly<br/>Risk: Medium · Due: Today</li>
+          </ul>
+          <button class="ui-btn btn-primary">Approve</button>
+          <button class="ui-btn" style="background:#e2e8f0;color:#475569;margin-left:10px">Request Revision</button>
+        `,
+      },
+      manager: {
+        num: 4,
+        title: "Plant Manager",
+        sub: "Monitor Operations",
+        caption: "Plant Managers monitor company KPIs through executive insights in real time.",
+        photo: "input/role-references/04-plant-manager.jpg",
+        fallback: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1600&q=80",
+        nav: ["📊", "📈", "🏭", "💡", "⚙"],
+        activeNav: 0,
+        uiTitle: "Executive Dashboard",
+        uiSub: "Plant Manager Overview · Today",
+        body: `
+          <div style="display:flex;gap:24px;align-items:flex-start">
+            <div class="gauge">87%</div>
+            <div class="kpi-grid" style="flex:1;margin:0">
+              <div class="kpi"><p class="label">Production</p><p class="val">12,450</p></div>
+              <div class="kpi"><p class="label">Quality</p><p class="val green">98.7%</p></div>
+              <div class="kpi"><p class="label">Defects</p><p class="val amber">245 PPM</p></div>
+              <div class="kpi"><p class="label">Status</p><p class="val green">Running</p></div>
+            </div>
+          </div>
+          <div class="chart-bar"></div>
+          <ul class="ui-list" style="margin-top:16px">
+            <li>💡 AI: White streak issues increased 23% in 24h</li>
+          </ul>
+        `,
+      },
+    };
+
+    function loadPhoto(url, fallback) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => resolve(fallback);
+        img.src = url;
+      });
+    }
+
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const key = params.get("role") || "operator";
+      const role = ROLES[key];
+      if (!role) return;
+
+      const photoUrl = await loadPhoto(role.photo, role.fallback);
+      const navHtml = role.nav.map((icon, i) =>
+        `<div class="nav-dot${i === role.activeNav ? " active" : ""}">${icon}</div>`
+      ).join("");
+
+      document.getElementById("scene").innerHTML = `
+        <div class="photo" style="background-image:url('${photoUrl}')"></div>
+        <header class="topbar">
+          <div class="brand"><div class="brand-mark"></div><h1>BUEK <span>CORE</span></h1></div>
+          <span class="role-pill">${role.title}</span>
+        </header>
+        <div class="content">
+          <div class="ui-frame">
+            <div class="sidebar"><div class="logo-mini"></div>${navHtml}</div>
+            <div class="ui-main">
+              <h2>${role.uiTitle}</h2>
+              <p class="sub">${role.uiSub}</p>
+              ${role.body}
+            </div>
+          </div>
+        </div>
+        <div class="copy">
+          <div class="num">${role.num}</div>
+          <h2>${role.title}</h2>
+          <p class="sub">${role.sub}</p>
+          <p>${role.caption}</p>
+        </div>
+      `;
+    })();
+  </script>
+</body>
+</html>

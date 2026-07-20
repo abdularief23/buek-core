@@ -51,7 +51,100 @@
       "voice": "Instead of creating a different AI for every business... Buek Core separates AI reasoning... from domain knowledge.",
       "method": "html-animation",
       "render": "node render_scene_06.mjs --duration 10 --fps 30",
-      "notes": "Infographic: AI CORE → Knowledge → 4 industries, stagger 0.8s"
+      "notes": "Infographic: Buek Core → Knowledge → 4 industries, stagger 0.8s"
+    },
+    {
+      "id": "scene-07-role-workspaces",
+      "time": "0:40-1:00",
+      "duration_seconds": 20,
+      "voice": "Every user has a dedicated workspace based on their role. Operators focus on keeping production running. Engineers investigate production issues and identify root causes. Supervisors review findings and approve corrective actions. Plant Managers monitor operational performance through real-time executive insights.",
+      "method": "screen-record + veo-broll",
+      "render": "node render_scene_07.mjs --shot-duration 4 --fps 30",
+      "shots": [
+        {
+          "id": "shot1-login",
+          "time": "0:40-0:44",
+          "method": "screen-record",
+          "notes": "Toyota Indonesia → Engineer → Launch Demo"
+        },
+        {
+          "id": "shot2-operator-broll",
+          "time": "0:44-0:48",
+          "method": "veo",
+          "duration_seconds": 4,
+          "prompt": "Medium cinematic shot at a modern automotive assembly line. East Asian woman operator age 26 in light blue factory uniform, blue safety cap, white gloves, standing beside a conveyor with car parts. She interacts with an industrial touchscreen panel showing production dashboard metrics. She taps Quality Check on screen. Soft morning factory light, slow pan right. Photorealistic, never looking at camera, no logos, no readable text on screen.",
+          "negative_prompt": "cartoon, blurry, watermark, logo, facing camera, unsafe behavior",
+          "screen_overlay": "scene-07-shot2-operator.mp4"
+        },
+        {
+          "id": "shot3-engineer-broll",
+          "time": "0:48-0:52",
+          "method": "veo",
+          "duration_seconds": 4,
+          "prompt": "Over-the-shoulder cinematic shot of East Asian male manufacturing engineer age 32 with thin rectangular glasses, navy blue engineering uniform, sitting at desk in factory office. Laptop shows engineering investigation workspace with charts and SOP documents. Production floor visible through glass behind him. Slow push in toward laptop. Coffee cup and notebook on desk. Never looking at camera. Photorealistic Apple commercial style.",
+          "negative_prompt": "cartoon, blurry, readable screen text, watermark, logo, facing camera",
+          "screen_overlay": "scene-07-shot3-engineer.mp4"
+        },
+        {
+          "id": "shot4-supervisor-broll",
+          "time": "0:52-0:56",
+          "method": "veo",
+          "duration_seconds": 4,
+          "prompt": "Close-up cinematic shot of East Asian male production supervisor age 42 in supervisor uniform holding tablet in factory office area. Tablet shows investigation approval dashboard. His finger taps Approve button. Focus on hands and tablet. Blurred production floor in background. Professional lighting, shallow depth of field. Never looking at camera.",
+          "negative_prompt": "cartoon, blurry, readable text, watermark, logo, facing camera",
+          "screen_overlay": "scene-07-shot4-supervisor.mp4"
+        },
+        {
+          "id": "shot5-manager-broll",
+          "time": "0:56-1:00",
+          "method": "veo",
+          "duration_seconds": 4,
+          "prompt": "Wide cinematic shot of executive meeting room in manufacturing plant. East Asian male plant manager age 50 in white shirt and dark blue blazer stands before large wall display showing executive KPI dashboard with production charts. He gestures while discussing with engineer in background. Slow dolly in. Professional, confident mood. Never looking at camera. Photorealistic.",
+          "negative_prompt": "cartoon, blurry, readable dashboard text, watermark, logo, facing camera",
+          "screen_overlay": "scene-07-shot5-manager.mp4"
+        }
+      ],
+      "notes": "Primary: per-role full-screen cinematic (node render_scene_07_per_role.mjs). Optional: screen recordings (render_scene_07.mjs) + Veo B-roll in CapCut. Legacy 2×2 grid: render_scene_07_infographic.mjs"
+    },
+    {
+      "id": "role-photo-operator",
+      "duration_seconds": 6,
+      "method": "veo-still-or-video",
+      "output_image": "input/role-references/01-operator.jpg",
+      "prompt": "Cinematic medium profile shot. East Asian woman factory operator age 26, blue baseball cap and blue industrial work jacket with white OPERATOR patch on sleeve. She stands at a modern assembly line touching a large rugged industrial touchscreen on a metal arm. Green stack light on monitor stand is lit. Screen shows dark sidebar and white Operator Dashboard with production target progress bar, defect count, line status Running, Quality Check and Report Problem buttons. Printer assembly hardware in blue tray on conveyor. Bright clean factory background soft focus. Photorealistic Apple commercial style. Never looking at camera. No watermark.",
+      "negative_prompt": "cartoon, anime, blurry, watermark, facing camera, unsafe behavior, illegible gibberish text",
+      "aspect_ratio": "16:9",
+      "resolution": "720p"
+    },
+    {
+      "id": "role-photo-engineer",
+      "duration_seconds": 6,
+      "method": "veo-still-or-video",
+      "output_image": "input/role-references/02-engineer.jpg",
+      "prompt": "Cinematic medium shot. East Asian male manufacturing engineer age 32 with thin rectangular glasses, navy blue uniform with ENGINEERING shoulder patch. He sits at desk in factory control room with thoughtful pose hand on chin. Laptop shows Buek Core Investigation Overview White Streak on Print with Open Investigation button. Second monitor shows Root Cause Analysis with AI suggested causes ranked by confidence. Whiteboard behind lists Key Issues. Desk has SOP Manual binders, open troubleshooting guide with printer diagram, Buek Core coffee mug, yellow sticky note. Large window shows bright factory floor behind. Photorealistic. Never looking at camera.",
+      "negative_prompt": "cartoon, blurry, watermark, facing camera, unreadable screen chaos",
+      "aspect_ratio": "16:9",
+      "resolution": "720p"
+    },
+    {
+      "id": "role-photo-supervisor",
+      "duration_seconds": 6,
+      "method": "veo-still-or-video",
+      "output_image": "input/role-references/03-supervisor.jpg",
+      "prompt": "Cinematic medium profile shot. East Asian male production supervisor age 42 in navy work jacket with white SUPERVISOR patch on upper arm. He sits at desk in factory control room reviewing laptop. Screen shows Buek Core dark sidebar and Pending Approvals list with orange Pending and blue Review tags, investigation summary panel with root cause and risk. Desk has Buek Core mug, handheld radio, notepad, Production Supervisor Handbook with Toyota Manufacturing logo. Glass window behind shows factory floor with digital andon display showing Target Output Defect Status and green-yellow-red stack lights. Photorealistic sharp focus on subject and screen. Never looking at camera.",
+      "negative_prompt": "cartoon, blurry, watermark, facing camera",
+      "aspect_ratio": "16:9",
+      "resolution": "720p"
+    },
+    {
+      "id": "role-photo-plant-manager",
+      "duration_seconds": 6,
+      "method": "veo-still-or-video",
+      "output_image": "input/role-references/04-plant-manager.jpg",
+      "prompt": "Cinematic medium-wide shot. East Asian male plant manager age 50 in dark suit and glasses sitting at modern desk in dim executive office overlooking factory through large glass window. Wall-mounted large monitor displays Buek Core Executive Dashboard Plant Manager Overview with OEE gauge 87 percent, production trend charts, defect PPM, top issues White Streak on Print, AI insights panel, production status Running. Laptop and tablet on desk sync same dashboard. Buek Core mug, notebook, pen on desk. Contemplative professional mood, cool blue lighting. Photorealistic. Never looking at camera.",
+      "negative_prompt": "cartoon, blurry, watermark, facing camera, cluttered UI",
+      "aspect_ratio": "16:9",
+      "resolution": "720p"
     }
   ]
 }

@@ -28,7 +28,7 @@ export function loadEnv(): ApiEnv {
     corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:5173",
     databaseUrl: readRequired("DATABASE_URL"),
     ...(openAiApiKey ? { openAiApiKey } : {}),
-    openAiModel: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
+    openAiModel: process.env.OPENAI_MODEL ?? "gpt-5.6",
     ...(domainModules ? { domainModules } : {})
   };
 }
