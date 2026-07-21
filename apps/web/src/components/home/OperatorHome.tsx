@@ -9,6 +9,7 @@ import {
   type OperatorOptions
 } from "../../lib/data-api.js";
 import { TodayTimeline } from "../TodayTimeline.js";
+import { useLanguage } from "../../lib/language-context.js";
 import type { RoleHomeProps } from "./shared.js";
 
 export function OperatorHome({
@@ -16,6 +17,7 @@ export function OperatorHome({
   workspace,
   roleHome
 }: RoleHomeProps) {
+  const { t } = useLanguage();
   const op = roleHome.operator!;
   const [checklist, setChecklist] = useState<OperatorChecklist | null>(null);
   const [options, setOptions] = useState<OperatorOptions | null>(null);
@@ -23,6 +25,8 @@ export function OperatorHome({
   const [savingContext, setSavingContext] = useState(false);
   const [problem, setProblem] = useState("");
   const [rejectCount, setRejectCount] = useState(1);
+  const [totalProduction, setTotalProduction] = useState(op.targetOutput || 5000);
+  const [ngPhenomenon, setNgPhenomenon] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reportMessage, setReportMessage] = useState<string | null>(null);
@@ -64,6 +68,12 @@ export function OperatorHome({
         ? "Misalnya: Metal detector alarm"
         : "Misalnya: White Streak defect";
   const progressPct = Math.round((progress / targetOutput) * 100);
+  const ppmPreview =
+    totalProduction > 0 ? Math.round((rejectCount / totalProduction) * 1_000_000) : 0;
+
+  useEffect(() => {
+    if (targetOutput > 0) setTotalProduction(targetOutput);
+  }, [targetOutput]);
 
   async function handleContextChange(field: "line" | "shift" | "machineCode", value: string) {
     if (savingContext) return;
@@ -111,14 +121,17 @@ export function OperatorHome({
           shift,
           machineCode,
           occurredAt: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          totalProduction,
           rejectCount,
           reporterName: user.name,
+          ...(ngPhenomenon.trim() ? { ngPhenomenon: ngPhenomenon.trim() } : {}),
           ...(notes.trim() ? { notes: notes.trim() } : {})
         },
         user.role
       );
       setReportMessage(result.message);
       setProblem("");
+      setNgPhenomenon("");
       setNotes("");
       setRejectCount(1);
     } catch {
@@ -232,7 +245,47 @@ export function OperatorHome({
               required
             />
           </label>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block space-y-2">
+              <span className="buek-small text-slate-500">{t("operator.totalProduction")}</span>
+              <input
+                type="number"
+                min={1}
+                value={totalProduction}
+                onChange={(e) => setTotalProduction(Number(e.target.value))}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+                required
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="buek-small text-slate-500">{t("operator.rejectCount")}</span>
+              <input
+                type="number"
+                min={1}
+                value={rejectCount}
+                onChange={(e) => setRejectCount(Number(e.target.value))}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+                required
+              />
+            </label>
+          </div>
+          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3">
+            <p className="buek-small text-slate-500">{t("operator.ppmPreview")}</p>
+            <p className="text-2xl font-bold text-cyan-300">{ppmPreview.toLocaleString()}</p>
+            <p className="buek-small text-slate-500">
+              {t("operator.ngRate")}: {totalProduction > 0 ? ((rejectCount / totalProduction) * 100).toFixed(2) : 0}%
+            </p>
+          </div>
+          <label className="block space-y-2">
+            <span className="buek-small text-slate-500">{t("operator.ngPhenomenon")}</span>
+            <input
+              value={ngPhenomenon}
+              onChange={(e) => setNgPhenomenon(e.target.value)}
+              placeholder={problemPlaceholder}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+            />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
             <label className="block space-y-2">
               <span className="buek-small text-slate-500">Shift</span>
               <input value={shift} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-400" />
@@ -240,16 +293,6 @@ export function OperatorHome({
             <label className="block space-y-2">
               <span className="buek-small text-slate-500">Machine</span>
               <input value={machineCode} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-400" />
-            </label>
-            <label className="block space-y-2">
-              <span className="buek-small text-slate-500">Reject Count</span>
-              <input
-                type="number"
-                min={1}
-                value={rejectCount}
-                onChange={(e) => setRejectCount(Number(e.target.value))}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-              />
             </label>
           </div>
           <label className="block space-y-2">

@@ -3,11 +3,10 @@ import {
   type AppearanceMode,
   type AppLanguage,
   getAppearanceMode,
-  getAppLanguage,
   LANGUAGE_LABELS,
-  setAppearanceMode,
-  setAppLanguage
+  setAppearanceMode
 } from "../lib/user-preferences.js";
+import { useLanguage } from "../lib/language-context.js";
 
 const APPEARANCE_OPTIONS: Array<{ value: AppearanceMode; label: string }> = [
   { value: "light", label: "Light" },
@@ -22,9 +21,9 @@ const LANGUAGE_OPTIONS: Array<{ value: AppLanguage; label: string }> = [
 ];
 
 export function PreferencesMenu({ compact = false }: { compact?: boolean }) {
+  const { language, setLanguage, t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [appearance, setAppearance] = useState<AppearanceMode>(getAppearanceMode());
-  const [language, setLanguage] = useState<AppLanguage>(getAppLanguage());
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +58,7 @@ export function PreferencesMenu({ compact = false }: { compact?: boolean }) {
 
       {open ? (
         <div className="pref-menu-dropdown absolute right-0 z-50 mt-2 w-64 rounded-xl border border-white/10 bg-slate-900 p-4 shadow-xl">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Tampilan</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">{t("prefs.appearance")}</p>
           <div className="space-y-1">
             {APPEARANCE_OPTIONS.map((option) => (
               <button
@@ -81,16 +80,13 @@ export function PreferencesMenu({ compact = false }: { compact?: boolean }) {
             ))}
           </div>
 
-          <p className="mb-2 mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">Bahasa</p>
+          <p className="mb-2 mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">{t("prefs.language")}</p>
           <div className="space-y-1">
             {LANGUAGE_OPTIONS.map((option) => (
               <button
                 key={option.value}
                 type="button"
-                onClick={() => {
-                  setLanguage(option.value);
-                  setAppLanguage(option.value);
-                }}
+                onClick={() => setLanguage(option.value)}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${
                   language === option.value
                     ? "bg-cyan-500/15 text-cyan-300"

@@ -6,7 +6,9 @@ export interface OperatorReportInput {
   shift: string;
   machineCode: string;
   occurredAt: string;
+  totalProduction: number;
   rejectCount: number;
+  ngPhenomenon?: string;
   notes?: string;
   reporterName: string;
 }
@@ -29,11 +31,20 @@ export async function submitOperatorReport(slug: string, input: OperatorReportIn
     where: { workspaceId, role: { contains: "Engineer", mode: "insensitive" } }
   });
 
+  const ppm =
+    input.totalProduction > 0
+      ? Math.round((input.rejectCount / input.totalProduction) * 1_000_000)
+      : 0;
+
   const description = [
     `Operator Report by ${input.reporterName}`,
     `Shift: ${input.shift}`,
     `Time: ${input.occurredAt}`,
-    `Reject Count: ${input.rejectCount} pcs`,
+    `Total Production: ${input.totalProduction.toLocaleString("en-US")} pcs`,
+    `Reject Count (NG): ${input.rejectCount} pcs`,
+    `NG Rate: ${input.totalProduction > 0 ? ((input.rejectCount / input.totalProduction) * 100).toFixed(2) : "0"}%`,
+    `PPM: ${ppm.toLocaleString("en-US")}`,
+    input.ngPhenomenon ? `NG Phenomenon: ${input.ngPhenomenon}` : "",
     input.notes ? `Notes: ${input.notes}` : ""
   ]
     .filter(Boolean)

@@ -391,7 +391,9 @@ export async function handleOperatorReport(req: Request, res: Response) {
       shift: string;
       machineCode: string;
       occurredAt: string;
+      totalProduction: number;
       rejectCount: number;
+      ngPhenomenon?: string;
       notes?: string;
       reporterName: string;
       role?: string;

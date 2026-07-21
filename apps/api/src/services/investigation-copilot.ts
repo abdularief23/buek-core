@@ -1,5 +1,6 @@
 import { prisma } from "../db.js";
 import { getTenantThemeOrDefault } from "../tenants/index.js";
+import { parseProductionContext, type ProductionContext } from "./production-metrics.js";
 
 export interface PossibleCauseDto {
   id: string;
@@ -12,6 +13,8 @@ export interface CountermeasureOptionDto {
   id: string;
   label: string;
   category: string;
+  confidence: number;
+  linkedCauseId: string;
 }
 
 export interface ExecutionPlanDto {
@@ -34,7 +37,44 @@ export interface InvestigationCopilotDto {
   defaultExecutionPlan: ExecutionPlanDto;
 }
 
-function copilotForIssue(title: string, machineCode?: string): Omit<InvestigationCopilotDto, "issueKey" | "issueTitle" | "machineCode"> {
+function cm(
+  id: string,
+  label: string,
+  category: string,
+  linkedCauseId: string,
+  confidence: number
+): CountermeasureOptionDto {
+  return { id, label, category, linkedCauseId, confidence };
+}
+
+function withProductionContext(
+  pack: Omit<InvestigationCopilotDto, "issueKey" | "issueTitle" | "machineCode">,
+  production: ProductionContext | null
+): Omit<InvestigationCopilotDto, "issueKey" | "issueTitle" | "machineCode"> {
+  if (!production) return pack;
+
+  const ngLine = `Operator NG report: ${production.rejectCount} pcs from ${production.totalProduction.toLocaleString("en-US")} total (${production.ngRatePercent}% NG, PPM ${production.ppm.toLocaleString("en-US")})`;
+  const phenomenonLine = production.ngPhenomenon
+    ? `NG phenomenon observed: ${production.ngPhenomenon}`
+    : null;
+
+  return {
+    ...pack,
+    autoLoadedContext: [ngLine, ...(phenomenonLine ? [phenomenonLine] : []), ...pack.autoLoadedContext],
+    possibleCauses: pack.possibleCauses.map((cause) => ({
+      ...cause,
+      evidence: [
+        `NG volume supports ${cause.confidence >= 70 ? "strong" : "moderate"} correlation`,
+        ...cause.evidence
+      ]
+    }))
+  };
+}
+
+function copilotForIssue(
+  title: string,
+  machineCode?: string
+): Omit<InvestigationCopilotDto, "issueKey" | "issueTitle" | "machineCode"> {
   const lower = title.toLowerCase();
 
   if (lower.includes("white") || lower.includes("streak") || lower.includes("print")) {
@@ -60,11 +100,11 @@ function copilotForIssue(title: string, machineCode?: string): Omit<Investigatio
         { id: "pc4", label: "Sensor Drift", confidence: 35, evidence: ["calibration overdue 2 weeks"] }
       ],
       countermeasureOptions: [
-        { id: "cm1", label: "Nozzle cleaning & purge cycle", category: "corrective" },
-        { id: "cm2", label: "Replace ink filter", category: "corrective" },
-        { id: "cm3", label: "Recalibrate print head", category: "adjustment" },
-        { id: "cm4", label: "Increase inspection frequency", category: "monitoring" },
-        { id: "cm5", label: "Need more inspection — hold batch", category: "hold" }
+        cm("cm1", "Nozzle cleaning & purge cycle", "corrective", "pc1", 88),
+        cm("cm2", "Replace ink filter", "corrective", "pc1", 76),
+        cm("cm3", "Recalibrate print head", "adjustment", "pc2", 71),
+        cm("cm4", "Increase inspection frequency", "monitoring", "pc1", 58),
+        cm("cm5", "Need more inspection — hold batch", "hold", "pc3", 46)
       ],
       defaultExecutionPlan: {
         pic: "Maintenance Team",
@@ -99,11 +139,11 @@ function copilotForIssue(title: string, machineCode?: string): Omit<Investigatio
         { id: "pc4", label: "Operator Technique Variation", confidence: 28, evidence: ["shift comparison"] }
       ],
       countermeasureOptions: [
-        { id: "cm1", label: "Recalibrate torque tool EA-04", category: "corrective" },
-        { id: "cm2", label: "Shaft alignment check", category: "inspection" },
-        { id: "cm3", label: "Replace torque socket", category: "corrective" },
-        { id: "cm4", label: "Operator re-training", category: "training" },
-        { id: "cm5", label: "Hold chassis batch for 100% check", category: "hold" }
+        cm("cm1", "Recalibrate torque tool EA-04", "corrective", "pc1", 86),
+        cm("cm2", "Shaft alignment check", "inspection", "pc2", 74),
+        cm("cm3", "Replace torque socket", "corrective", "pc1", 69),
+        cm("cm4", "Operator re-training", "training", "pc4", 52),
+        cm("cm5", "Hold chassis batch for 100% check", "hold", "pc3", 48)
       ],
       defaultExecutionPlan: {
         pic: "Assembly Engineer",
@@ -138,11 +178,11 @@ function copilotForIssue(title: string, machineCode?: string): Omit<Investigatio
         { id: "pc4", label: "Seal Integrity Failure", confidence: 38, evidence: ["visual inspection gap"] }
       ],
       countermeasureOptions: [
-        { id: "cm1", label: "Isolate & inspect affected batch", category: "hold" },
-        { id: "cm2", label: "Recalibrate metal detector", category: "corrective" },
-        { id: "cm3", label: "Supplier lot quarantine", category: "supplier" },
-        { id: "cm4", label: "Increase CCP monitoring frequency", category: "monitoring" },
-        { id: "cm5", label: "Line cleaning & foreign object search", category: "corrective" }
+        cm("cm1", "Isolate & inspect affected batch", "hold", "pc1", 84),
+        cm("cm2", "Recalibrate metal detector", "corrective", "pc2", 72),
+        cm("cm3", "Supplier lot quarantine", "supplier", "pc3", 66),
+        cm("cm4", "Increase CCP monitoring frequency", "monitoring", "pc2", 55),
+        cm("cm5", "Line cleaning & foreign object search", "corrective", "pc1", 49)
       ],
       defaultExecutionPlan: {
         pic: "QA / Food Safety",
@@ -170,11 +210,11 @@ function copilotForIssue(title: string, machineCode?: string): Omit<Investigatio
       { id: "pc4", label: "Sensor Drift", confidence: 35, evidence: ["calibration log"] }
     ],
     countermeasureOptions: [
-      { id: "cm1", label: "Replace bearing", category: "corrective" },
-      { id: "cm2", label: "Alignment check", category: "inspection" },
-      { id: "cm3", label: "Lubrication service", category: "preventive" },
-      { id: "cm4", label: "Increase monitoring", category: "monitoring" },
-      { id: "cm5", label: "Need more inspection", category: "hold" }
+      cm("cm1", "Replace bearing", "corrective", "pc1", 82),
+      cm("cm2", "Alignment check", "inspection", "pc2", 70),
+      cm("cm3", "Lubrication service", "preventive", "pc3", 61),
+      cm("cm4", "Increase monitoring", "monitoring", "pc1", 54),
+      cm("cm5", "Need more inspection", "hold", "pc4", 44)
     ],
     defaultExecutionPlan: {
       pic: "Maintenance",
@@ -197,7 +237,11 @@ export async function getInvestigationCopilot(slug: string, issueKey: string): P
   if (!issue) return null;
 
   getTenantThemeOrDefault(slug);
-  const pack = copilotForIssue(issue.title, issue.machine?.code);
+  const production = parseProductionContext(issue.description);
+  const pack = withProductionContext(
+    copilotForIssue(issue.title, issue.machine?.code),
+    production
+  );
 
   return {
     issueKey,

@@ -159,6 +159,8 @@ export interface CountermeasureOption {
   id: string;
   label: string;
   category: string;
+  confidence: number;
+  linkedCauseId: string;
 }
 
 export interface ExecutionPlanDto {
@@ -311,7 +313,9 @@ export function submitOperatorReport(
     shift: string;
     machineCode: string;
     occurredAt: string;
+    totalProduction: number;
     rejectCount: number;
+    ngPhenomenon?: string;
     notes?: string;
     reporterName: string;
   },
@@ -389,6 +393,11 @@ export interface EngineerIssueMetrics {
   dueLabel: string;
   issueKey: string;
   analysisStatus?: string;
+  ppmSource?: "operator_report" | "estimate";
+  totalProduction?: number;
+  rejectCount?: number;
+  ngRatePercent?: number;
+  ngPhenomenon?: string;
 }
 
 export function fetchEngineeringAnalysis(slug: string, issueKey: string) {
