@@ -2,7 +2,7 @@ import { Button } from "@buek/ui";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { PreferencesMenu } from "./PreferencesMenu.js";
 import { applyTenantTheme } from "../lib/tenant-theme.js";
-import { getAppLanguage } from "../lib/user-preferences.js";
+import { useLanguage } from "../lib/language-context.js";
 import type { DemoWorkspaceOption } from "../types.js";
 
 interface LoginScreenProps {
@@ -177,7 +177,7 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
   const [selectedWorkspace, setSelectedWorkspace] = useState("epson-factory");
   const [selectedRole, setSelectedRole] = useState("Engineer");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [language, setLanguage] = useState(getAppLanguage());
+  const { language } = useLanguage();
 
   const copy = LOGIN_COPY[language];
 

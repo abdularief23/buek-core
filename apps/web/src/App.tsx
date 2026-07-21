@@ -11,7 +11,7 @@ import { NotificationsPanel } from "./components/NotificationsPanel.js";
 import { ProfileView } from "./components/ProfileView.js";
 import { WorkflowView } from "./components/WorkflowView.js";
 import { applyTenantTheme, tenantPrimaryIssueKey } from "./lib/tenant-theme.js";
-import { getAppLanguage } from "./lib/user-preferences.js";
+import { useLanguage } from "./lib/language-context.js";
 import {
   createMessageId,
   hasErrorMessage,
@@ -42,6 +42,7 @@ interface LoginResponse {
 }
 
 export function App() {
+  const { language } = useLanguage();
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
@@ -210,7 +211,7 @@ export function App() {
           workspaceId: currentWorkspace?.id,
           role: currentUser?.role,
           chatPersona: roleHome?.chatPersona,
-          language: getAppLanguage(),
+          language,
           messages: [...chatPayload, { role: "user", content: contextualPrompt }]
         })
       });

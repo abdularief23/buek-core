@@ -1,6 +1,7 @@
 import { prisma } from "../db.js";
 import { canApprove, canDraftReport, assertRole } from "../lib/roles.js";
 import { defaultInvestigationSteps, getInvestigationCopilot } from "./investigation-copilot.js";
+import { calculatePpmMetrics, parseProductionContext } from "./production-metrics.js";
 import { createWorkOrderFromExecutionPlan } from "./execution-work-order.js";
 import { createDraftReport } from "./workflow-data.js";
 import type { ReportSections } from "./report-template.js";
@@ -63,6 +64,11 @@ export interface EngineerIssueMetrics {
   dueLabel: string;
   issueKey: string;
   analysisStatus?: AnalysisStatus;
+  ppmSource?: "operator_report" | "estimate";
+  totalProduction?: number;
+  rejectCount?: number;
+  ngRatePercent?: number;
+  ngPhenomenon?: string;
 }
 
 function emptyAnalysis(): EngineeringAnalysisData {
@@ -124,13 +130,14 @@ function metricsForIssue(
     title: string;
     severity: string;
     dueAt: Date | null;
+    description?: string | null;
     machine?: { code: string } | null;
     investigation?: { analysisData: unknown } | null;
   }
 ): EngineerIssueMetrics {
   const issueKey = issue.id.replace(`issue-${slug}-`, "");
   const analysis = (issue.investigation?.analysisData as EngineeringAnalysisData | null) ?? null;
-  const seedPpm =
+  const fallback =
     issue.title.toLowerCase().includes("white") || issue.title.toLowerCase().includes("streak")
       ? { current: 4250, target: 2000, increase: 18 }
       : issue.title.toLowerCase().includes("torque")
@@ -138,6 +145,9 @@ function metricsForIssue(
         : issue.title.toLowerCase().includes("metal")
           ? { current: 2800, target: 1500, increase: 22 }
           : { current: 3400, target: 2000, increase: 15 };
+
+  const production = parseProductionContext(issue.description);
+  const ppm = calculatePpmMetrics(production, fallback);
 
   const dueLabel = issue.dueAt
     ? issue.dueAt.toDateString() === new Date().toDateString()
@@ -148,13 +158,22 @@ function metricsForIssue(
   return {
     machineCode: issue.machine?.code ?? "—",
     issueTitle: issue.title,
-    currentPpm: seedPpm.current,
-    targetPpm: seedPpm.target,
-    increasePercent: seedPpm.increase,
+    currentPpm: ppm.currentPpm,
+    targetPpm: ppm.targetPpm,
+    increasePercent: ppm.increasePercent,
     priority:
       issue.severity === "critical" ? "Critical" : issue.severity === "high" ? "High" : "Medium",
     dueLabel,
     issueKey,
+    ppmSource: ppm.source,
+    ...(ppm.production
+      ? {
+          totalProduction: ppm.production.totalProduction,
+          rejectCount: ppm.production.rejectCount,
+          ngRatePercent: ppm.production.ngRatePercent,
+          ...(ppm.production.ngPhenomenon ? { ngPhenomenon: ppm.production.ngPhenomenon } : {})
+        }
+      : {}),
     ...(analysis?.status ? { analysisStatus: analysis.status } : {})
   };
 }

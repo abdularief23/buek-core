@@ -9,10 +9,13 @@ import {
   submitEngineeringAnalysis,
   submitVerificationResult,
   type CompanyBrainMachineNode,
+  type CountermeasureOption,
   type EngineeringAnalysisData,
   type InvestigationCopilot,
   type PossibleCause
 } from "../lib/data-api.js";
+import { useLanguage } from "../lib/language-context.js";
+import type { TranslationKey } from "../lib/i18n.js";
 import { isEngineer, isPlantManager, isSupervisor } from "../lib/roles.js";
 import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
 import { InvestigationStepper } from "./InvestigationStepper.js";
@@ -73,10 +76,15 @@ function EngineeringAnalysisWizard({
     increasePercent: number;
     priority: string;
     dueLabel: string;
+    ppmSource?: "operator_report" | "estimate";
+    totalProduction?: number;
+    rejectCount?: number;
+    ngRatePercent?: number;
+    ngPhenomenon?: string;
   } | null>(null);
   const [analysis, setAnalysis] = useState<EngineeringAnalysisData | null>(null);
   const [possibleCauses, setPossibleCauses] = useState<PossibleCause[]>([]);
-  const [countermeasureOptions, setCountermeasureOptions] = useState<string[]>([]);
+  const [allCountermeasureOptions, setAllCountermeasureOptions] = useState<CountermeasureOption[]>([]);
   const [otherCause, setOtherCause] = useState("");
   const [askHistorical, setAskHistorical] = useState<boolean | null>(null);
   const [verificationPpm, setVerificationPpm] = useState("");
@@ -86,6 +94,7 @@ function EngineeringAnalysisWizard({
   const supervisorView = isSupervisor(userRole);
   const managerView = isPlantManager(userRole);
   const readOnly = managerView || (!engineerView && !supervisorView);
+  const { t } = useLanguage();
 
   useEffect(() => {
     let cancelled = false;
@@ -104,11 +113,20 @@ function EngineeringAnalysisWizard({
           targetPpm: data.metrics.targetPpm,
           increasePercent: data.metrics.increasePercent,
           priority: data.metrics.priority,
-          dueLabel: data.metrics.dueLabel
+          dueLabel: data.metrics.dueLabel,
+          ...(data.metrics.ppmSource ? { ppmSource: data.metrics.ppmSource } : {}),
+          ...(data.metrics.totalProduction !== undefined
+            ? { totalProduction: data.metrics.totalProduction }
+            : {}),
+          ...(data.metrics.rejectCount !== undefined ? { rejectCount: data.metrics.rejectCount } : {}),
+          ...(data.metrics.ngRatePercent !== undefined
+            ? { ngRatePercent: data.metrics.ngRatePercent }
+            : {}),
+          ...(data.metrics.ngPhenomenon ? { ngPhenomenon: data.metrics.ngPhenomenon } : {})
         });
         setAnalysis(data.analysis);
         setPossibleCauses(data.copilot.possibleCauses);
-        setCountermeasureOptions(data.copilot.countermeasureOptions.map((o) => o.label));
+        setAllCountermeasureOptions(data.copilot.countermeasureOptions);
         if (data.analysis.selectedCause?.isOther) {
           setOtherCause(data.analysis.selectedCause.label);
         }
@@ -155,8 +173,11 @@ function EngineeringAnalysisWizard({
     if (!analysis) return;
     void persistDraft({
       ...analysis,
-      selectedCause: { label: cause.label, confidence: cause.confidence }
+      selectedCause: { label: cause.label, confidence: cause.confidence },
+      countermeasures: [],
+      countermeasureNotes: ""
     });
+    setAskHistorical(null);
     setStep(2);
   }
 
@@ -172,7 +193,9 @@ function EngineeringAnalysisWizard({
   function applyHistoricalCountermeasures(useHistorical: boolean) {
     if (!analysis) return;
     setAskHistorical(useHistorical);
-    const selected = useHistorical ? countermeasureOptions : [];
+    const causeId = possibleCauses.find((c) => c.label === analysis.selectedCause?.label)?.id;
+    const ranked = countermeasuresForCause(allCountermeasureOptions, causeId);
+    const selected = useHistorical ? ranked.slice(0, 3).map((o) => o.label) : [];
     void persistDraft({
       ...analysis,
       useHistoricalCountermeasure: useHistorical,
@@ -249,13 +272,13 @@ function EngineeringAnalysisWizard({
   }
 
   if (loading) {
-    return <p className="buek-body text-slate-500">Memuat analisa engineering...</p>;
+    return <p className="buek-body text-slate-500">{t("investigation.loading")}</p>;
   }
 
   if (loadError || !analysis || !metrics) {
     return (
       <div className="space-y-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-6">
-        <p className="buek-card-title text-red-300">Analisa engineering tidak dapat dimuat</p>
+        <p className="buek-card-title text-red-300">{t("investigation.loadError")}</p>
         <p className="buek-body text-slate-400">
           {loadError ?? "Data analisa tidak tersedia. Pastikan API berjalan dan database sudah di-migrate."}
         </p>
@@ -266,14 +289,14 @@ function EngineeringAnalysisWizard({
             onClick={() => setReloadKey((key) => key + 1)}
             className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
           >
-            Coba lagi
+            {t("investigation.retry")}
           </button>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
           >
-            Kembali
+            {t("common.back")}
           </button>
         </div>
       </div>
@@ -285,6 +308,13 @@ function EngineeringAnalysisWizard({
   const waitingReview = status === "waiting_supervisor_review";
   const approved = status === "analysis_approved" || status === "verification_complete";
   const submitted = status !== "draft" && status !== "revision_requested";
+  const activeCountermeasures = countermeasuresForCause(
+    allCountermeasureOptions,
+    possibleCauses.find((c) => c.label === analysis.selectedCause?.label)?.id
+  );
+  const trendInsights =
+    copilot?.autoLoadedContext.filter((line) => /trend|kpi|ppm|telemetry|drift|elevated/i.test(line)) ?? [];
+  const evidenceCards = buildEvidenceCards(metrics, copilot, t);
 
   return (
     <div className="space-y-6 pb-16">
@@ -330,6 +360,16 @@ function EngineeringAnalysisWizard({
         <Metric label="Increase" value={`+${metrics.increasePercent}%`} warn />
         <Metric label="Priority" value={metrics.priority} />
         <Metric label="Due" value={metrics.dueLabel} />
+        {metrics.totalProduction ? (
+          <Metric label={t("investigation.production")} value={`${metrics.totalProduction.toLocaleString()} pcs`} />
+        ) : null}
+        {metrics.rejectCount !== undefined ? (
+          <Metric label={t("investigation.ng")} value={`${metrics.rejectCount} pcs`} />
+        ) : null}
+        <Metric
+          label={t("investigation.ppm.source")}
+          value={metrics.ppmSource === "operator_report" ? t("investigation.ppm.fromOperator") : t("investigation.ppm.estimate")}
+        />
       </section>
 
       {status === "revision_requested" ? (
@@ -476,7 +516,45 @@ function EngineeringAnalysisWizard({
 
           {step === 0 ? (
             <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-              <h2 className="buek-card-title text-slate-400">STEP 1 — Evidence</h2>
+              <h2 className="buek-card-title text-slate-400">{t("investigation.evidence.title")}</h2>
+              <p className="buek-small text-slate-500">{t("investigation.evidence.hint")}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {evidenceCards.map((card) => (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => {
+                      const nextNotes = analysis.evidence.notes.includes(card.body)
+                        ? analysis.evidence.notes
+                        : [analysis.evidence.notes, card.body].filter(Boolean).join("\n\n");
+                      void persistDraft({
+                        ...analysis,
+                        evidence: {
+                          ...analysis.evidence,
+                          notes: nextNotes,
+                          ...(card.toggleKey ? { [card.toggleKey]: true } : {})
+                        }
+                      });
+                    }}
+                    className="rounded-xl border border-white/10 bg-white/5 p-4 text-left hover:border-cyan-400/40 hover:bg-cyan-500/5"
+                  >
+                    <p className="buek-small font-semibold text-cyan-300">{card.title}</p>
+                    <p className="mt-2 buek-small text-slate-400">{card.body}</p>
+                  </button>
+                ))}
+              </div>
+              {trendInsights.length ? (
+                <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-4">
+                  <p className="buek-small font-semibold text-violet-200">{t("investigation.evidence.trendTitle")}</p>
+                  <ul className="mt-2 space-y-1">
+                    {trendInsights.map((line) => (
+                      <li key={line} className="buek-small text-slate-300">
+                        • {line}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               {(
                 [
                   ["qcResult", "QC Result"],
@@ -507,9 +585,9 @@ function EngineeringAnalysisWizard({
                     evidence: { ...analysis.evidence, notes: e.target.value }
                   })
                 }
-                rows={3}
+                rows={4}
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-                placeholder="Catatan evidence..."
+                placeholder={t("investigation.evidence.notesPlaceholder")}
               />
               <PhotoUploadField
                 label="Upload Foto Evidence"
@@ -530,28 +608,33 @@ function EngineeringAnalysisWizard({
 
           {step === 1 ? (
             <section className="buek-card space-y-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
-              <h2 className="buek-card-title text-cyan-300">STEP 2 — Possible Root Cause</h2>
-              <p className="buek-small text-slate-500">AI menemukan kemungkinan berikut — engineer memilih.</p>
+              <h2 className="buek-card-title text-cyan-300">{t("investigation.rootCause.title")}</h2>
+              <p className="buek-small text-slate-500">{t("investigation.rootCause.hint")}</p>
               <div className="space-y-2">
                 {possibleCauses.map((cause) => (
                   <label
                     key={cause.id}
-                    className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 ${
+                    className={`flex cursor-pointer flex-col gap-2 rounded-xl border px-4 py-3 ${
                       analysis.selectedCause?.label === cause.label
                         ? "border-cyan-400/50 bg-cyan-500/10"
                         : "border-white/10"
                     }`}
                   >
-                    <span className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="cause"
-                        checked={analysis.selectedCause?.label === cause.label}
-                        onChange={() => selectCause(cause)}
-                      />
-                      <span className="buek-body text-white">{cause.label}</span>
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="cause"
+                          checked={analysis.selectedCause?.label === cause.label}
+                          onChange={() => selectCause(cause)}
+                        />
+                        <span className="buek-body text-white">{cause.label}</span>
+                      </span>
+                      <span className="text-cyan-300">{cause.confidence}%</span>
                     </span>
-                    <span className="text-cyan-300">{cause.confidence}%</span>
+                    <span className="pl-7 buek-small text-slate-500">
+                      {cause.evidence.join(" · ")}
+                    </span>
                   </label>
                 ))}
                 <label className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3">
@@ -576,41 +659,45 @@ function EngineeringAnalysisWizard({
 
           {step === 2 && analysis.selectedCause ? (
             <section className="buek-card space-y-4 rounded-2xl border border-white/10 p-6">
-              <h2 className="buek-card-title text-slate-400">STEP 3 — Countermeasure</h2>
+              <h2 className="buek-card-title text-slate-400">{t("investigation.countermeasure.title")}</h2>
+              <p className="buek-small text-slate-500">
+                {t("investigation.countermeasure.hint")} — <strong>{analysis.selectedCause.label}</strong>
+              </p>
               {askHistorical === null ? (
                 <div className="space-y-3">
-                  <p className="buek-body text-white">
-                    Apakah Anda ingin menggunakan countermeasure yang pernah berhasil?
-                  </p>
+                  <p className="buek-body text-white">{t("investigation.countermeasure.historical")}</p>
                   <div className="flex gap-3">
                     <button type="button" onClick={() => applyHistoricalCountermeasures(true)} className="rounded-lg border border-white/10 px-4 py-2">
-                      Ya
+                      {t("common.yes")}
                     </button>
                     <button type="button" onClick={() => applyHistoricalCountermeasures(false)} className="rounded-lg border border-white/10 px-4 py-2">
-                      Tidak
+                      {t("common.no")}
                     </button>
                   </div>
                 </div>
               ) : (
                 <>
-                  <p className="buek-small text-cyan-400">AI Recommendation — engineer dapat mengedit</p>
-                  {countermeasureOptions.map((option) => (
-                    <label key={option} className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={analysis.countermeasures.includes(option)}
-                        onChange={(e) => {
-                          const next = e.target.checked
-                            ? [...analysis.countermeasures, option]
-                            : analysis.countermeasures.filter((c) => c !== option);
-                          void persistDraft({
-                            ...analysis,
-                            countermeasures: next,
-                            countermeasureNotes: next.join("\n")
-                          });
-                        }}
-                      />
-                      <span className="buek-body text-slate-200">{option}</span>
+                  <p className="buek-small text-cyan-400">AI Recommendation — sorted by effectiveness for selected root cause</p>
+                  {activeCountermeasures.map((option) => (
+                    <label key={option.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3">
+                      <span className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={analysis.countermeasures.includes(option.label)}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...analysis.countermeasures, option.label]
+                              : analysis.countermeasures.filter((c) => c !== option.label);
+                            void persistDraft({
+                              ...analysis,
+                              countermeasures: next,
+                              countermeasureNotes: next.join("\n")
+                            });
+                          }}
+                        />
+                        <span className="buek-body text-slate-200">{option.label}</span>
+                      </span>
+                      <span className="font-semibold text-emerald-300">{option.confidence}%</span>
                     </label>
                   ))}
                   <textarea
@@ -689,7 +776,7 @@ function EngineeringAnalysisWizard({
               onClick={() => setStep((s) => Math.max(0, s - 1))}
               className="rounded-lg border border-white/10 px-4 py-2 text-slate-300 disabled:opacity-40"
             >
-              ← Previous
+              {t("common.previous")}
             </button>
             <button
               type="button"
@@ -697,7 +784,7 @@ function EngineeringAnalysisWizard({
               onClick={() => setStep((s) => Math.min(WIZARD_STEPS.length - 1, s + 1))}
               className="rounded-lg border border-white/10 px-4 py-2 text-slate-300 disabled:opacity-40"
             >
-              Next →
+              {t("common.next")}
             </button>
           </div>
         </>
@@ -1106,4 +1193,87 @@ function readFileAsDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
+}
+
+type EvidenceToggleKey = "qcResult" | "photo" | "trend" | "machineHistory";
+
+interface EvidenceCard {
+  id: string;
+  title: string;
+  body: string;
+  toggleKey?: EvidenceToggleKey;
+}
+
+function countermeasuresForCause(
+  options: CountermeasureOption[],
+  causeId?: string
+): CountermeasureOption[] {
+  const filtered = causeId ? options.filter((option) => option.linkedCauseId === causeId) : options;
+  return [...filtered].sort((a, b) => b.confidence - a.confidence);
+}
+
+function buildEvidenceCards(
+  metrics: {
+    currentPpm: number;
+    totalProduction?: number;
+    rejectCount?: number;
+    ngRatePercent?: number;
+    ngPhenomenon?: string;
+  },
+  copilot: InvestigationCopilot | null,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
+): EvidenceCard[] {
+  const cards: EvidenceCard[] = [];
+
+  if (metrics.rejectCount !== undefined && metrics.totalProduction) {
+    cards.push({
+      id: "ng-report",
+      title: t("investigation.evidence.ngReport"),
+      body: `${metrics.rejectCount} NG / ${metrics.totalProduction.toLocaleString()} pcs · PPM ${metrics.currentPpm.toLocaleString()} · ${metrics.ngRatePercent ?? 0}% NG`,
+      toggleKey: "qcResult"
+    });
+  }
+
+  if (metrics.ngPhenomenon) {
+    cards.push({
+      id: "ng-phenomenon",
+      title: t("investigation.evidence.ngPhenomenon"),
+      body: metrics.ngPhenomenon,
+      toggleKey: "qcResult"
+    });
+  }
+
+  const contextLines = copilot?.autoLoadedContext ?? [];
+  contextLines
+    .filter((line) => !/operator ng report|ng phenomenon observed/i.test(line))
+    .slice(0, 3)
+    .forEach((line, index) => {
+      cards.push({
+        id: `telemetry-${index}`,
+        title: t("investigation.evidence.machineTelemetry"),
+        body: line,
+        toggleKey: index === 0 ? "trend" : "machineHistory"
+      });
+    });
+
+  copilot?.similarCases.slice(0, 2).forEach((item, index) => {
+    const card: EvidenceCard = {
+      id: `similar-${item.id}`,
+      title: t("investigation.evidence.similarCase"),
+      body: `${item.title}${item.reference ? ` (${item.reference})` : ""}`
+    };
+    if (index === 0) card.toggleKey = "machineHistory";
+    cards.push(card);
+  });
+
+  copilot?.sopReferences.slice(0, 1).forEach((item) => {
+    cards.push({
+      id: `sop-${item.id}`,
+      title: t("investigation.evidence.sop"),
+      body: `${item.title}${item.referenceId ? ` — ${item.referenceId}` : ""}`,
+      toggleKey: "machineHistory"
+    });
+  });
+
+  return cards;
 }

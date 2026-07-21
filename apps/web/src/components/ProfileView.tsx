@@ -1,13 +1,7 @@
 import { useState } from "react";
 import type { DemoUser, ModuleSummary, Workspace } from "../types.js";
-import {
-  type AppearanceMode,
-  type AppLanguage,
-  getAppearanceMode,
-  getAppLanguage,
-  setAppearanceMode,
-  setAppLanguage
-} from "../lib/user-preferences.js";
+import { type AppearanceMode, getAppearanceMode, setAppearanceMode } from "../lib/user-preferences.js";
+import { useLanguage } from "../lib/language-context.js";
 
 interface ProfileViewProps {
   workspace: Workspace;
@@ -19,7 +13,7 @@ interface ProfileViewProps {
 export function ProfileView({ workspace, user, installedModule, status }: ProfileViewProps) {
   const totalDocuments = workspace.documentStats.reduce((sum, item) => sum + item.count, 0);
   const [appearance, setAppearance] = useState<AppearanceMode>(getAppearanceMode());
-  const [language, setLanguage] = useState<AppLanguage>(getAppLanguage());
+  const { language, setLanguage } = useLanguage();
 
   const settings = [
     { label: "AI Provider", value: workspace.aiProvider },
@@ -109,7 +103,6 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
                 checked={language === value}
                 onChange={() => {
                   setLanguage(value);
-                  setAppLanguage(value);
                 }}
               />
               <span className="buek-body text-slate-200">{label}</span>
