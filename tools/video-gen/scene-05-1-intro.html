@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Scene 5.1 — Buek Core Introduction</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #020617;
+      font-family: Inter, "SF Pro Display", system-ui, sans-serif;
+      color: #f8fafc;
+    }
+    .stage {
+      position: relative; width: 100%; height: 100%;
+      animation: dollyIn 5s ease-in-out forwards;
+    }
+    @keyframes dollyIn {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+    .bg-deep {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 45%, rgba(14, 116, 244, 0.2) 0%, transparent 65%),
+        linear-gradient(180deg, #020617 0%, #0f172a 50%, #020617 100%);
+    }
+    .parallax-far, .parallax-near {
+      position: absolute; inset: 0; overflow: hidden;
+    }
+    .parallax-far { animation: parallaxFar 5s ease-out forwards; opacity: 0.35; }
+    .parallax-near { animation: parallaxNear 5s ease-out forwards; opacity: 0.55; }
+    @keyframes parallaxFar { to { transform: translateY(-20px) scale(1.02); } }
+    @keyframes parallaxNear { to { transform: translateY(-40px) scale(1.04); } }
+    .grid-lines {
+      position: absolute; inset: -50%;
+      background-image:
+        linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+      background-size: 80px 80px;
+      transform: perspective(800px) rotateX(55deg);
+      transform-origin: center 80%;
+      animation: gridForm 2s ease-out 0.8s forwards;
+      opacity: 0;
+    }
+    @keyframes gridForm { to { opacity: 1; } }
+    .digital-rings {
+      position: absolute; left: 50%; top: 42%;
+      transform: translate(-50%, -50%);
+      width: 600px; height: 600px;
+    }
+    .ring {
+      position: absolute; inset: 0;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 50%;
+      opacity: 0;
+      animation: ringExpand 1.2s ease-out forwards;
+    }
+    .ring:nth-child(1) { animation-delay: 1s; }
+    .ring:nth-child(2) { animation-delay: 1.3s; inset: -40px; }
+    .ring:nth-child(3) { animation-delay: 1.6s; inset: -80px; border-color: rgba(56,189,248,0.1); }
+    @keyframes ringExpand {
+      0% { opacity: 0; transform: scale(0.6); }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; transform: scale(1); }
+    }
+    .center {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 5;
+    }
+    .glow {
+      position: absolute; width: 480px; height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(13, 79, 240, 0.45) 0%, rgba(122, 42, 247, 0.2) 45%, transparent 70%);
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.12); opacity: 1; }
+    }
+    .logo-block {
+      position: relative; text-align: center;
+      opacity: 0; transform: scale(0.7);
+      animation: logoIn 1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+    }
+    @keyframes logoIn {
+      to { opacity: 1; transform: scale(1); }
+    }
+    .logo-icon {
+      font-size: 80px; margin-bottom: 12px;
+      filter: drop-shadow(0 0 32px rgba(56, 189, 248, 0.7));
+    }
+    .logo-text {
+      font-size: 68px; font-weight: 900; letter-spacing: 8px;
+    }
+    .logo-text .core {
+      background: linear-gradient(90deg, #38bdf8, #c4b5fd);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .tagline {
+      margin-top: 36px; text-align: center;
+      opacity: 0; transform: translateY(20px);
+      animation: tagIn 0.8s ease-out 1.4s forwards;
+    }
+    .tagline .l1 {
+      display: block; font-size: 30px; font-weight: 700;
+      letter-spacing: 5px; color: #e2e8f0;
+    }
+    .tagline .l2 {
+      display: block; margin-top: 6px; font-size: 26px; font-weight: 500;
+      letter-spacing: 4px; color: #94a3b8;
+    }
+    @keyframes tagIn { to { opacity: 1; transform: translateY(0); } }
+    .particle {
+      position: absolute; border-radius: 50%;
+      background: rgba(147, 197, 253, 0.7);
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(1100px); opacity: 0; }
+      15% { opacity: 0.9; }
+      85% { opacity: 0.3; }
+      100% { transform: translateY(-30px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg-deep"></div>
+    <div class="parallax-far" id="particles-far"></div>
+    <div class="parallax-near" id="particles-near"></div>
+    <div class="grid-lines"></div>
+    <div class="digital-rings">
+      <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+    </div>
+    <div class="center">
+      <div class="glow"></div>
+      <div class="logo-block">
+        <div class="logo-icon">⬡</div>
+        <div class="logo-text">BUEK <span class="core">CORE</span></div>
+      </div>
+      <div class="tagline">
+        <span class="l1">Build AI Workers</span>
+        <span class="l2">For Any Industry</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    function spawnParticles(id, count, size) {
+      const el = document.getElementById(id);
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement("div");
+        p.className = "particle";
+        const s = size + Math.random() * 2;
+        p.style.cssText = `left:${Math.random()*100}%;width:${s}px;height:${s}px;animation-duration:${6+Math.random()*8}s;animation-delay:${Math.random()*4}s`;
+        el.appendChild(p);
+      }
+    }
+    spawnParticles("particles-far", 35, 2);
+    spawnParticles("particles-near", 25, 3);
+  </script>
+</body>
+</html>

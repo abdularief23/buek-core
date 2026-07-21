@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Scene 5.2 — One AI Core Architecture</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #020617;
+      font-family: Inter, "SF Pro Display", system-ui, sans-serif;
+      color: #f8fafc;
+    }
+    .stage {
+      position: relative; width: 100%; height: 100%;
+      perspective: 1200px;
+      animation: zoomIn 5s ease-in-out forwards;
+    }
+    @keyframes zoomIn {
+      0% { transform: scale(1); }
+      55% { transform: scale(1); }
+      100% { transform: scale(1.12); }
+    }
+    .bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 50%, rgba(13, 79, 240, 0.15) 0%, transparent 70%),
+        #020617;
+    }
+    .floor {
+      position: absolute; left: 50%; top: 55%;
+      width: 1400px; height: 800px;
+      transform: translate(-50%, -50%) rotateX(72deg);
+      background:
+        radial-gradient(ellipse at center, rgba(59,130,246,0.08) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(59,130,246,0.08) 49px, rgba(59,130,246,0.08) 50px),
+        repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(59,130,246,0.08) 49px, rgba(59,130,246,0.08) 50px);
+      opacity: 0.6;
+    }
+    .canvas {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ai-node {
+      position: absolute;
+      padding: 16px 22px;
+      border-radius: 14px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.4);
+      font-size: 15px; font-weight: 700;
+      color: #fca5a5;
+      white-space: nowrap;
+      opacity: 0;
+      animation: aiAppear 0.5s ease-out forwards, aiToCenter 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1.2s forwards;
+    }
+    .ai-1 { top: 18%; left: 12%; animation-delay: 0.2s, 1.2s; }
+    .ai-2 { top: 18%; right: 12%; animation-delay: 0.4s, 1.2s; }
+    .ai-3 { bottom: 22%; left: 12%; animation-delay: 0.6s, 1.2s; }
+    .ai-4 { bottom: 22%; right: 12%; animation-delay: 0.8s, 1.2s; }
+    @keyframes aiAppear { to { opacity: 1; } }
+    @keyframes aiToCenter {
+      to {
+        top: 50%; left: 50%; right: auto; bottom: auto;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+    }
+    .core {
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      text-align: center;
+      z-index: 10;
+      animation: coreMerge 0.8s cubic-bezier(0.22, 1, 0.36, 1) 2.3s forwards;
+    }
+    @keyframes coreMerge {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      70% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    .core-box {
+      padding: 28px 44px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #0d4ff0, #7a2af7);
+      box-shadow: 0 0 60px rgba(13, 79, 240, 0.5);
+    }
+    .core-title { font-size: 32px; font-weight: 900; letter-spacing: 2px; }
+    .core-sub { font-size: 16px; font-weight: 600; letter-spacing: 4px; color: #bfdbfe; margin-top: 4px; }
+    .knowledge-ring {
+      position: absolute; left: 50%; top: 50%;
+      width: 700px; height: 700px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      animation: ringIn 0.6s ease-out 3.2s forwards;
+    }
+    @keyframes ringIn { to { opacity: 1; } }
+    .k-node {
+      position: absolute;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(148, 163, 255, 0.3);
+      font-size: 14px; font-weight: 600;
+      color: #cbd5e1;
+      opacity: 0;
+      animation: kIn 0.4s ease-out forwards;
+    }
+    .k1 { top: 0; left: 50%; transform: translateX(-50%); animation-delay: 3.4s; }
+    .k2 { top: 50%; right: 0; transform: translateY(-50%); animation-delay: 3.6s; }
+    .k3 { bottom: 0; left: 50%; transform: translateX(-50%); animation-delay: 3.8s; }
+    .k4 { top: 50%; left: 0; transform: translateY(-50%); animation-delay: 4.0s; }
+    @keyframes kIn { to { opacity: 1; } }
+    .conn-svg {
+      position: absolute; left: 50%; top: 50%;
+      width: 700px; height: 700px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      animation: ringIn 0.5s ease-out 3.3s forwards;
+    }
+    .conn-line {
+      stroke: url(#connGrad);
+      stroke-width: 2;
+      fill: none;
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+      animation: drawConn 0.5s ease-out forwards;
+    }
+    .cl1 { animation-delay: 3.5s; }
+    .cl2 { animation-delay: 3.7s; }
+    .cl3 { animation-delay: 3.9s; }
+    .cl4 { animation-delay: 4.1s; }
+    @keyframes drawConn { to { stroke-dashoffset: 0; } }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg"></div>
+    <div class="floor"></div>
+    <div class="canvas">
+      <div class="ai-node ai-1">Manufacturing AI</div>
+      <div class="ai-node ai-2">Healthcare AI</div>
+      <div class="ai-node ai-3">Construction AI</div>
+      <div class="ai-node ai-4">Retail AI</div>
+      <div class="core">
+        <div class="core-box">
+          <div class="core-title">Buek Core</div>
+          <div class="core-sub">AI CORE</div>
+        </div>
+      </div>
+      <svg class="conn-svg" viewBox="0 0 700 700">
+        <defs>
+          <linearGradient id="connGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop stop-color="#38bdf8"/><stop offset="1" stop-color="#a78bfa"/>
+          </linearGradient>
+        </defs>
+        <line class="conn-line cl1" x1="350" y1="350" x2="350" y2="60"/>
+        <line class="conn-line cl2" x1="350" y1="350" x2="640" y2="350"/>
+        <line class="conn-line cl3" x1="350" y1="350" x2="350" y2="640"/>
+        <line class="conn-line cl4" x1="350" y1="350" x2="60" y2="350"/>
+      </svg>
+      <div class="knowledge-ring">
+        <div class="k-node k1">Manufacturing Knowledge</div>
+        <div class="k-node k2">Healthcare Knowledge</div>
+        <div class="k-node k3">Construction Knowledge</div>
+        <div class="k-node k4">Retail Knowledge</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -24,9 +24,19 @@
       "silent": true
     },
     {
-      "id": "scene-05",
-      "file": "scene-05-platform-intro.mp3",
-      "text": "Meet Buek Core, an AI platform designed to build AI Workers for any industry. Instead of creating a different AI for every business, Buek Core separates AI reasoning from domain knowledge."
+      "id": "scene-05-1",
+      "file": "scene-05-1-intro.mp3",
+      "text": "Meet Buek Core."
+    },
+    {
+      "id": "scene-05-2",
+      "file": "scene-05-2-architecture.mp3",
+      "text": "An AI platform designed to build AI Workers for any industry. Instead of creating a different AI for every business..."
+    },
+    {
+      "id": "scene-05-3",
+      "file": "scene-05-3-industries.mp3",
+      "text": "Buek Core separates AI reasoning from domain knowledge. Manufacturing is our first domain — but the same AI Core can power healthcare, construction, retail, and many more."
     },
     {
       "id": "scene-06",

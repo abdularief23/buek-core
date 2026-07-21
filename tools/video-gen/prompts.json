@@ -35,17 +35,35 @@
       "camera": "close up slow pan"
     },
     {
-      "id": "scene-05-platform-intro",
-      "time": "0:22-0:35",
-      "duration_seconds": 13,
-      "voice": "Meet Buek Core, an AI platform designed to build AI Workers for any industry. Instead of creating a different AI for every business, Buek Core separates AI reasoning from domain knowledge.",
+      "id": "scene-05-1-intro",
+      "time": "0:22-0:27",
+      "duration_seconds": 5,
+      "voice": "Meet Buek Core.",
       "method": "html-animation",
-      "render": "node render_scene_05.mjs --duration 13 --fps 30",
-      "notes": "4-phase concept: logo glow → multi-domain tree → fragmented vs unified → architecture stack. Dark Apple/OpenAI style, no website UI."
+      "render": "node render_scene_05_segment.mjs --html scene-05-1-intro.html --output scene-05-1-intro.mp4 --duration 5",
+      "notes": "Dark intro: logo glow, digital lines, tagline Build AI Workers For Any Industry. Apple/OpenAI style."
+    },
+    {
+      "id": "scene-05-2-architecture",
+      "time": "0:27-0:32",
+      "duration_seconds": 5,
+      "voice": "An AI platform designed to build AI Workers for any industry. Instead of creating a different AI for every business...",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-05-2-architecture.html --output scene-05-2-architecture.mp4 --duration 5",
+      "notes": "4 separate AIs merge into Buek Core AI Core, knowledge nodes connect. Top-view motion graphics."
+    },
+    {
+      "id": "scene-05-3-industries",
+      "time": "0:32-0:37",
+      "duration_seconds": 5,
+      "voice": "Buek Core separates AI reasoning from domain knowledge. Manufacturing is our first domain — but the same AI Core can power healthcare, construction, retail, and many more.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-05-3-industries.html --output scene-05-3-industries.mp4 --duration 5",
+      "notes": "8 industry modules orbit AI Core, zoom out, fade to logo + One AI Core. Unlimited Industry Knowledge."
     },
     {
       "id": "scene-06-platform-vision",
-      "time": "0:35-0:45",
+      "time": "0:37-0:47",
       "duration_seconds": 10,
       "voice": "Instead of creating a different AI for every business... Buek Core separates AI reasoning... from domain knowledge.",
       "method": "html-animation",

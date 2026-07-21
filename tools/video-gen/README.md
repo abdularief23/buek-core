@@ -242,25 +242,28 @@ gsutil -m cp output/scene-07-*.mp4 gs://buek-core-video-output/scenes/scene-07-r
 
 ---
 
-## Scene 5 — Platform intro animation (13s)
+## Scene 5 — Platform concept (3 segments × 5s)
 
-Animasi konsep bergaya Apple/OpenAI (13s, background gelap, **tanpa website UI**):
+Split into three Apple/OpenAI-style concept animations (no website UI):
 
-1. **0–3s** — Logo Buek Core + glow + "Build AI Workers For Any Industry"
-2. **3–7s** — Buek Core → tree → Manufacturing / Healthcare / Construction
-3. **7–10s** — Perbandingan AI terpisah vs satu Buek Core (✓ hijau)
-4. **10–13s** — Arsitektur: Users → Platform → AI Reasoning (biru) + Domain Knowledge (hijau) → industri → logo
+| Segment | Time | File | Content |
+|---------|------|------|---------|
+| **5.1** | 0:22–0:27 | `scene-05-1-intro.mp4` | Logo glow + tagline |
+| **5.2** | 0:27–0:32 | `scene-05-2-architecture.mp4` | 4 AIs merge → Buek Core AI Core |
+| **5.3** | 0:32–0:37 | `scene-05-3-industries.mp4` | 8 industries orbit → logo finale |
 
 ```bash
 cd tools/video-gen
-node render_scene_05.mjs --duration 13 --fps 30
+node render_scene_05_all.mjs
+# or individually:
+node render_scene_05_segment.mjs --html scene-05-1-intro.html --output scene-05-1-intro.mp4 --duration 5
 ```
-
-Output: `tools/video-gen/output/scene-05-platform-intro.mp4`
 
 Upload ke GCS:
 ```bash
-gsutil cp output/scene-05-platform-intro.mp4 gs://buek-core-video-output/scenes/scene-05-platform-intro/scene-05-platform-intro.mp4
+gsutil cp output/scene-05-1-intro.mp4 gs://buek-core-video-output/scenes/scene-05-1-intro/
+gsutil cp output/scene-05-2-architecture.mp4 gs://buek-core-video-output/scenes/scene-05-2-architecture/
+gsutil cp output/scene-05-3-industries.mp4 gs://buek-core-video-output/scenes/scene-05-3-industries/
 ```
 
 ---
