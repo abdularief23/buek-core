@@ -268,6 +268,37 @@ gsutil cp output/scene-05-3-industries.mp4 gs://buek-core-video-output/scenes/sc
 
 ---
 
+## Scene 8–10 — Codex, Copilot & Closing Vision (8 segments × 5s)
+
+Split into eight Apple/OpenAI-style concept animations. Full storyboard: `docs/scene-storyboard-8-10.md`
+
+| Segment | File | Content |
+|---------|------|---------|
+| **8.1** | `scene-08-1-codex.mp4` | Built with Codex — engineer + VS Code/Cursor |
+| **8.2** | `scene-08-2-accelerating.mp4` | Dev montage: scaffold → Docker → GitHub PR |
+| **8.3** | `scene-08-3-gpt-codex.mp4` | GPT builds product, Codex builds platform |
+| **9.1** | `scene-09-1-copilot.mp4` | AI Copilot intro — engineer chat |
+| **9.2** | `scene-09-2-conversation.mp4` | Natural engineering conversation |
+| **10.1** | `scene-10-1-beyond.mp4` | Domain orbit around AI Core |
+| **10.2** | `scene-10-2-platform.mp4` | One platform, unlimited industries |
+| **10.3** | `scene-10-3-closing.mp4` | Factory crane up → logo + taglines |
+
+```bash
+cd tools/video-gen
+node render_scenes_8_9_10.mjs
+```
+
+Upload ke GCS:
+```bash
+for f in scene-08-1-codex scene-08-2-accelerating scene-08-3-gpt-codex \
+         scene-09-1-copilot scene-09-2-conversation \
+         scene-10-1-beyond scene-10-2-platform scene-10-3-closing; do
+  gsutil cp output/${f}.mp4 gs://buek-core-video-output/scenes/${f}/${f}.mp4
+done
+```
+
+---
+
 ## Scene 6 — Platform vision infographic
 
 Animasi diagram: **Buek Core** → **Knowledge** → Manufacturing / Healthcare / Construction / Retail.

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Scene 8.2 — Accelerating Development</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #020617;
+      font-family: "SF Mono", Consolas, monospace;
+      color: #e2e8f0;
+    }
+    .stage { position: relative; width: 100%; height: 100%; }
+    .bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(13, 79, 240, 0.12) 0%, transparent 70%), #020617;
+    }
+    .frame {
+      position: absolute; inset: 80px 120px;
+      border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(71, 85, 105, 0.5);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+      opacity: 0;
+      animation: cutFrame 5s steps(1) forwards;
+    }
+    @keyframes cutFrame {
+      0%, 12% { opacity: 1; } 12%, 100% { opacity: 0; }
+    }
+    .f1 { animation-name: f1; }
+    .f2 { animation-name: f2; }
+    .f3 { animation-name: f3; }
+    .f4 { animation-name: f4; }
+    .f5 { animation-name: f5; }
+    .f6 { animation-name: f6; }
+    @keyframes f1 { 0%, 16% { opacity: 1; } 16%, 100% { opacity: 0; } }
+    @keyframes f2 { 0%, 16% { opacity: 0; } 16%, 32% { opacity: 1; } 32%, 100% { opacity: 0; } }
+    @keyframes f3 { 0%, 32% { opacity: 0; } 32%, 48% { opacity: 1; } 48%, 100% { opacity: 0; } }
+    @keyframes f4 { 0%, 48% { opacity: 0; } 48%, 64% { opacity: 1; } 64%, 100% { opacity: 0; } }
+    @keyframes f5 { 0%, 64% { opacity: 0; } 64%, 80% { opacity: 1; } 80%, 100% { opacity: 0; } }
+    @keyframes f6 { 0%, 80% { opacity: 0; } 80%, 100% { opacity: 1; } }
+    .titlebar {
+      height: 36px; background: #0f172a;
+      display: flex; align-items: center; padding: 0 14px; gap: 7px;
+      border-bottom: 1px solid #334155;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dr { background: #ef4444; } .dy { background: #eab308; } .dg { background: #22c55e; }
+    .titlebar span { margin-left: 10px; font-size: 12px; color: #64748b; font-family: Inter, sans-serif; }
+    .content { padding: 24px; height: calc(100% - 36px); background: #0d1117; }
+    .label {
+      font-family: Inter, sans-serif; font-size: 14px; font-weight: 700;
+      color: #38bdf8; letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .scaffold-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    }
+    .scaffold-item {
+      padding: 20px; border-radius: 10px;
+      background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25);
+      text-align: center; font-size: 12px; color: #94a3b8;
+      opacity: 0; animation: popIn 0.25s ease-out forwards;
+    }
+    .scaffold-item:nth-child(1) { animation-delay: 0.1s; }
+    .scaffold-item:nth-child(2) { animation-delay: 0.2s; }
+    .scaffold-item:nth-child(3) { animation-delay: 0.3s; }
+    .scaffold-item:nth-child(4) { animation-delay: 0.4s; }
+    .scaffold-item:nth-child(5) { animation-delay: 0.5s; }
+    .scaffold-item:nth-child(6) { animation-delay: 0.6s; }
+    .scaffold-item:nth-child(7) { animation-delay: 0.7s; }
+    .scaffold-item:nth-child(8) { animation-delay: 0.8s; }
+    @keyframes popIn { to { opacity: 1; transform: scale(1); } from { opacity: 0; transform: scale(0.9); } }
+    .refactor-diff { font-size: 13px; line-height: 2; }
+    .del { background: rgba(239,68,68,0.15); color: #fca5a5; padding: 2px 8px; }
+    .add { background: rgba(74,222,128,0.15); color: #86efac; padding: 2px 8px; }
+    .feature-list { list-style: none; font-size: 15px; line-height: 2.2; }
+    .feature-list li { opacity: 0; animation: slideIn 0.3s ease-out forwards; }
+    .feature-list li:nth-child(1) { animation-delay: 0.1s; }
+    .feature-list li:nth-child(2) { animation-delay: 0.3s; }
+    .feature-list li:nth-child(3) { animation-delay: 0.5s; }
+    .feature-list li:nth-child(4) { animation-delay: 0.7s; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    .check { color: #4ade80; }
+    .terminal {
+      font-size: 14px; line-height: 1.9;
+      animation: termZoom 0.8s ease-out 0.3s forwards;
+      transform-origin: center center;
+    }
+    @keyframes termZoom {
+      0% { transform: scale(1); }
+      60% { transform: scale(1.08); }
+      100% { transform: scale(1.05); }
+    }
+    .success {
+      color: #4ade80; font-size: 22px; font-weight: 700;
+      margin-top: 20px; padding: 16px 24px;
+      background: rgba(74, 222, 128, 0.1); border-radius: 8px;
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      opacity: 0; animation: successIn 0.4s ease-out 0.6s forwards;
+    }
+    @keyframes successIn { to { opacity: 1; } }
+    .docker-grid { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 20px; }
+    .container-box {
+      padding: 16px 24px; border-radius: 10px;
+      background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.4);
+      font-size: 13px; display: flex; align-items: center; gap: 10px;
+      opacity: 0; animation: popIn 0.3s ease-out forwards;
+    }
+    .container-box:nth-child(1) { animation-delay: 0.2s; }
+    .container-box:nth-child(2) { animation-delay: 0.4s; }
+    .container-box:nth-child(3) { animation-delay: 0.6s; }
+    .container-box:nth-child(4) { animation-delay: 0.8s; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
+    .github-pr {
+      font-family: Inter, sans-serif;
+      background: #161b22; border-radius: 12px; padding: 28px;
+      border: 1px solid #30363d;
+    }
+    .pr-title { font-size: 22px; font-weight: 700; color: #f0f6fc; margin-bottom: 12px; }
+    .pr-meta { font-size: 14px; color: #8b949e; margin-bottom: 20px; }
+    .merged-badge {
+      display: inline-block; padding: 6px 14px; border-radius: 20px;
+      background: rgba(137, 87, 229, 0.2); color: #a371f7;
+      font-size: 13px; font-weight: 700;
+    }
+    .progress-bar {
+      position: absolute; bottom: 40px; left: 120px; right: 120px; height: 3px;
+      background: rgba(71, 85, 105, 0.3); border-radius: 2px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, #0d4ff0, #7a2af7);
+      animation: progress 5s linear forwards;
+    }
+    @keyframes progress { to { width: 100%; } from { width: 0; } }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg"></div>
+    <div class="frame f1">
+      <div class="titlebar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span>Cursor — Scaffolding</span></div>
+      <div class="content">
+        <div class="label">Application Scaffolding</div>
+        <div class="scaffold-grid">
+          <div class="scaffold-item">📁 apps/api</div>
+          <div class="scaffold-item">📁 apps/web</div>
+          <div class="scaffold-item">📁 packages/shared</div>
+          <div class="scaffold-item">📁 docker/</div>
+          <div class="scaffold-item">⚙️ routes.ts</div>
+          <div class="scaffold-item">⚙️ services/</div>
+          <div class="scaffold-item">🎨 components/</div>
+          <div class="scaffold-item">📋 schemas/</div>
+        </div>
+      </div>
+    </div>
+    <div class="frame f2">
+      <div class="titlebar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span>Refactoring</span></div>
+      <div class="content">
+        <div class="label">Multi-file Refactor</div>
+        <div class="refactor-diff">
+          <div class="del">- const analyzeData = (input) => { ... }</div>
+          <div class="add">+ export async function analyzeEvidence(data: Evidence)</div>
+          <div class="add">+ export async function rankRootCauses(context, data)</div>
+          <div class="del">- function getMetrics() { ... }</div>
+          <div class="add">+ export class ProductionMetricsService { ... }</div>
+        </div>
+      </div>
+    </div>
+    <div class="frame f3">
+      <div class="titlebar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span>New Features</span></div>
+      <div class="content">
+        <div class="label">Feature Development</div>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Investigation Copilot workspace</li>
+          <li><span class="check">✓</span> Production metrics API</li>
+          <li><span class="check">✓</span> Role-based AI personas</li>
+          <li><span class="check">✓</span> Multi-tenant data engine</li>
+        </ul>
+      </div>
+    </div>
+    <div class="frame f4">
+      <div class="titlebar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span>Terminal</span></div>
+      <div class="content">
+        <div class="terminal">
+          <div style="color:#94a3b8;">$ npm run build</div>
+          <div style="color:#94a3b8;margin-top:8px;">Compiling TypeScript...</div>
+          <div style="color:#94a3b8;">Bundling web assets...</div>
+          <div class="success">✓ Build Successful</div>
+        </div>
+      </div>
+    </div>
+    <div class="frame f5">
+      <div class="titlebar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span>Docker Desktop</span></div>
+      <div class="content">
+        <div class="label">All Containers Running</div>
+        <div class="docker-grid">
+          <div class="container-box"><div class="status-dot"></div>buek-api</div>
+          <div class="container-box"><div class="status-dot"></div>buek-web</div>
+          <div class="container-box"><div class="status-dot"></div>postgres</div>
+          <div class="container-box"><div class="status-dot"></div>redis</div>
+        </div>
+      </div>
+    </div>
+    <div class="frame f6">
+      <div class="titlebar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span>GitHub</span></div>
+      <div class="content">
+        <div class="github-pr">
+          <div class="pr-title">feat: Investigation Copilot + Production Metrics</div>
+          <div class="pr-meta">abdularief23/buek-core · #43 · 12 files changed</div>
+          <span class="merged-badge">✓ Merged into main</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
+</body>
+</html>

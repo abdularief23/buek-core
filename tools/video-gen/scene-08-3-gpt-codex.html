@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Scene 8.3 — GPT Builds Product, Codex Builds Platform</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #020617;
+      font-family: Inter, "SF Pro Display", system-ui, sans-serif;
+      color: #f8fafc;
+    }
+    .stage {
+      position: relative; width: 100%; height: 100%;
+      animation: zoomOut 5s ease-in-out forwards;
+    }
+    @keyframes zoomOut {
+      0%, 60% { transform: scale(1); }
+      100% { transform: scale(0.92); }
+    }
+    .bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(13, 79, 240, 0.15) 0%, transparent 70%), #020617;
+    }
+    .split {
+      position: absolute; inset: 60px 80px;
+      display: flex; gap: 40px;
+      opacity: 1;
+      animation: splitFade 0.8s ease-in 3.8s forwards;
+    }
+    @keyframes splitFade { to { opacity: 0; transform: scale(0.95); } }
+    .panel {
+      flex: 1; border-radius: 20px; padding: 36px;
+      position: relative; overflow: hidden;
+    }
+    .panel-left {
+      background: linear-gradient(160deg, rgba(16, 163, 127, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid rgba(16, 163, 127, 0.3);
+    }
+    .panel-right {
+      background: linear-gradient(160deg, rgba(139, 92, 246, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    .panel-title {
+      font-size: 13px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; margin-bottom: 24px;
+    }
+    .panel-left .panel-title { color: #34d399; }
+    .panel-right .panel-title { color: #a78bfa; }
+    .gpt-logo {
+      font-size: 48px; font-weight: 900; margin-bottom: 8px;
+      background: linear-gradient(135deg, #10a37f, #1a7f64);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .gpt-sub { font-size: 16px; color: #6ee7b7; font-weight: 600; margin-bottom: 32px; }
+    .dev-tools {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 32px;
+    }
+    .tool {
+      padding: 10px 18px; border-radius: 10px;
+      background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.35);
+      font-size: 14px; font-weight: 600; color: #c4b5fd;
+    }
+    .flow-arrow {
+      position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+      font-size: 28px; color: #38bdf8; opacity: 0.6;
+    }
+    .target-box {
+      padding: 20px; border-radius: 14px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(56, 189, 248, 0.3);
+      text-align: center;
+    }
+    .target-box .icon { font-size: 32px; margin-bottom: 8px; }
+    .target-box .name { font-size: 18px; font-weight: 700; }
+    .target-box .desc { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .data-stream {
+      position: absolute; height: 2px;
+      background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+      opacity: 0; animation: streamFlow 1.5s ease-in-out infinite;
+    }
+    .ds1 { top: 45%; left: 10%; width: 35%; animation-delay: 0.5s; }
+    .ds2 { top: 55%; right: 10%; width: 35%; animation-delay: 1s; }
+    @keyframes streamFlow {
+      0%, 100% { opacity: 0; transform: scaleX(0.5); }
+      50% { opacity: 0.8; transform: scaleX(1); }
+    }
+    .connector-svg {
+      position: absolute; inset: 60px 80px; pointer-events: none;
+    }
+    .conn-line {
+      stroke: url(#connGrad); stroke-width: 2; fill: none;
+      stroke-dasharray: 600; stroke-dashoffset: 600;
+      animation: drawConn 2s ease-out 1s forwards;
+    }
+    @keyframes drawConn { to { stroke-dashoffset: 0; } }
+    .divider {
+      position: absolute; left: 50%; top: 100px; bottom: 100px;
+      width: 1px; background: linear-gradient(180deg, transparent, rgba(148,163,184,0.3), transparent);
+    }
+    .finale {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; animation: finaleIn 1s ease-out 4s forwards; z-index: 10;
+    }
+    @keyframes finaleIn { to { opacity: 1; } }
+    .finale-glow {
+      position: absolute; width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,79,240,0.4) 0%, transparent 70%);
+    }
+    .finale-logo { font-size: 72px; margin-bottom: 8px; filter: drop-shadow(0 0 24px rgba(56,189,248,0.6)); }
+    .finale-text { font-size: 56px; font-weight: 900; letter-spacing: 6px; }
+    .finale-text .c {
+      background: linear-gradient(90deg, #38bdf8, #c4b5fd);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .finale-sub {
+      margin-top: 20px; font-size: 18px; color: #94a3b8; letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg"></div>
+    <svg class="connector-svg" viewBox="0 0 1760 960">
+      <defs>
+        <linearGradient id="connGrad" x1="0" y1="480" x2="1760" y2="480">
+          <stop stop-color="#10a37f" stop-opacity="0.6"/>
+          <stop offset="0.5" stop-color="#38bdf8" stop-opacity="0.8"/>
+          <stop offset="1" stop-color="#8b5cf6" stop-opacity="0.6"/>
+        </linearGradient>
+      </defs>
+      <path class="conn-line" d="M 200 400 Q 880 200 1560 400" />
+      <path class="conn-line" d="M 200 560 Q 880 760 1560 560" style="animation-delay:1.5s"/>
+    </svg>
+    <div class="split">
+      <div class="panel panel-left">
+        <div class="panel-title">Product AI</div>
+        <div class="gpt-logo">GPT-5.6</div>
+        <div class="gpt-sub">Powers user-facing features</div>
+        <div class="data-stream ds1"></div>
+        <div class="target-box" style="margin-top: 60px;">
+          <div class="icon">📊</div>
+          <div class="name">Buek Core Dashboard</div>
+          <div class="desc">Investigation · Copilot · Analytics</div>
+        </div>
+        <div class="flow-arrow">↓</div>
+      </div>
+      <div class="divider"></div>
+      <div class="panel panel-right">
+        <div class="panel-title">Development AI</div>
+        <div class="dev-tools">
+          <span class="tool">Cursor</span>
+          <span class="tool">VS Code</span>
+          <span class="tool">Docker</span>
+          <span class="tool">GitHub</span>
+        </div>
+        <div class="gpt-sub" style="color:#c4b5fd;">Codex builds the platform</div>
+        <div class="data-stream ds2"></div>
+        <div class="target-box" style="margin-top: 40px;">
+          <div class="icon">💻</div>
+          <div class="name">Buek Core Source</div>
+          <div class="desc">API · Web · Infrastructure</div>
+        </div>
+        <div class="flow-arrow">↓</div>
+      </div>
+    </div>
+    <div class="finale">
+      <div class="finale-glow"></div>
+      <div class="finale-logo">⬡</div>
+      <div class="finale-text">BUEK <span class="c">CORE</span></div>
+      <p class="finale-sub">GPT builds the product · Codex builds the platform</p>
+    </div>
+  </div>
+</body>
+</html>

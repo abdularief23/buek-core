@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Scene 9.2 — Natural Engineering Conversation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #0f172a;
+      font-family: Inter, "SF Pro Display", system-ui, sans-serif;
+      color: #f8fafc;
+    }
+    .stage { position: relative; width: 100%; height: 100%; }
+    .bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(13, 79, 240, 0.1) 0%, transparent 70%), #0f172a;
+    }
+    .chat-window {
+      position: absolute; left: 120px; right: 120px; top: 60px; bottom: 60px;
+      background: #1e293b; border-radius: 20px;
+      border: 1px solid rgba(71, 85, 105, 0.5);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+      overflow: hidden;
+      animation: scrollChat 5s ease-in-out forwards;
+    }
+    @keyframes scrollChat {
+      0% { transform: translateY(0); }
+      30% { transform: translateY(-60px); }
+      55% { transform: translateY(-180px); }
+      80% { transform: translateY(-320px); }
+      100% { transform: translateY(-400px); }
+    }
+    .chat-header {
+      height: 64px; background: #0f172a;
+      display: flex; align-items: center; padding: 0 32px;
+      border-bottom: 1px solid #334155;
+    }
+    .chat-header h2 { font-size: 18px; font-weight: 800; }
+    .chat-header span { margin-left: 12px; font-size: 13px; color: #64748b; }
+    .messages { padding: 28px 40px; }
+    .msg {
+      margin-bottom: 20px; max-width: 80%;
+      opacity: 0; animation: fadeUp 0.4s ease-out forwards;
+    }
+    .msg-user {
+      margin-left: auto;
+      padding: 14px 20px; border-radius: 18px 18px 4px 18px;
+      background: linear-gradient(135deg, #0d4ff0, #7a2af7);
+      font-size: 15px; line-height: 1.5;
+    }
+    .msg-ai {
+      padding: 16px 22px; border-radius: 4px 18px 18px 18px;
+      background: rgba(15, 23, 42, 0.8); border: 1px solid #334155;
+      font-size: 14px; line-height: 1.7; color: #cbd5e1;
+    }
+    .msg:nth-child(1) { animation-delay: 0.2s; }
+    .msg:nth-child(2) { animation-delay: 0.6s; }
+    .msg:nth-child(3) { animation-delay: 1.0s; }
+    .msg:nth-child(4) { animation-delay: 1.4s; }
+    .msg:nth-child(5) { animation-delay: 1.8s; }
+    .msg:nth-child(6) { animation-delay: 2.2s; }
+    .msg:nth-child(7) { animation-delay: 2.6s; }
+    .msg:nth-child(8) { animation-delay: 3.0s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .doc-card {
+      margin-top: 12px; padding: 16px 20px; border-radius: 12px;
+      background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3);
+      opacity: 0; animation: highlight 0.6s ease-out 3.5s forwards;
+    }
+    @keyframes highlight {
+      0% { opacity: 0; box-shadow: none; }
+      50% { box-shadow: 0 0 30px rgba(56, 189, 248, 0.4); }
+      100% { opacity: 1; box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+    }
+    .doc-card .title { font-weight: 700; color: #38bdf8; font-size: 15px; margin-bottom: 6px; }
+    .doc-card .meta { font-size: 12px; color: #64748b; }
+    .doc-card .preview {
+      margin-top: 10px; font-size: 13px; color: #94a3b8; line-height: 1.6;
+      border-left: 2px solid #38bdf8; padding-left: 12px;
+    }
+    .compare-table {
+      margin-top: 10px; width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .compare-table th {
+      text-align: left; padding: 8px 12px; color: #64748b;
+      border-bottom: 1px solid #334155; font-weight: 600;
+    }
+    .compare-table td {
+      padding: 8px 12px; border-bottom: 1px solid rgba(51,65,85,0.5);
+    }
+    .match { color: #4ade80; font-weight: 700; }
+    .highlight-ring {
+      position: absolute; right: 140px; top: 200px;
+      width: 500px; height: 300px;
+      border: 2px solid rgba(56, 189, 248, 0.5); border-radius: 16px;
+      pointer-events: none; opacity: 0;
+      animation: ringPulse 1s ease-out 3.5s forwards;
+    }
+    @keyframes ringPulse {
+      0% { opacity: 0; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.02); }
+      100% { opacity: 0.6; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg"></div>
+    <div class="chat-window">
+      <div class="chat-header">
+        <h2>✦ AI Copilot</h2>
+        <span>Manufacturing Engineer · Epson Indonesia</span>
+      </div>
+      <div class="messages">
+        <div class="msg msg-user">Summarize the investigation from last week on white streak defects</div>
+        <div class="msg msg-ai">
+          <strong>Investigation Summary — White Streak (Batch #2847)</strong><br/>
+          Root cause: Ink cartridge pressure deviation. Countermeasure applied: recalibrated pressure sensor on Line 2. PPM reduced from 340 to 12. Status: Closed.
+        </div>
+        <div class="msg msg-user">Find the QC technical report for similar cases</div>
+        <div class="msg msg-ai">
+          Found 3 matching reports in Company Brain:
+          <table class="compare-table">
+            <tr><th>Case</th><th>Date</th><th>Match</th></tr>
+            <tr><td>White Streak #2847</td><td>Jul 12</td><td class="match">94%</td></tr>
+            <tr><td>Print Banding #2612</td><td>Jun 28</td><td class="match">78%</td></tr>
+            <tr><td>Ink Smear #2501</td><td>Jun 15</td><td>62%</td></tr>
+          </table>
+        </div>
+        <div class="msg msg-user">Compare with current production data and draft an engineering report</div>
+        <div class="msg msg-ai">
+          <div class="doc-card">
+            <div class="title">📄 Engineering Report — Draft</div>
+            <div class="meta">Generated by AI Copilot · Ready for review</div>
+            <div class="preview">
+              <strong>1. Issue:</strong> White streak defect on Line 2, Batch #2901<br/>
+              <strong>2. Evidence:</strong> QC photos, machine history, trend data (PPM: 285)<br/>
+              <strong>3. Root Cause:</strong> Ink pressure deviation (87% confidence)<br/>
+              <strong>4. Recommended Action:</strong> Recalibrate pressure sensor per SOP 4.2.3
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-ring"></div>
+  </div>
+</body>
+</html>
