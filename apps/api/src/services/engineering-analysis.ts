@@ -1,7 +1,12 @@
 import { prisma } from "../db.js";
 import { canApprove, canDraftReport, assertRole } from "../lib/roles.js";
 import { defaultInvestigationSteps, getInvestigationCopilot } from "./investigation-copilot.js";
-import { calculatePpmMetrics, parseProductionContext } from "./production-metrics.js";
+import {
+  calculatePpmMetrics,
+  mergeProductionIntoDescription,
+  parseProductionContext,
+  type ProductionInput
+} from "./production-metrics.js";
 import { createWorkOrderFromExecutionPlan } from "./execution-work-order.js";
 import { createDraftReport } from "./workflow-data.js";
 import type { ReportSections } from "./report-template.js";
@@ -264,6 +269,37 @@ export async function getEngineeringAnalysis(slug: string, issueKey: string) {
     copilot,
     investigationStatus: issue.investigation?.status ?? "in_progress"
   };
+}
+
+export async function updateIssueProductionContext(
+  slug: string,
+  issueKey: string,
+  input: ProductionInput,
+  role?: string
+) {
+  assertRole(canDraftReport(role ?? ""), "Only Engineers can update production data.");
+  const issue = await getIssueWithInvestigation(slug, issueKey);
+  if (!issue) throw new Error("Issue not found.");
+
+  if (input.totalProduction <= 0 || input.rejectCount < 0) {
+    throw new Error("Total production must be positive and reject count cannot be negative.");
+  }
+
+  const description = mergeProductionIntoDescription(issue.description, input);
+  const updated = await prisma.issue.update({
+    where: { id: issue.id },
+    data: { description }
+  });
+
+  const metrics = metricsForIssue(slug, {
+    ...updated,
+    machine: issue.machine,
+    investigation: issue.investigation
+  });
+  const copilot = await getInvestigationCopilot(slug, issueKey);
+  if (!copilot) throw new Error("Investigation co-pilot data unavailable.");
+
+  return { metrics, copilot };
 }
 
 export async function saveEngineeringAnalysis(

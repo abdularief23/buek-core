@@ -23,6 +23,7 @@ import {
   handleRejectEngineeringAnalysis,
   handleSubmitVerification,
   handleGenerateReportFromAnalysis,
+  handleUpdateIssueProduction,
   handleCompanyBrain,
   handleApproveReport,
   handleApproveSopRevision,
@@ -281,6 +282,7 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/data/:slug/issues/:issueKey/analysis", (req, res) => void handleGetEngineeringAnalysis(req, res));
   app.get("/api/data/:slug/issues/:issueKey/analysis/document", (req, res) => void handleAnalysisDocumentExport(req, res));
   app.put("/api/data/:slug/issues/:issueKey/analysis", (req, res) => void handleSaveEngineeringAnalysis(req, res));
+  app.patch("/api/data/:slug/issues/:issueKey/production", (req, res) => void handleUpdateIssueProduction(req, res));
   app.post("/api/data/:slug/issues/:issueKey/analysis/submit", (req, res) => void handleSubmitEngineeringAnalysis(req, res));
   app.post("/api/data/:slug/issues/:issueKey/analysis/approve", (req, res) => void handleApproveEngineeringAnalysis(req, res));
   app.post("/api/data/:slug/issues/:issueKey/analysis/reject", (req, res) => void handleRejectEngineeringAnalysis(req, res));

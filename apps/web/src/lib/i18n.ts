@@ -36,7 +36,23 @@ const STRINGS = {
   "investigation.ppm.source": { id: "Sumber PPM", en: "PPM source", ja: "PPMソース" },
   "investigation.ppm.fromOperator": { id: "Laporan operator (NG)", en: "Operator report (NG)", ja: "オペレーター報告（NG）" },
   "investigation.ppm.estimate": { id: "Estimasi sistem", en: "System estimate", ja: "システム推定" },
+  "investigation.production.edit": {
+    id: "Edit Data Produksi / NG",
+    en: "Edit Production / NG Data",
+    ja: "生産／NGデータを編集"
+  },
+  "investigation.production.save": { id: "Simpan Data NG", en: "Save NG Data", ja: "NGデータを保存" },
+  "investigation.production.saved": {
+    id: "Data produksi & NG diperbarui — PPM dihitung ulang.",
+    en: "Production & NG data updated — PPM recalculated.",
+    ja: "生産・NGデータを更新しました — PPMを再計算しました。"
+  },
   "investigation.production": { id: "Produksi", en: "Production", ja: "生産" },
+  "operator.ppmFromTotal": {
+    id: "PPM dihitung dari: NG ÷ Total Produksi × 1.000.000",
+    en: "PPM calculated from: NG ÷ Total Production × 1,000,000",
+    ja: "PPM = NG ÷ 総生産数 × 1,000,000"
+  },
   "investigation.ng": { id: "NG (reject)", en: "NG (reject)", ja: "NG（不良）" },
   "operator.totalProduction": { id: "Total produksi shift (pcs)", en: "Shift total production (pcs)", ja: "シフト総生産数（個）" },
   "operator.rejectCount": { id: "Jumlah NG / reject (pcs)", en: "NG / reject count (pcs)", ja: "NG／不良数（個）" },

@@ -425,6 +425,26 @@ export function saveEngineeringAnalysis(slug: string, issueKey: string, analysis
   });
 }
 
+export function updateIssueProduction(
+  slug: string,
+  issueKey: string,
+  input: {
+    totalProduction: number;
+    rejectCount: number;
+    ngPhenomenon?: string;
+  },
+  role: string
+) {
+  return fetchJson<{
+    metrics: EngineerIssueMetrics;
+    copilot: InvestigationCopilot;
+  }>(`/api/data/${slug}/issues/${issueKey}/production`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...input, role })
+  });
+}
+
 export function submitEngineeringAnalysis(
   slug: string,
   issueKey: string,
