@@ -25,8 +25,8 @@
     },
     {
       "id": "scene-05",
-      "file": "scene-05-website.mp3",
-      "text": "This is Buek Core. We built it during OpenAI Build Week — using Codex to ship the full platform, from UI to API to deployment."
+      "file": "scene-05-platform-intro.mp3",
+      "text": "Meet Buek Core. An AI platform designed to build AI Workers for any industry. Most AI applications are built for a single business domain. We took a different approach. Buek Core separates AI reasoning from domain knowledge. Manufacturing is our first domain — but the same Buek Core can power healthcare, construction, retail, and many more."
     },
     {
       "id": "scene-06",

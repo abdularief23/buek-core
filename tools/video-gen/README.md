@@ -242,20 +242,20 @@ gsutil -m cp output/scene-07-*.mp4 gs://buek-core-video-output/scenes/scene-07-r
 
 ---
 
-## Scene 5 — Website screen record
+## Scene 5 — Platform intro animation (13s)
 
-Rekam landing page `core.buekwebsite.com` (hero + scroll pelan ke demo industri).
+Animasi: **Logo** → **Buek Core** → **AI Reasoning / Domain Knowledge** → Manufacturing / Healthcare / Construction / Retail.
 
 ```bash
 cd tools/video-gen
 node render_scene_05.mjs --duration 13 --fps 30
 ```
 
-Output: `tools/video-gen/output/scene-05-website.mp4`
+Output: `tools/video-gen/output/scene-05-platform-intro.mp4`
 
-Upload ke GCS (opsional):
+Upload ke GCS:
 ```bash
-gsutil cp output/scene-05-website.mp4 gs://buek-core-video-output/scenes/scene-05-website/scene-05-website.mp4
+gsutil cp output/scene-05-platform-intro.mp4 gs://buek-core-video-output/scenes/scene-05-platform-intro/scene-05-platform-intro.mp4
 ```
 
 ---
