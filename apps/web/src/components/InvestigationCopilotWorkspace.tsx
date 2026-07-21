@@ -8,6 +8,7 @@ import {
   saveEngineeringAnalysis,
   submitEngineeringAnalysis,
   submitVerificationResult,
+  updateIssueProduction,
   type CompanyBrainMachineNode,
   type CountermeasureOption,
   type EngineeringAnalysisData,
@@ -89,6 +90,12 @@ function EngineeringAnalysisWizard({
   const [askHistorical, setAskHistorical] = useState<boolean | null>(null);
   const [verificationPpm, setVerificationPpm] = useState("");
   const [countermeasureDone, setCountermeasureDone] = useState<boolean | null>(null);
+  const [editingProduction, setEditingProduction] = useState(false);
+  const [savingProduction, setSavingProduction] = useState(false);
+  const [productionSaveMessage, setProductionSaveMessage] = useState<string | null>(null);
+  const [editTotalProduction, setEditTotalProduction] = useState(5000);
+  const [editRejectCount, setEditRejectCount] = useState(1);
+  const [editNgPhenomenon, setEditNgPhenomenon] = useState("");
 
   const engineerView = isEngineer(userRole);
   const supervisorView = isSupervisor(userRole);
@@ -133,6 +140,9 @@ function EngineeringAnalysisWizard({
         if (data.analysis.useHistoricalCountermeasure !== undefined) {
           setAskHistorical(data.analysis.useHistoricalCountermeasure);
         }
+        setEditTotalProduction(data.metrics.totalProduction ?? 5000);
+        setEditRejectCount(data.metrics.rejectCount ?? 1);
+        setEditNgPhenomenon(data.metrics.ngPhenomenon ?? "");
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -202,6 +212,51 @@ function EngineeringAnalysisWizard({
       countermeasures: selected,
       countermeasureNotes: selected.join("\n")
     });
+  }
+
+  async function handleSaveProduction() {
+    if (savingProduction) return;
+    setSavingProduction(true);
+    setProductionSaveMessage(null);
+    try {
+      const result = await updateIssueProduction(
+        slug,
+        issueKey,
+        {
+          totalProduction: editTotalProduction,
+          rejectCount: editRejectCount,
+          ngPhenomenon: editNgPhenomenon.trim()
+        },
+        userRole
+      );
+      setMetrics({
+        machineCode: result.metrics.machineCode,
+        currentPpm: result.metrics.currentPpm,
+        targetPpm: result.metrics.targetPpm,
+        increasePercent: result.metrics.increasePercent,
+        priority: result.metrics.priority,
+        dueLabel: result.metrics.dueLabel,
+        ...(result.metrics.ppmSource ? { ppmSource: result.metrics.ppmSource } : {}),
+        ...(result.metrics.totalProduction !== undefined
+          ? { totalProduction: result.metrics.totalProduction }
+          : {}),
+        ...(result.metrics.rejectCount !== undefined ? { rejectCount: result.metrics.rejectCount } : {}),
+        ...(result.metrics.ngRatePercent !== undefined
+          ? { ngRatePercent: result.metrics.ngRatePercent }
+          : {}),
+        ...(result.metrics.ngPhenomenon ? { ngPhenomenon: result.metrics.ngPhenomenon } : {})
+      });
+      setCopilot(result.copilot);
+      setPossibleCauses(result.copilot.possibleCauses);
+      setAllCountermeasureOptions(result.copilot.countermeasureOptions);
+      setEditingProduction(false);
+      setProductionSaveMessage(t("investigation.production.saved"));
+      onDataChange?.();
+    } catch (error) {
+      setProductionSaveMessage(error instanceof Error ? error.message : "Gagal menyimpan");
+    } finally {
+      setSavingProduction(false);
+    }
   }
 
   async function handleSubmit() {
@@ -371,6 +426,84 @@ function EngineeringAnalysisWizard({
           value={metrics.ppmSource === "operator_report" ? t("investigation.ppm.fromOperator") : t("investigation.ppm.estimate")}
         />
       </section>
+
+      {engineerView && editable ? (
+        <section className="buek-card space-y-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="buek-card-title text-cyan-300">{t("investigation.production.edit")}</h2>
+              <p className="buek-small text-slate-500">{t("operator.ppmFromTotal")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingProduction((open) => !open);
+                setProductionSaveMessage(null);
+                if (!editingProduction) {
+                  setEditTotalProduction(metrics.totalProduction ?? editTotalProduction);
+                  setEditRejectCount(metrics.rejectCount ?? editRejectCount);
+                  setEditNgPhenomenon(metrics.ngPhenomenon ?? editNgPhenomenon);
+                }
+              }}
+              className="rounded-lg border border-cyan-400/30 px-4 py-2 buek-small text-cyan-300 hover:bg-cyan-500/10"
+            >
+              {editingProduction ? t("common.back") : t("investigation.production.edit")}
+            </button>
+          </div>
+          {editingProduction ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block space-y-2">
+                <span className="buek-small text-slate-500">{t("operator.totalProduction")}</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={editTotalProduction}
+                  onChange={(e) => setEditTotalProduction(Number(e.target.value))}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white"
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className="buek-small text-slate-500">{t("operator.rejectCount")}</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={editRejectCount}
+                  onChange={(e) => setEditRejectCount(Number(e.target.value))}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white"
+                />
+              </label>
+              <label className="block space-y-2 sm:col-span-2">
+                <span className="buek-small text-slate-500">{t("operator.ngPhenomenon")}</span>
+                <input
+                  value={editNgPhenomenon}
+                  onChange={(e) => setEditNgPhenomenon(e.target.value)}
+                  placeholder="Misalnya: white streak, scratch, torque out of spec"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white"
+                />
+              </label>
+              <div className="sm:col-span-2 flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  disabled={savingProduction}
+                  onClick={() => void handleSaveProduction()}
+                  className="rounded-xl bg-cyan-500 px-6 py-2 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
+                >
+                  {savingProduction ? "..." : t("investigation.production.save")}
+                </button>
+                <p className="buek-small text-cyan-300">
+                  PPM preview:{" "}
+                  {editTotalProduction > 0
+                    ? Math.round((editRejectCount / editTotalProduction) * 1_000_000).toLocaleString()
+                    : 0}
+                </p>
+              </div>
+            </div>
+          ) : null}
+          {productionSaveMessage ? (
+            <p className="buek-small text-emerald-400">{productionSaveMessage}</p>
+          ) : null}
+        </section>
+      ) : null}
 
       {status === "revision_requested" ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 buek-small text-amber-200">

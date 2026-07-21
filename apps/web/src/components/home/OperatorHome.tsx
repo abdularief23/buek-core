@@ -247,7 +247,7 @@ export function OperatorHome({
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block space-y-2">
-              <span className="buek-small text-slate-500">{t("operator.totalProduction")}</span>
+              <span className="buek-small font-medium text-slate-400">{t("operator.totalProduction")}</span>
               <input
                 type="number"
                 min={1}
@@ -258,7 +258,7 @@ export function OperatorHome({
               />
             </label>
             <label className="block space-y-2">
-              <span className="buek-small text-slate-500">{t("operator.rejectCount")}</span>
+              <span className="buek-small font-medium text-slate-400">{t("operator.rejectCount")}</span>
               <input
                 type="number"
                 min={1}
@@ -275,9 +275,10 @@ export function OperatorHome({
             <p className="buek-small text-slate-500">
               {t("operator.ngRate")}: {totalProduction > 0 ? ((rejectCount / totalProduction) * 100).toFixed(2) : 0}%
             </p>
+            <p className="mt-1 buek-small text-slate-600">{t("operator.ppmFromTotal")}</p>
           </div>
           <label className="block space-y-2">
-            <span className="buek-small text-slate-500">{t("operator.ngPhenomenon")}</span>
+            <span className="buek-small font-medium text-slate-400">{t("operator.ngPhenomenon")}</span>
             <input
               value={ngPhenomenon}
               onChange={(e) => setNgPhenomenon(e.target.value)}

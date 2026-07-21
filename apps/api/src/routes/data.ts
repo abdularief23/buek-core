@@ -33,7 +33,8 @@ import {
   rejectEngineeringAnalysis,
   saveEngineeringAnalysis,
   submitEngineeringAnalysis,
-  submitVerificationResult
+  submitVerificationResult,
+  updateIssueProductionContext
 } from "../services/engineering-analysis.js";
 import {
   approveReport,
@@ -543,6 +544,31 @@ export async function handleAnalysisDocumentExport(req: Request, res: Response) 
     res.send(html);
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
+  }
+}
+
+export async function handleUpdateIssueProduction(req: Request, res: Response) {
+  try {
+    const body = req.body as {
+      totalProduction: number;
+      rejectCount: number;
+      ngPhenomenon?: string;
+      role?: string;
+    };
+    const result = await updateIssueProductionContext(
+      getSlug(req),
+      String(req.params.issueKey),
+      {
+        totalProduction: Number(body.totalProduction),
+        rejectCount: Number(body.rejectCount),
+        ...(body.ngPhenomenon !== undefined ? { ngPhenomenon: body.ngPhenomenon } : {})
+      },
+      body.role
+    );
+    res.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed";
+    res.status(permissionStatus(message)).json({ error: { message } });
   }
 }
 

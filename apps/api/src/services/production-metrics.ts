@@ -38,6 +38,56 @@ export function parseProductionContext(description: string | null | undefined): 
   };
 }
 
+export interface ProductionInput {
+  totalProduction: number;
+  rejectCount: number;
+  ngPhenomenon?: string;
+}
+
+export function mergeProductionIntoDescription(
+  description: string | null | undefined,
+  input: ProductionInput
+): string {
+  const ppm =
+    input.totalProduction > 0
+      ? Math.round((input.rejectCount / input.totalProduction) * 1_000_000)
+      : 0;
+  const ngRate =
+    input.totalProduction > 0
+      ? ((input.rejectCount / input.totalProduction) * 100).toFixed(2)
+      : "0";
+
+  const productionLines: Record<string, string> = {
+    "Total Production": `${input.totalProduction.toLocaleString("en-US")} pcs`,
+    "Reject Count (NG)": `${input.rejectCount} pcs`,
+    "NG Rate": `${ngRate}%`,
+    PPM: ppm.toLocaleString("en-US")
+  };
+
+  if (input.ngPhenomenon?.trim()) {
+    productionLines["NG Phenomenon"] = input.ngPhenomenon.trim();
+  }
+
+  const lines = description?.trim() ? description.split("\n") : [];
+
+  for (const [label, value] of Object.entries(productionLines)) {
+    const idx = lines.findIndex((line) => line.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+    const newLine = `${label}: ${value}`;
+    if (idx >= 0) {
+      lines[idx] = newLine;
+    } else {
+      lines.push(newLine);
+    }
+  }
+
+  if (!input.ngPhenomenon?.trim()) {
+    const phenIdx = lines.findIndex((line) => /^NG Phenomenon:/i.test(line));
+    if (phenIdx >= 0) lines.splice(phenIdx, 1);
+  }
+
+  return lines.filter(Boolean).join("\n");
+}
+
 export function calculatePpmMetrics(
   production: ProductionContext | null,
   fallback: { current: number; target: number; increase: number }
