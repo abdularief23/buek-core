@@ -14,7 +14,7 @@ Judges must hear **Codex** (how we built it) and **GPT-5.6** (how it runs) — n
 | 2 | 0:06–0:12 | Engineer at desk | Engineers lose hours digging through SOPs, old reports, and scattered company knowledge. |
 | 3 | 0:12–0:20 | Line stopped | Meanwhile, the line is down. Every minute costs money. What if AI could work like another engineer on your team? |
 | 4 | 0:20–0:22 | Logo reveal | *(silent — logo only)* |
-| 5 | 0:22–0:35 | Platform intro animation | Meet **Buek Core**. An AI platform designed to build AI Workers for any industry. Most AI applications are built for a single business domain. We took a different approach. **Buek Core** separates AI reasoning from domain knowledge. Manufacturing is our first domain — but the same **Buek Core** can power healthcare, construction, retail, and many more. |
+| 5 | 0:22–0:35 | Concept animation (dark) | Meet **Buek Core**, an AI platform designed to build AI Workers for any industry. Instead of creating a different AI for every business, **Buek Core** separates AI reasoning from domain knowledge. |
 | 6 | 0:35–0:45 | Platform vision | And **GPT-5.6** powers the reasoning inside — one AI engine, your domain knowledge, starting with manufacturing. |
 | 7 | 0:45–1:05 | Role workspaces | Every role gets its own workspace. Operators keep the line running. Engineers investigate root causes. Supervisors approve corrective actions. Plant managers track KPIs in real time. |
 | 8 | 1:05–1:25 | Investigation wizard | When a defect is reported — like this white streak on print — the engineer opens a guided five-step investigation. |
@@ -36,7 +36,7 @@ Engineers lose hours digging through SOPs, old reports, and scattered company kn
 
 Meanwhile, the line is down. Every minute costs money. What if AI could work like another engineer on your team?
 
-Meet Buek Core. An AI platform designed to build AI Workers for any industry. Most AI applications are built for a single business domain. We took a different approach. Buek Core separates AI reasoning from domain knowledge. Manufacturing is our first domain — but the same Buek Core can power healthcare, construction, retail, and many more.
+Meet Buek Core, an AI platform designed to build AI Workers for any industry. Instead of creating a different AI for every business, Buek Core separates AI reasoning from domain knowledge.
 
 And GPT-5.6 powers the reasoning inside — one AI engine, your domain knowledge, starting with manufacturing.
 

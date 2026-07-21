@@ -3,344 +3,570 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1920, height=1080" />
-  <title>BUEK CORE — Scene 5 Platform Intro</title>
+  <title>BUEK CORE — Scene 5 Concept Animation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       width: 1920px;
       height: 1080px;
       overflow: hidden;
-      background: #ffffff;
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
-      color: #071341;
+      background: #030712;
+      font-family: Inter, "SF Pro Display", "Segoe UI", Arial, sans-serif;
+      color: #f8fafc;
     }
+
     .stage {
       position: relative;
       width: 100%;
       height: 100%;
+      overflow: hidden;
+      animation: stageZoom 13s ease-in-out forwards;
+    }
+    @keyframes stageZoom {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.06); }
+    }
+
+    /* ── Ambient background ── */
+    .bg-gradient {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(13, 79, 240, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(122, 42, 247, 0.12) 0%, transparent 50%),
+        linear-gradient(180deg, #030712 0%, #0a0f1e 50%, #030712 100%);
+    }
+    .particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      opacity: 0.5;
+    }
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(148, 163, 255, 0.6);
+      animation: floatParticle linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg-gradient"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- ═══ PHASE 1: Logo reveal (0–3s) ═══ -->
+    <div class="phase p1">
+      <div class="p1-glow"></div>
+      <div class="p1-logo">
+        <div class="logo-icon">⬡</div>
+        <div class="logo-text">BUEK <span class="grad">CORE</span></div>
+      </div>
+      <div class="p1-tagline">
+        <span class="line1">Build AI Workers</span>
+        <span class="line2">For Any Industry</span>
+      </div>
+    </div>
+
+    <!-- ═══ PHASE 2: One core → many domains (3–7s) ═══ -->
+    <div class="phase p2">
+      <div class="tree">
+        <div class="node node-core">Buek Core</div>
+        <div class="tree-connector">
+          <svg viewBox="0 0 900 120" fill="none" class="tree-svg">
+            <path class="tree-line trunk" d="M450 0 L450 40" />
+            <path class="tree-line bar" d="M150 40 L750 40" />
+            <path class="tree-line drop1" d="M150 40 L150 80" />
+            <path class="tree-line drop2" d="M450 40 L450 80" />
+            <path class="tree-line drop3" d="M750 40 L750 80" />
+          </svg>
+        </div>
+        <div class="domains">
+          <div class="domain d1"><span class="ico">🏭</span>Manufacturing</div>
+          <div class="domain d2"><span class="ico">🏥</span>Healthcare</div>
+          <div class="domain d3"><span class="ico">🏗️</span>Construction</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PHASE 3: Fragmented vs unified (7–10s) ═══ -->
+    <div class="phase p3">
+      <div class="compare">
+        <div class="compare-side bad">
+          <p class="compare-label">Before</p>
+          <div class="frag-stack">
+            <div class="frag"><span class="ai">AI A</span><span class="arr">↓</span><span class="dom">Manufacturing</span></div>
+            <div class="frag"><span class="ai">AI B</span><span class="arr">↓</span><span class="dom">Healthcare</span></div>
+            <div class="frag"><span class="ai">AI C</span><span class="arr">↓</span><span class="dom">Retail</span></div>
+          </div>
+        </div>
+        <div class="compare-arrow">→</div>
+        <div class="compare-side good">
+          <p class="compare-label">Buek Core</p>
+          <div class="unified">
+            <div class="node-sm">Buek Core</div>
+            <div class="uni-line"></div>
+            <div class="uni-domains">
+              <span>Manufacturing</span>
+              <span>Healthcare</span>
+              <span>Retail</span>
+            </div>
+            <div class="check">✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PHASE 4: Architecture stack (10–13s) ═══ -->
+    <div class="phase p4">
+      <div class="arch">
+        <div class="arch-layer users">Users</div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-layer platform">Buek Core Platform</div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-split">
+          <div class="arch-layer reasoning">AI Reasoning <span class="badge">GPT-5.6</span></div>
+          <div class="arch-layer knowledge">Domain Knowledge</div>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-industries">
+          <span>Manufacturing</span>
+          <span>Healthcare</span>
+          <span>Construction</span>
+          <span>Retail</span>
+        </div>
+      </div>
+      <div class="p4-logo-end">
+        <div class="logo-icon-sm">⬡</div>
+        <span>BUEK CORE</span>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Particles */
+    @keyframes floatParticle {
+      0% { transform: translateY(1080px) translateX(0); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.4; }
+      100% { transform: translateY(-20px) translateX(30px); opacity: 0; }
+    }
+
+    /* Phase container */
+    .phase {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── PHASE 1 ── */
+    .p1 { animation: phase1 3s ease-in-out forwards; }
+    @keyframes phase1 {
+      0% { opacity: 0; }
+      8% { opacity: 1; }
+      88% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .p1-glow {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(13, 79, 240, 0.35) 0%, rgba(122, 42, 247, 0.15) 40%, transparent 70%);
+      animation: glowPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+    .p1-logo {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      opacity: 0;
+      transform: scale(0.85);
+      animation: logoReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+    }
+    @keyframes logoReveal {
+      to { opacity: 1; transform: scale(1); }
+    }
+    .logo-icon {
+      font-size: 72px;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 0 24px rgba(13, 79, 240, 0.6));
+    }
+    .logo-text {
+      font-size: 64px;
+      font-weight: 900;
+      letter-spacing: 6px;
+    }
+    .grad {
+      background: linear-gradient(90deg, #38bdf8, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .p1-tagline {
+      position: absolute;
+      bottom: 280px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: taglineIn 0.8s ease-out 1s forwards;
+    }
+    .p1-tagline .line1 {
+      display: block;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #e2e8f0;
+    }
+    .p1-tagline .line2 {
+      display: block;
+      margin-top: 8px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 6px;
+      color: #94a3b8;
+    }
+    @keyframes taglineIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── PHASE 2 ── */
+    .p2 { animation: phase2 4s ease-in-out 3s forwards; }
+    @keyframes phase2 {
+      0% { opacity: 0; transform: scale(0.96); }
+      10% { opacity: 1; transform: scale(1); }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .tree { display: flex; flex-direction: column; align-items: center; width: 900px; }
+    .node {
+      padding: 22px 48px;
+      border-radius: 16px;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+    .node-core {
+      background: linear-gradient(135deg, #0d4ff0, #7a2af7);
+      box-shadow: 0 0 40px rgba(13, 79, 240, 0.45);
+      opacity: 0;
+      animation: nodePop 0.6s cubic-bezier(0.22, 1, 0.36, 1) 3.2s forwards;
+    }
+    @keyframes nodePop {
+      0% { opacity: 0; transform: scale(0.8); }
+      70% { transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .tree-connector { width: 100%; height: 100px; margin-top: 4px; }
+    .tree-svg { width: 100%; height: 100px; }
+    .tree-line {
+      stroke: url(#treeGrad);
+      stroke-width: 3;
+      stroke-linecap: round;
+      fill: none;
+      stroke-dasharray: 400;
+      stroke-dashoffset: 400;
+    }
+    .trunk { animation: drawLine 0.4s ease-out 3.8s forwards; }
+    .bar { animation: drawLine 0.5s ease-out 4.1s forwards; }
+    .drop1 { animation: drawLine 0.35s ease-out 4.5s forwards; }
+    .drop2 { animation: drawLine 0.35s ease-out 4.7s forwards; }
+    .drop3 { animation: drawLine 0.35s ease-out 4.9s forwards; }
+    @keyframes drawLine { to { stroke-dashoffset: 0; } }
+    .domains {
+      display: flex;
+      gap: 40px;
+      width: 100%;
+      justify-content: space-between;
+      padding: 0 40px;
+    }
+    .domain {
+      flex: 1;
+      padding: 20px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(148, 163, 255, 0.25);
+      text-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: #e2e8f0;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    .domain .ico { display: block; font-size: 28px; margin-bottom: 8px; }
+    .d1 { animation: domainIn 0.5s ease-out 5.1s forwards; box-shadow: 0 0 24px rgba(13, 79, 240, 0.3); }
+    .d2 { animation: domainIn 0.5s ease-out 5.5s forwards; }
+    .d3 { animation: domainIn 0.5s ease-out 5.9s forwards; }
+    @keyframes domainIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── PHASE 3 ── */
+    .p3 { animation: phase3 3s ease-in-out 7s forwards; }
+    @keyframes phase3 {
+      0% { opacity: 0; }
+      12% { opacity: 1; }
+      88% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .compare {
+      display: flex;
+      align-items: center;
+      gap: 48px;
+      width: 1200px;
+    }
+    .compare-label {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .compare-side { flex: 1; }
+    .compare-side.bad .frag-stack {
+      opacity: 1;
+      animation: fadeOutBad 0.6s ease-in 8.2s forwards;
+    }
+    @keyframes fadeOutBad {
+      to { opacity: 0.3; transform: scale(0.95); }
+    }
+    .frag {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      font-size: 18px;
+      opacity: 0;
+      animation: fragIn 0.4s ease-out forwards;
+    }
+    .frag:nth-child(1) { animation-delay: 7.2s; }
+    .frag:nth-child(2) { animation-delay: 7.5s; }
+    .frag:nth-child(3) { animation-delay: 7.8s; }
+    @keyframes fragIn { to { opacity: 1; } }
+    .frag .ai { font-weight: 800; color: #f87171; min-width: 48px; }
+    .frag .arr { color: #64748b; }
+    .frag .dom { color: #cbd5e1; }
+    .compare-arrow {
+      font-size: 36px;
+      color: #38bdf8;
+      opacity: 0;
+      animation: fadeIn 0.4s ease-out 8.4s forwards;
+    }
+    .compare-side.good { opacity: 0; animation: goodIn 0.6s ease-out 8.5s forwards; }
+    @keyframes goodIn { to { opacity: 1; } }
+    @keyframes fadeIn { to { opacity: 1; } }
+    .unified { text-align: center; position: relative; }
+    .node-sm {
+      display: inline-block;
+      padding: 16px 36px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0d4ff0, #7a2af7);
+      font-size: 22px;
+      font-weight: 800;
+      box-shadow: 0 0 32px rgba(13, 79, 240, 0.4);
+    }
+    .uni-line {
+      width: 2px;
+      height: 32px;
+      background: linear-gradient(180deg, #0d4ff0, #7a2af7);
+      margin: 8px auto;
+    }
+    .uni-domains {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .uni-domains span {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      font-size: 15px;
+      font-weight: 600;
+      color: #86efac;
+    }
+    .check {
+      position: absolute;
+      top: -8px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #22c55e;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0);
+      animation: checkPop 0.4s cubic-bezier(0.22, 1, 0.36, 1) 9.2s forwards;
+    }
+    @keyframes checkPop {
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── PHASE 4 ── */
+    .p4 { animation: phase4 3s ease-in-out 10s forwards; }
+    @keyframes phase4 {
+      0% { opacity: 0; }
+      15% { opacity: 1; }
+      75% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .arch {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      gap: 6px;
+      width: 700px;
     }
-
-    /* ── Phase 1: Logo ── */
-    .logo-phase {
+    .arch-layer {
+      width: 100%;
+      padding: 16px 24px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    .users {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e2e8f0;
+      animation: archIn 0.4s ease-out 10.2s forwards;
+    }
+    .platform {
+      background: linear-gradient(135deg, rgba(13, 79, 240, 0.4), rgba(122, 42, 247, 0.4));
+      border: 1px solid rgba(13, 79, 240, 0.5);
+      color: #fff;
+      animation: archIn 0.4s ease-out 10.5s forwards;
+    }
+    .arch-split {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+    }
+    .reasoning {
+      flex: 1;
+      background: rgba(13, 79, 240, 0.25);
+      border: 2px solid #3b82f6;
+      color: #93c5fd;
+      box-shadow: 0 0 24px rgba(59, 130, 246, 0.3);
+      animation: archIn 0.4s ease-out 10.8s forwards;
+    }
+    .knowledge {
+      flex: 1;
+      background: rgba(34, 197, 94, 0.15);
+      border: 2px solid #22c55e;
+      color: #86efac;
+      box-shadow: 0 0 24px rgba(34, 197, 94, 0.2);
+      animation: archIn 0.4s ease-out 11.1s forwards;
+    }
+    .badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      font-size: 13px;
+    }
+    .arch-arrow {
+      font-size: 18px;
+      color: #475569;
+      opacity: 0;
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    .arch-arrow:nth-of-type(1) { animation-delay: 10.35s; }
+    .arch-arrow:nth-of-type(2) { animation-delay: 10.65s; }
+    .arch-arrow:nth-of-type(3) { animation-delay: 11.4s; }
+    @keyframes archIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .arch-industries {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      opacity: 0;
+      animation: archIn 0.5s ease-out 11.5s forwards;
+    }
+    .arch-industries span {
+      padding: 10px 18px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(148, 163, 255, 0.2);
+      font-size: 15px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .p4-logo-end {
       position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 10;
-      animation: logoPhaseOut 0.7s ease-in 1.4s forwards;
-    }
-    .logo-glow {
-      position: absolute;
-      width: 420px;
-      height: 420px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%);
-      animation: glowPulse 1.4s ease-out forwards;
-    }
-    .logo-mark {
-      width: 120px;
-      height: 120px;
-      border-radius: 28px;
-      background: linear-gradient(135deg, #0d4ff0 0%, #7a2af7 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 56px;
-      box-shadow: 0 16px 40px rgba(13, 79, 240, 0.3);
       opacity: 0;
-      transform: scale(0.6);
-      animation: popIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+      transform: scale(0.9);
+      animation: logoEnd 0.8s cubic-bezier(0.22, 1, 0.36, 1) 12.2s forwards;
     }
-    .logo-wordmark {
-      margin-top: 20px;
-      font-size: 52px;
-      font-weight: 900;
-      letter-spacing: 3px;
-      opacity: 0;
-      transform: translateY(12px);
-      animation: slideUp 0.5s ease-out 0.35s forwards;
-    }
-    .logo-wordmark .core {
-      background: linear-gradient(90deg, #0d4ff0, #7a2af7);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    /* ── Phase 2: Platform diagram ── */
-    .diagram-phase {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 1100px;
-      opacity: 0;
-      animation: fadeIn 0.5s ease-out 1.6s forwards;
-    }
-    .node-core {
-      width: 400px;
-      padding: 26px 40px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, #0d4ff0 0%, #5b2cf0 55%, #7a2af7 100%);
-      color: #fff;
-      font-size: 36px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-align: center;
-      box-shadow: 0 18px 48px rgba(13, 79, 240, 0.28);
-      opacity: 0;
-      transform: translateY(20px) scale(0.94);
-      animation: nodeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.8s forwards;
-    }
-    .node-core .highlight {
-      background: linear-gradient(90deg, #a5f3fc, #e9d5ff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .split-row {
-      display: flex;
-      gap: 24px;
-      margin-top: 0;
-      opacity: 0;
-      animation: fadeIn 0.5s ease-out 5.6s forwards;
-    }
-    .connector-v {
-      width: 4px;
-      height: 0;
-      background: linear-gradient(180deg, #0d4ff0, #7a2af7);
-      border-radius: 999px;
-      animation: growDown 0.45s ease-out 2.6s forwards;
-    }
-    .pillars {
-      display: flex;
-      gap: 20px;
-      width: 100%;
-      justify-content: center;
-    }
-    .pillar {
-      flex: 1;
-      max-width: 260px;
-      padding: 18px 20px;
-      border-radius: 14px;
-      text-align: center;
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-    .pillar-reasoning {
-      background: linear-gradient(135deg, #0d4ff0 0%, #3b5cf0 100%);
-      color: #fff;
-      opacity: 0;
-      transform: translateX(-16px);
-      animation: slideRight 0.5s ease-out 5.8s forwards;
-    }
-    .pillar-knowledge {
-      background: #fff;
-      border: 3px solid #0d4ff0;
-      color: #071341;
-      opacity: 0;
-      transform: translateX(16px);
-      animation: slideLeft 0.5s ease-out 6.2s forwards;
-    }
-    .connector-v2 {
-      width: 4px;
-      height: 0;
-      background: linear-gradient(180deg, #7a2af7, #0d4ff0);
-      border-radius: 999px;
-      animation: growDownShort 0.4s ease-out 6.8s forwards;
-    }
-    .branch-wrap {
-      position: relative;
-      width: 100%;
-      height: 64px;
-    }
-    .branch-svg { width: 100%; height: 64px; overflow: visible; display: block; }
-    .branch-line {
-      fill: none;
-      stroke: url(#lineGrad);
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-dasharray: 1200;
-      stroke-dashoffset: 1200;
-      animation: drawBranch 0.65s ease-out 7.2s forwards;
-    }
-    .industries {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
-      width: 100%;
-    }
-    .industry {
-      opacity: 0;
-      transform: translateY(18px);
-      animation: nodeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-      padding: 20px 14px;
-      border-radius: 16px;
-      background: #f8faff;
-      border: 2px solid rgba(13, 79, 240, 0.18);
-      text-align: center;
-      font-size: 18px;
-      font-weight: 700;
-      color: #162044;
-      box-shadow: 0 8px 24px rgba(13, 79, 240, 0.06);
-    }
-    .industry .icon { display: block; font-size: 30px; margin-bottom: 8px; }
-    .industry-1 { animation-delay: 7.8s; border-color: #0d4ff0; background: #eef4ff; }
-    .industry-2 { animation-delay: 9.0s; }
-    .industry-3 { animation-delay: 10.2s; }
-    .industry-4 { animation-delay: 11.4s; }
-
-    /* ── Captions (voiceover sync) ── */
-    .captions {
-      position: absolute;
-      bottom: 72px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      padding: 0 80px;
-    }
-    .caption {
-      position: absolute;
-      left: 0;
-      right: 0;
-      font-size: 26px;
-      font-weight: 600;
-      color: #4a5580;
-      letter-spacing: 0.5px;
-      line-height: 1.4;
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    .cap-1 { animation: captionIn 0.45s ease-out 1.9s forwards, captionOut 0.35s ease-in 3.6s forwards; }
-    .cap-2 { animation: captionIn 0.45s ease-out 3.7s forwards, captionOut 0.35s ease-in 5.4s forwards; }
-    .cap-3 { animation: captionIn 0.45s ease-out 5.5s forwards, captionOut 0.35s ease-in 6.8s forwards; }
-    .cap-4 { animation: captionIn 0.45s ease-out 6.9s forwards, captionOut 0.35s ease-in 8.2s forwards; }
-    .cap-5 { animation: captionIn 0.45s ease-out 8.3s forwards; }
-
-    .single-domain {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 16px 32px;
-      border-radius: 12px;
-      background: #fef2f2;
-      border: 2px dashed #f87171;
-      color: #991b1b;
-      font-size: 20px;
-      font-weight: 600;
-      opacity: 0;
-      z-index: 5;
-      animation: domainWarn 1.6s ease-out 4.2s forwards;
-    }
-
-    @keyframes logoPhaseOut {
-      to { opacity: 0; transform: scale(0.92); pointer-events: none; }
-    }
-    @keyframes glowPulse {
-      0% { opacity: 0; transform: scale(0.7); }
-      50% { opacity: 1; }
-      100% { opacity: 0.6; transform: scale(1.1); }
-    }
-    @keyframes popIn {
+    @keyframes logoEnd {
       to { opacity: 1; transform: scale(1); }
     }
-    @keyframes slideUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn { to { opacity: 1; } }
-    @keyframes nodeIn {
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes growDown {
-      from { height: 0; opacity: 0; }
-      to { height: 56px; opacity: 1; }
-    }
-    @keyframes growDownShort {
-      from { height: 0; opacity: 0; }
-      to { height: 40px; opacity: 1; }
-    }
-    @keyframes drawBranch { to { stroke-dashoffset: 0; } }
-    @keyframes slideRight {
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes slideLeft {
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes captionIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes captionOut {
-      to { opacity: 0; transform: translateY(-6px); }
-    }
-    @keyframes domainWarn {
-      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-      15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-      70% { opacity: 1; }
-      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+    .logo-icon-sm { font-size: 56px; margin-bottom: 12px; filter: drop-shadow(0 0 20px rgba(13, 79, 240, 0.5)); }
+    .p4-logo-end span {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 8px;
+      background: linear-gradient(90deg, #38bdf8, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
   </style>
-</head>
-<body>
-  <div class="stage">
-    <!-- Phase 1: Logo -->
-    <div class="logo-phase">
-      <div class="logo-glow" aria-hidden="true"></div>
-      <div class="logo-mark">⬡</div>
-      <div class="logo-wordmark">BUEK <span class="core">CORE</span></div>
-    </div>
 
-    <!-- Phase 2: Platform diagram -->
-    <div class="diagram-phase">
-      <div class="node-core">Buek <span class="highlight">Core</span></div>
-      <div class="connector-v"></div>
-      <div class="split-row">
-        <div class="pillars">
-          <div class="pillar pillar-reasoning">AI Reasoning</div>
-          <div class="pillar pillar-knowledge">Domain Knowledge</div>
-        </div>
-      </div>
-      <div class="connector-v2"></div>
-      <div class="branch-wrap">
-        <svg class="branch-svg" viewBox="0 0 1100 64" fill="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="lineGrad" x1="550" y1="0" x2="550" y2="64" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#0d4ff0"/>
-              <stop offset="1" stop-color="#7a2af7"/>
-            </linearGradient>
-          </defs>
-          <path class="branch-line" d="M550 0 L550 24" />
-          <path class="branch-line" d="M127 24 L973 24" />
-          <path class="branch-line" d="M127 24 L127 64" />
-          <path class="branch-line" d="M409 24 L409 64" />
-          <path class="branch-line" d="M691 24 L691 64" />
-          <path class="branch-line" d="M973 24 L973 64" />
-        </svg>
-      </div>
-      <div class="industries">
-        <div class="industry industry-1"><span class="icon">🏭</span>Manufacturing</div>
-        <div class="industry industry-2"><span class="icon">🏥</span>Healthcare</div>
-        <div class="industry industry-3"><span class="icon">🏗️</span>Construction</div>
-        <div class="industry industry-4"><span class="icon">🛒</span>Retail</div>
-      </div>
-    </div>
+  <svg width="0" height="0" aria-hidden="true">
+    <defs>
+      <linearGradient id="treeGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop stop-color="#0d4ff0"/>
+        <stop offset="1" stop-color="#7a2af7"/>
+      </linearGradient>
+    </defs>
+  </svg>
 
-    <div class="single-domain">Most AI → single business domain only</div>
-
-    <div class="captions">
-      <p class="caption cap-1">Meet Buek Core.</p>
-      <p class="caption cap-2">An AI platform designed to build AI Workers… for any industry.</p>
-      <p class="caption cap-3">We took a different approach.</p>
-      <p class="caption cap-4">Buek Core separates AI reasoning… from domain knowledge.</p>
-      <p class="caption cap-5">Manufacturing first — then healthcare, construction, retail… and many more.</p>
-    </div>
-  </div>
+  <script>
+    const container = document.getElementById("particles");
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement("div");
+      p.className = "particle";
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.animationDuration = `${8 + Math.random() * 12}s`;
+      p.style.animationDelay = `${Math.random() * 5}s`;
+      p.style.width = p.style.height = `${2 + Math.random() * 3}px`;
+      container.appendChild(p);
+    }
+  </script>
 </body>
 </html>

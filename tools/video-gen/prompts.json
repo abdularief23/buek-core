@@ -38,10 +38,10 @@
       "id": "scene-05-platform-intro",
       "time": "0:22-0:35",
       "duration_seconds": 13,
-      "voice": "Meet Buek Core. An AI platform designed to build AI Workers for any industry. Most AI applications are built for a single business domain. We took a different approach. Buek Core separates AI reasoning from domain knowledge. Manufacturing is our first domain — but the same Buek Core can power healthcare, construction, retail, and many more.",
+      "voice": "Meet Buek Core, an AI platform designed to build AI Workers for any industry. Instead of creating a different AI for every business, Buek Core separates AI reasoning from domain knowledge.",
       "method": "html-animation",
       "render": "node render_scene_05.mjs --duration 13 --fps 30",
-      "notes": "Logo → Buek Core → Reasoning/Knowledge split → 4 industries stagger"
+      "notes": "4-phase concept: logo glow → multi-domain tree → fragmented vs unified → architecture stack. Dark Apple/OpenAI style, no website UI."
     },
     {
       "id": "scene-06-platform-vision",

@@ -244,7 +244,12 @@ gsutil -m cp output/scene-07-*.mp4 gs://buek-core-video-output/scenes/scene-07-r
 
 ## Scene 5 — Platform intro animation (13s)
 
-Animasi: **Logo** → **Buek Core** → **AI Reasoning / Domain Knowledge** → Manufacturing / Healthcare / Construction / Retail.
+Animasi konsep bergaya Apple/OpenAI (13s, background gelap, **tanpa website UI**):
+
+1. **0–3s** — Logo Buek Core + glow + "Build AI Workers For Any Industry"
+2. **3–7s** — Buek Core → tree → Manufacturing / Healthcare / Construction
+3. **7–10s** — Perbandingan AI terpisah vs satu Buek Core (✓ hijau)
+4. **10–13s** — Arsitektur: Users → Platform → AI Reasoning (biru) + Domain Knowledge (hijau) → industri → logo
 
 ```bash
 cd tools/video-gen
