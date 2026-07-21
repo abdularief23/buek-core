@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Scene 10.3 — Closing Vision</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #020617;
+      font-family: Inter, "SF Pro Display", system-ui, sans-serif;
+      color: #f8fafc;
+    }
+    .stage { position: relative; width: 100%; height: 100%; }
+    .factory-scene {
+      position: absolute; inset: 0;
+      opacity: 1;
+      animation: factoryFade 1s ease-in 3.8s forwards;
+    }
+    @keyframes factoryFade { to { opacity: 0; } }
+    .factory-bg {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, rgba(2,6,23,0.3) 0%, rgba(2,6,23,0.7) 100%),
+        linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e3a5f 100%);
+      animation: craneUp 4s ease-in-out forwards;
+    }
+    @keyframes craneUp {
+      0% { transform: scale(1.1) translateY(40px); }
+      100% { transform: scale(1) translateY(-30px); }
+    }
+    .factory-floor {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 45%;
+      background:
+        repeating-linear-gradient(90deg, transparent, transparent 120px, rgba(59,130,246,0.05) 120px, rgba(59,130,246,0.05) 121px),
+        linear-gradient(0deg, #0f172a 0%, #1e293b 100%);
+      perspective: 800px;
+    }
+    .conveyor {
+      position: absolute; bottom: 200px; left: 10%; right: 10%; height: 8px;
+      background: linear-gradient(90deg, #334155, #475569, #334155);
+      border-radius: 4px;
+    }
+    .worker {
+      position: absolute; bottom: 210px;
+      width: 50px; height: 90px;
+      border-radius: 25px 25px 0 0;
+      opacity: 0; animation: workerIn 0.5s ease-out forwards;
+    }
+    .w1 { left: 18%; background: linear-gradient(180deg, #38bdf8, #1e40af); animation-delay: 0.5s; }
+    .w2 { left: 35%; background: linear-gradient(180deg, #1e3a8a, #1e293b); animation-delay: 0.8s; height: 100px; }
+    .w3 { left: 52%; background: linear-gradient(180deg, #6366f1, #312e81); animation-delay: 1.1s; }
+    .w4 { left: 70%; background: linear-gradient(180deg, #f8fafc, #94a3b8); animation-delay: 1.4s; height: 95px; }
+    @keyframes workerIn { to { opacity: 0.85; } }
+    .screen-glow {
+      position: absolute; bottom: 280px;
+      width: 60px; height: 40px; border-radius: 4px;
+      background: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+      opacity: 0; animation: glowIn 0.4s ease-out forwards;
+    }
+    .g1 { left: 17%; animation-delay: 1.0s; }
+    .g2 { left: 34%; animation-delay: 1.3s; }
+    .g3 { left: 51%; animation-delay: 1.6s; }
+    .g4 { left: 69%; animation-delay: 1.9s; }
+    @keyframes glowIn { to { opacity: 1; } }
+    .role-labels {
+      position: absolute; bottom: 140px; left: 0; right: 0;
+      display: flex; justify-content: space-around; padding: 0 200px;
+      opacity: 0; animation: capIn 0.6s ease-out 2.2s forwards;
+    }
+    .role-labels span {
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      color: #64748b; text-transform: uppercase;
+    }
+    @keyframes capIn { to { opacity: 1; } }
+    .windows {
+      position: absolute; top: 0; left: 0; width: 300px; height: 100%;
+      background: linear-gradient(90deg, rgba(186,230,253,0.15) 0%, transparent 100%);
+    }
+    .finale {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; animation: finaleIn 1.2s ease-out 4s forwards; z-index: 10;
+    }
+    @keyframes finaleIn { to { opacity: 1; } }
+    .finale-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(13,79,240,0.2) 0%, transparent 70%), #020617;
+    }
+    .particles {
+      position: absolute; inset: 0; overflow: hidden;
+    }
+    .particle {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: rgba(56, 189, 248, 0.4);
+      animation: float 4s ease-in-out infinite;
+    }
+    .particle:nth-child(1) { left: 20%; top: 30%; animation-delay: 0s; }
+    .particle:nth-child(2) { left: 40%; top: 60%; animation-delay: 0.5s; }
+    .particle:nth-child(3) { left: 60%; top: 25%; animation-delay: 1s; }
+    .particle:nth-child(4) { left: 80%; top: 50%; animation-delay: 1.5s; }
+    .particle:nth-child(5) { left: 30%; top: 70%; animation-delay: 2s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); opacity: 0.3; }
+      50% { transform: translateY(-20px); opacity: 0.8; }
+    }
+    .finale-glow {
+      position: absolute; width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,79,240,0.4) 0%, transparent 70%);
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+    .finale-logo { font-size: 80px; margin-bottom: 12px; filter: drop-shadow(0 0 30px rgba(56,189,248,0.6)); z-index: 1; }
+    .finale-text { font-size: 64px; font-weight: 900; letter-spacing: 8px; z-index: 1; }
+    .finale-text .c {
+      background: linear-gradient(90deg, #38bdf8, #c4b5fd);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .tagline-1 {
+      margin-top: 36px; font-size: 26px; font-weight: 700; letter-spacing: 3px;
+      color: #e2e8f0; text-align: center; z-index: 1;
+      opacity: 0; animation: tagIn 0.6s ease-out 4.6s forwards;
+    }
+    .tagline-2 {
+      margin-top: 16px; font-size: 20px; font-weight: 600; letter-spacing: 4px;
+      color: #64748b; text-align: center; z-index: 1;
+      opacity: 0; animation: tagIn 0.6s ease-out 5s forwards;
+    }
+    @keyframes tagIn { to { opacity: 1; } }
+    .url {
+      margin-top: 32px; font-size: 16px; color: #475569; letter-spacing: 2px; z-index: 1;
+      opacity: 0; animation: tagIn 0.6s ease-out 5.3s forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="factory-scene">
+      <div class="factory-bg"></div>
+      <div class="windows"></div>
+      <div class="factory-floor">
+        <div class="conveyor"></div>
+        <div class="worker w1"></div>
+        <div class="screen-glow g1"></div>
+        <div class="worker w2"></div>
+        <div class="screen-glow g2"></div>
+        <div class="worker w3"></div>
+        <div class="screen-glow g3"></div>
+        <div class="worker w4"></div>
+        <div class="screen-glow g4"></div>
+        <div class="role-labels">
+          <span>Operator</span>
+          <span>Engineer</span>
+          <span>Supervisor</span>
+          <span>Plant Manager</span>
+        </div>
+      </div>
+    </div>
+    <div class="finale">
+      <div class="finale-bg"></div>
+      <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+      </div>
+      <div class="finale-glow"></div>
+      <div class="finale-logo">⬡</div>
+      <div class="finale-text">BUEK <span class="c">CORE</span></div>
+      <p class="tagline-1">One AI Core. Unlimited Industry Knowledge.</p>
+      <p class="tagline-2">Build AI Workers for Any Industry.</p>
+      <p class="url">core.buekwebsite.com</p>
+    </div>
+  </div>
+</body>
+</html>

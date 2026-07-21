@@ -49,17 +49,57 @@
       "text": "Every role gets its own workspace. Operators keep the line running. Engineers investigate root causes. Supervisors approve corrective actions. Plant managers track KPIs in real time."
     },
     {
-      "id": "scene-08",
+      "id": "scene-08-1",
+      "file": "scene-08-1-codex.mp3",
+      "text": "Buek Core was built with Codex — your AI pair programmer."
+    },
+    {
+      "id": "scene-08-2",
+      "file": "scene-08-2-accelerating.mp3",
+      "text": "From scaffolding to deployment — Codex accelerates the entire development cycle."
+    },
+    {
+      "id": "scene-08-3",
+      "file": "scene-08-3-gpt-codex.mp3",
+      "text": "GPT-5.6 powers the product. Codex builds the platform."
+    },
+    {
+      "id": "scene-08-investigation",
       "file": "scene-08-investigation.mp3",
       "text": "When a defect is reported — like this white streak on print — the engineer opens a guided five-step investigation."
     },
     {
-      "id": "scene-09",
+      "id": "scene-09-1",
+      "file": "scene-09-1-copilot.mp3",
+      "text": "Meet the AI Copilot — your interface to the Company Brain."
+    },
+    {
+      "id": "scene-09-2",
+      "file": "scene-09-2-conversation.mp3",
+      "text": "Ask in plain language. Summarize investigations, find reports, draft engineering documents."
+    },
+    {
+      "id": "scene-09-analysis",
       "file": "scene-09-analysis.mp3",
       "text": "GPT-5.6 analyzes the evidence, retrieves relevant SOPs, and ranks possible causes. The engineer always makes the final call."
     },
     {
-      "id": "scene-10",
+      "id": "scene-10-1",
+      "file": "scene-10-1-beyond.mp3",
+      "text": "Manufacturing is our first domain — but Buek Core was built for every industry."
+    },
+    {
+      "id": "scene-10-2",
+      "file": "scene-10-2-platform.mp3",
+      "text": "One AI Core. Swap domain knowledge. Unlimited industries."
+    },
+    {
+      "id": "scene-10-3",
+      "file": "scene-10-3-closing.mp3",
+      "text": "One AI Core. Unlimited Industry Knowledge. Build AI Workers for Any Industry."
+    },
+    {
+      "id": "scene-10-countermeasure",
       "file": "scene-10-countermeasure.mp3",
       "text": "It recommends countermeasures and helps draft an execution plan — ready for supervisor review."
     },

@@ -124,6 +124,94 @@
       "notes": "Primary: per-role full-screen cinematic (node render_scene_07_per_role.mjs). Optional: screen recordings (render_scene_07.mjs) + Veo B-roll in CapCut. Legacy 2×2 grid: render_scene_07_infographic.mjs"
     },
     {
+      "id": "scene-08-1-codex",
+      "duration_seconds": 5,
+      "voice": "Buek Core was built with Codex — your AI pair programmer.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-08-1-codex.html --output scene-08-1-codex.mp4 --duration 5",
+      "camera": "over-the-shoulder, slow push in to monitor",
+      "style": "modern software engineering office, Apple keynote, cinematic, premium blue-purple lighting",
+      "purpose": "Show Codex as AI pair programmer during Buek Core development",
+      "notes": "Engineer at 3 monitors: VS Code (Buek Core), Cursor AI generating code, terminal. See docs/scene-storyboard-8-10.md"
+    },
+    {
+      "id": "scene-08-2-accelerating",
+      "duration_seconds": 5,
+      "voice": "From scaffolding to deployment — Codex accelerates the entire development cycle.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-08-2-accelerating.html --output scene-08-2-accelerating.mp4 --duration 5",
+      "camera": "close-up monitor, fast cuts, zoom on Build Successful",
+      "style": "fast-paced montage, clean UI, modern dev workflow",
+      "purpose": "Show Codex accelerating full dev cycle from coding to deployment",
+      "notes": "Montage: scaffold → refactor → features → terminal build → Docker → GitHub merged PR"
+    },
+    {
+      "id": "scene-08-3-gpt-codex",
+      "duration_seconds": 5,
+      "voice": "GPT-5.6 powers the product. Codex builds the platform.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-08-3-gpt-codex.html --output scene-08-3-gpt-codex.mp4 --duration 5",
+      "camera": "slow zoom out, connection animations, fade to logo",
+      "style": "motion graphics, OpenAI launch style, minimalist, premium",
+      "purpose": "Differentiate GPT-5.6 (product AI) from Codex (platform builder)",
+      "notes": "Split screen: GPT-5.6 → dashboard vs Cursor/VS Code/Docker/GitHub → source code → Buek Core logo"
+    },
+    {
+      "id": "scene-09-1-copilot",
+      "duration_seconds": 5,
+      "voice": "Meet the AI Copilot — your interface to the Company Brain.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-09-1-copilot.html --output scene-09-1-copilot.mp4 --duration 5",
+      "camera": "over-the-shoulder, dolly in to laptop, focus on AI chat",
+      "style": "clean UI, modern office, soft lighting, corporate technology",
+      "purpose": "Introduce AI Copilot as main interface to Company Brain",
+      "notes": "Manufacturing engineer asks about production issue, AI responds in real-time"
+    },
+    {
+      "id": "scene-09-2-conversation",
+      "duration_seconds": 5,
+      "voice": "Ask in plain language. Summarize investigations, find reports, draft engineering documents.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-09-2-conversation.html --output scene-09-2-conversation.mp4 --duration 5",
+      "camera": "close-up chat screen, smooth scroll, highlight generated document",
+      "style": "minimal UI, Apple animation, premium interface",
+      "purpose": "Show natural language engineering conversation capabilities",
+      "notes": "Fast chat: summarize investigation → find QC reports → compare cases → draft report"
+    },
+    {
+      "id": "scene-10-1-beyond",
+      "duration_seconds": 5,
+      "voice": "Manufacturing is our first domain — but Buek Core was built for every industry.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-10-1-beyond.html --output scene-10-1-beyond.mp4 --duration 5",
+      "camera": "slow orbit around AI Core, zoom out to show ecosystem",
+      "style": "futuristic motion graphics, OpenAI keynote, dark premium background",
+      "purpose": "Show Manufacturing is first product built on Buek Core",
+      "notes": "AI Core center with 7 domain nodes: Manufacturing, Healthcare, Construction, Retail, Energy, Logistics, Education"
+    },
+    {
+      "id": "scene-10-2-platform",
+      "duration_seconds": 5,
+      "voice": "One AI Core. Swap domain knowledge. Unlimited industries.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-10-2-platform.html --output scene-10-2-platform.mp4 --duration 5",
+      "camera": "static center, domain transition animations, slow zoom out",
+      "style": "clean infographic, minimalist, corporate technology",
+      "purpose": "Visualize AI Reasoning vs Domain Knowledge separation",
+      "notes": "Domains swap one by one while AI Core stays unchanged"
+    },
+    {
+      "id": "scene-10-3-closing",
+      "duration_seconds": 5,
+      "voice": "One AI Core. Unlimited Industry Knowledge. Build AI Workers for Any Industry.",
+      "method": "html-animation",
+      "render": "node render_scene_05_segment.mjs --html scene-10-3-closing.html --output scene-10-3-closing.mp4 --duration 5",
+      "camera": "wide cinematic, crane up from factory, fade to logo with slow zoom",
+      "style": "Apple product launch, inspirational, cinematic ending, premium branding",
+      "purpose": "Close with vision: AI empowers engineers, Buek Core as cross-industry platform",
+      "notes": "Factory with 4 roles using Buek Core → logo + taglines + core.buekwebsite.com"
+    },
+    {
       "id": "role-photo-operator",
       "duration_seconds": 6,
       "method": "veo-still-or-video",

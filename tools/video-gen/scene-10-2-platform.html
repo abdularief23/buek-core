@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Scene 10.2 — One Platform, Unlimited Industries</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #020617;
+      font-family: Inter, "SF Pro Display", system-ui, sans-serif;
+      color: #f8fafc;
+    }
+    .stage {
+      position: relative; width: 100%; height: 100%;
+      animation: zoomOut 5s ease-in-out forwards;
+    }
+    @keyframes zoomOut {
+      0%, 70% { transform: scale(1); }
+      100% { transform: scale(0.92); }
+    }
+    .bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 55% at 50% 50%, rgba(13, 79, 240, 0.15) 0%, transparent 70%), #020617;
+    }
+    .core {
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); z-index: 10;
+      text-align: center;
+      padding: 32px 48px; border-radius: 22px;
+      background: linear-gradient(135deg, #0d4ff0, #7a2af7);
+      box-shadow: 0 0 70px rgba(13, 79, 240, 0.5);
+    }
+    .core .t1 { font-size: 36px; font-weight: 900; letter-spacing: 3px; }
+    .core .t2 { font-size: 14px; font-weight: 600; letter-spacing: 5px; color: #bfdbfe; margin-top: 6px; }
+    .core-label {
+      position: absolute; left: 50%; top: calc(50% + 100px);
+      transform: translateX(-50%);
+      font-size: 13px; font-weight: 700; letter-spacing: 4px;
+      color: #64748b; text-transform: uppercase; z-index: 10;
+    }
+    .domain-slot {
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px 36px; border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 28px; font-weight: 800; white-space: nowrap;
+      opacity: 0; z-index: 5;
+    }
+    .slot-1 { animation: swap1 5s ease-in-out forwards; }
+    .slot-2 { animation: swap2 5s ease-in-out forwards; }
+    .slot-3 { animation: swap3 5s ease-in-out forwards; }
+    .slot-4 { animation: swap4 5s ease-in-out forwards; }
+    .slot-5 { animation: swap5 5s ease-in-out forwards; }
+    @keyframes swap1 {
+      0%, 5% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      8%, 18% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      22%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    }
+    @keyframes swap2 {
+      0%, 18% { opacity: 0; }
+      22%, 32% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      36%, 100% { opacity: 0; }
+    }
+    @keyframes swap3 {
+      0%, 32% { opacity: 0; }
+      36%, 46% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      50%, 100% { opacity: 0; }
+    }
+    @keyframes swap4 {
+      0%, 46% { opacity: 0; }
+      50%, 60% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      64%, 100% { opacity: 0; }
+    }
+    @keyframes swap5 {
+      0%, 60% { opacity: 0; }
+      64%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      84%, 100% { opacity: 0; }
+    }
+    .ring {
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 50%;
+      animation: ringPulse 3s ease-in-out infinite;
+    }
+    .ring-1 { width: 500px; height: 500px; }
+    .ring-2 { width: 650px; height: 650px; animation-delay: 0.5s; opacity: 0.6; }
+    .ring-3 { width: 800px; height: 800px; animation-delay: 1s; opacity: 0.3; }
+    @keyframes ringPulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+    .labels {
+      position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+      text-align: center; z-index: 10;
+    }
+    .labels .top {
+      font-size: 16px; font-weight: 700; letter-spacing: 4px;
+      color: #64748b; text-transform: uppercase; margin-bottom: 12px;
+      opacity: 0; animation: capIn 0.5s ease-out 3.5s forwards;
+    }
+    .labels .bottom {
+      font-size: 24px; font-weight: 800; letter-spacing: 2px;
+      opacity: 0; animation: capIn 0.5s ease-out 4s forwards;
+    }
+    .labels .bottom span {
+      background: linear-gradient(90deg, #38bdf8, #c4b5fd);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    @keyframes capIn { to { opacity: 1; } }
+    .split-line {
+      position: absolute; left: 120px; right: 120px; top: 50%;
+      height: 1px; background: linear-gradient(90deg, transparent, rgba(56,189,248,0.2), transparent);
+    }
+    .reasoning, .knowledge {
+      position: absolute; font-size: 12px; font-weight: 700;
+      letter-spacing: 3px; color: #475569; text-transform: uppercase;
+    }
+    .reasoning { left: 140px; top: calc(50% - 30px); }
+    .knowledge { right: 140px; top: calc(50% - 30px); }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg"></div>
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+    <div class="ring ring-3"></div>
+    <div class="split-line"></div>
+    <span class="reasoning">AI Reasoning</span>
+    <span class="knowledge">Domain Knowledge</span>
+    <div class="core">
+      <div class="t1">AI CORE</div>
+      <div class="t2">UNCHANGED</div>
+    </div>
+    <div class="core-label">Platform stays the same</div>
+    <div class="domain-slot slot-1" style="top: 28%;">🏭 Manufacturing</div>
+    <div class="domain-slot slot-2" style="top: 28%;">🏥 Healthcare</div>
+    <div class="domain-slot slot-3" style="top: 28%;">🏗️ Construction</div>
+    <div class="domain-slot slot-4" style="top: 28%;">⚡ Energy</div>
+    <div class="domain-slot slot-5" style="top: 28%;">🎓 Education</div>
+    <div class="labels">
+      <div class="top">Swap domain knowledge · Keep AI core</div>
+      <div class="bottom">One Platform · <span>Unlimited Industries</span></div>
+    </div>
+  </div>
+</body>
+</html>

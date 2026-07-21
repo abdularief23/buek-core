@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>Scene 8.1 — Built with Codex</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #0a0f1e;
+      font-family: "SF Mono", "Fira Code", Consolas, monospace;
+      color: #e2e8f0;
+    }
+    .stage {
+      position: relative; width: 100%; height: 100%;
+      animation: pushIn 5s ease-in-out forwards;
+    }
+    @keyframes pushIn {
+      0% { transform: scale(1) translateY(0); }
+      100% { transform: scale(1.06) translateY(-12px); }
+    }
+    .bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 55% 40%, rgba(99, 102, 241, 0.25) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 30% 60%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        linear-gradient(160deg, #0a0f1e 0%, #111827 50%, #0f172a 100%);
+    }
+    .desk-glow {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 400px;
+      background: linear-gradient(0deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
+    }
+    .engineer-silhouette {
+      position: absolute; left: 80px; bottom: 120px;
+      width: 280px; height: 420px;
+      background: linear-gradient(180deg, transparent 30%, rgba(15, 23, 42, 0.9) 100%);
+      border-radius: 140px 140px 0 0;
+      opacity: 0.7;
+      z-index: 2;
+    }
+    .shoulder {
+      position: absolute; left: 200px; bottom: 280px;
+      width: 500px; height: 200px;
+      background: radial-gradient(ellipse at left, rgba(30, 41, 59, 0.8) 0%, transparent 70%);
+      z-index: 3;
+    }
+    .monitors {
+      position: absolute; right: 120px; top: 140px;
+      display: flex; gap: 24px; align-items: flex-end;
+      z-index: 4;
+    }
+    .monitor {
+      border-radius: 12px;
+      background: #1e293b;
+      border: 2px solid rgba(71, 85, 105, 0.6);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(59, 130, 246, 0.1);
+      overflow: hidden;
+    }
+    .monitor-side { width: 320px; height: 220px; opacity: 0.85; transform: perspective(800px) rotateY(-8deg); }
+    .monitor-main {
+      width: 720px; height: 440px;
+      animation: focusMain 5s ease-in-out forwards;
+    }
+    @keyframes focusMain {
+      0%, 40% { filter: brightness(1); }
+      70%, 100% { filter: brightness(1.15); box-shadow: 0 20px 80px rgba(59, 130, 246, 0.3); }
+    }
+    .titlebar {
+      height: 32px; background: #0f172a;
+      display: flex; align-items: center; padding: 0 12px; gap: 6px;
+      border-bottom: 1px solid rgba(71, 85, 105, 0.4);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ef4444; } .dot-y { background: #eab308; } .dot-g { background: #22c55e; }
+    .titlebar span { margin-left: 8px; font-size: 11px; color: #64748b; }
+    .screen { padding: 16px; height: calc(100% - 32px); overflow: hidden; }
+    .vscode .sidebar {
+      position: absolute; left: 0; top: 32px; width: 48px; height: calc(100% - 32px);
+      background: #0f172a; border-right: 1px solid #334155;
+    }
+    .vscode .explorer {
+      position: absolute; left: 48px; top: 32px; width: 180px; height: calc(100% - 32px);
+      background: #1e293b; padding: 12px 8px; font-size: 11px; color: #94a3b8;
+    }
+    .vscode .explorer .folder { color: #38bdf8; margin-bottom: 6px; font-weight: 600; }
+    .vscode .explorer .file { padding-left: 12px; margin: 3px 0; }
+    .vscode .explorer .file.new {
+      color: #4ade80; animation: fileNew 0.4s ease-out 2.8s forwards; opacity: 0;
+    }
+    @keyframes fileNew { to { opacity: 1; } }
+    .vscode .editor {
+      position: absolute; left: 228px; top: 32px; right: 0; bottom: 0;
+      background: #0d1117; padding: 16px 20px; font-size: 13px; line-height: 1.7;
+    }
+    .ln { color: #484f58; display: inline-block; width: 28px; }
+    .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .str { color: #a5d6ff; }
+    .cm { color: #8b949e; } .type { color: #79c0ff; } .var { color: #ffa657; }
+    .cursor-line {
+      position: absolute; left: 260px;
+      width: 2px; height: 18px; background: #58a6ff;
+      animation: blink 1s step-end infinite, cursorMove 5s ease-in-out forwards;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes cursorMove {
+      0%, 30% { top: 80px; }
+      50%, 100% { top: 200px; }
+    }
+    .code-line { opacity: 0; animation: typeIn 0.3s ease-out forwards; }
+    .cl1 { animation-delay: 0.8s; } .cl2 { animation-delay: 1.2s; }
+    .cl3 { animation-delay: 1.6s; } .cl4 { animation-delay: 2.0s; }
+    .cl5 { animation-delay: 2.4s; } .cl6 { animation-delay: 2.8s; }
+    @keyframes typeIn { to { opacity: 1; } }
+    .cursor-panel .screen {
+      background: #0d1117; font-size: 11px; line-height: 1.6;
+    }
+    .cursor-header {
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 10px; border-bottom: 1px solid #21262d; margin-bottom: 10px;
+    }
+    .cursor-logo { color: #a78bfa; font-weight: 700; font-size: 13px; }
+    .ai-msg {
+      background: rgba(139, 92, 246, 0.1); border-left: 2px solid #8b5cf6;
+      padding: 8px 10px; margin: 6px 0; border-radius: 0 6px 6px 0;
+      opacity: 0; animation: msgIn 0.4s ease-out forwards;
+    }
+    .am1 { animation-delay: 1.0s; } .am2 { animation-delay: 2.2s; } .am3 { animation-delay: 3.4s; }
+    @keyframes msgIn { to { opacity: 1; } }
+    .badge {
+      position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+      padding: 14px 32px; border-radius: 40px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 18px; font-weight: 700; letter-spacing: 2px;
+      color: #c4b5fd; z-index: 10;
+      opacity: 0; animation: badgeIn 0.6s ease-out 3.8s forwards;
+      box-shadow: 0 0 40px rgba(139, 92, 246, 0.2);
+    }
+    @keyframes badgeIn { to { opacity: 1; } }
+    .badge span { color: #38bdf8; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bg"></div>
+    <div class="desk-glow"></div>
+    <div class="engineer-silhouette"></div>
+    <div class="shoulder"></div>
+    <div class="monitors">
+      <div class="monitor monitor-side cursor-panel">
+        <div class="titlebar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span>Cursor</span></div>
+        <div class="screen">
+          <div class="cursor-header"><span class="cursor-logo">✦ Cursor</span> Agent</div>
+          <div class="ai-msg am1">Creating <strong>investigation-copilot.ts</strong>...</div>
+          <div class="ai-msg am2">Adding API routes for production metrics</div>
+          <div class="ai-msg am3">✓ 3 files created · refactoring complete</div>
+        </div>
+      </div>
+      <div class="monitor monitor-main vscode">
+        <div class="titlebar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span>buek-core — Visual Studio Code</span></div>
+        <div class="sidebar"></div>
+        <div class="explorer">
+          <div class="folder">📁 buek-core</div>
+          <div class="file">  apps/api/src/</div>
+          <div class="file">  apps/web/src/</div>
+          <div class="file new">+ investigation-copilot.ts</div>
+          <div class="file new">+ production-metrics.ts</div>
+        </div>
+        <div class="editor">
+          <div class="code-line cl1"><span class="ln">1</span><span class="cm">// Buek Core — Investigation Copilot</span></div>
+          <div class="code-line cl2"><span class="ln">2</span><span class="kw">export async function</span> <span class="fn">analyzeEvidence</span>(<span class="var">data</span>: <span class="type">Evidence</span>) {</div>
+          <div class="code-line cl3"><span class="ln">3</span>  <span class="kw">const</span> <span class="var">context</span> = <span class="kw">await</span> <span class="fn">retrieveSOPs</span>(data);</div>
+          <div class="code-line cl4"><span class="ln">4</span>  <span class="kw">return</span> <span class="fn">rankRootCauses</span>(context, data);</div>
+          <div class="code-line cl5"><span class="ln">5</span>}</div>
+          <div class="code-line cl6"><span class="ln">6</span></div>
+          <div class="cursor-line"></div>
+        </div>
+      </div>
+      <div class="monitor monitor-side" style="transform: perspective(800px) rotateY(8deg);">
+        <div class="titlebar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span>Terminal</span></div>
+        <div class="screen" style="background:#0d1117;font-size:11px;padding:12px;">
+          <div style="color:#4ade80;margin-top:40px;">$ npm run dev</div>
+          <div style="color:#94a3b8;margin-top:8px;">✓ API ready on :3001</div>
+          <div style="color:#94a3b8;">✓ Web ready on :5173</div>
+        </div>
+      </div>
+    </div>
+    <div class="badge">Built with <span>Codex</span></div>
+  </div>
+</body>
+</html>
