@@ -117,7 +117,15 @@ GPT-5.6 runs inside the live app via the OpenAI Responses API:
 | **Infrastructure** | Docker Compose, Nginx deploy, GitHub Actions, VPS recovery scripts |
 | **Demo assets** | Video scene renderers, voiceover script, README screenshots |
 
-> **Codex Session ID:** run `/feedback` inside Codex on this repo → paste into Devpost form.
+**Codex Session ID** (primary build thread on `buek-core`):
+
+```
+019f8738-3bd4-74a3-96c0-5687f62b8662
+```
+
+Obtained via `codex login --device-auth` on the production VPS, working directory `~/buek-core` (repo: `github.com/abdularief23/buek-core`, branch `main`). To verify in Codex CLI: run `/status` in the same thread.
+
+Development was also accelerated with **Cursor** AI agents for day-to-day iteration; Codex was used for scaffolding, refactoring, and deployment on the core codebase.
 
 ---
 
