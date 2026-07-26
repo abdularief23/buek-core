@@ -205,6 +205,47 @@ body {
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
+/* Pricing checkout modal — readable in light and dark mode */
+:root[data-appearance="light"] .pricing-checkout-modal {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+:root[data-appearance="light"] .pricing-checkout-modal .pricing-modal-title,
+:root[data-appearance="light"] .pricing-checkout-modal .pricing-modal-label {
+  color: #0f172a !important;
+}
+
+:root[data-appearance="light"] .pricing-checkout-modal .pricing-modal-body {
+  color: #334155 !important;
+}
+
+:root[data-appearance="light"] .pricing-checkout-modal .pricing-modal-plan {
+  background-color: rgba(8, 145, 178, 0.12) !important;
+  color: #0e7490 !important;
+}
+
+:root[data-appearance="light"] .pricing-checkout-modal .pricing-modal-input {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-appearance="light"] .pricing-checkout-modal .pricing-modal-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+:root[data-appearance="light"] .pricing-checkout-modal .pricing-cancel-btn {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-appearance="light"] .pricing-checkout-modal .pricing-cancel-btn:hover {
+  background-color: #e2e8f0 !important;
+}
+
 :root[data-appearance="light"] .ai-copilot-panel input::placeholder {
   color: #64748b !important;
 }

@@ -29,7 +29,8 @@ const COPY = {
     confirm: "Aktifkan trial",
     confirmStripe: "Lanjut ke Stripe",
     success: "Berhasil!",
-    stripeNote: "Pembayaran aman via Stripe · Trial 14 hari · Batal kapan saja"
+    stripeNote: "Pembayaran aman · Trial 14 hari · Batal kapan saja",
+    demoNote: "Mode demo — pembayaran nyata akan diaktifkan setelah gateway terhubung."
   },
   en: {
     title: "Pricing & Plans",
@@ -45,7 +46,8 @@ const COPY = {
     confirm: "Activate trial",
     confirmStripe: "Continue to Stripe",
     success: "Success!",
-    stripeNote: "Secure checkout via Stripe · 14-day trial · Cancel anytime"
+    stripeNote: "Secure checkout · 14-day trial · Cancel anytime",
+    demoNote: "Demo mode — live payments activate once the gateway is connected."
   }
 } as const;
 
@@ -163,20 +165,18 @@ export function PricingPage({ onBack }: PricingPageProps) {
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs text-slate-500">
-          {stripeEnabled
-            ? copy.stripeNote
-            : "Demo checkout — configure STRIPE_SECRET_KEY on the API for live Stripe billing."}
+        <p className="mt-8 text-center text-sm text-slate-400">
+          {stripeEnabled ? copy.stripeNote : copy.demoNote}
         </p>
       </section>
 
       {selectedPlan ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div className="pricing-checkout-modal w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-2xl">
             {resultMessage ? (
               <div className="text-center">
-                <p className="text-lg font-semibold text-cyan-300">{copy.success}</p>
-                <p className="mt-3 text-sm text-slate-300">{resultMessage}</p>
+                <p className="pricing-modal-title text-lg font-semibold text-cyan-300">{copy.success}</p>
+                <p className="pricing-modal-body mt-3 text-sm text-slate-200">{resultMessage}</p>
                 <Button
                   type="button"
                   className="mt-6 w-full bg-white text-slate-950"
@@ -190,34 +190,38 @@ export function PricingPage({ onBack }: PricingPageProps) {
                 </Button>
               </div>
             ) : (
-              <form onSubmit={(event) => void handleCheckout(event)} className="space-y-4">
-                <h3 className="text-lg font-semibold text-white">{copy.checkoutTitle}</h3>
-                <p className="text-sm capitalize text-slate-400">
-                  {plans.find((plan) => plan.tier === selectedPlan)?.name ?? selectedPlan}
-                </p>
-                <label className="block text-sm text-slate-400">
+              <form onSubmit={(event) => void handleCheckout(event)} className="space-y-5">
+                <div>
+                  <h3 className="pricing-modal-title text-xl font-semibold text-white">{copy.checkoutTitle}</h3>
+                  <p className="pricing-modal-plan mt-2 inline-flex rounded-full bg-cyan-400/15 px-3 py-1 text-sm font-medium text-cyan-200">
+                    {plans.find((plan) => plan.tier === selectedPlan)?.name ?? selectedPlan}
+                  </p>
+                </div>
+                <label className="pricing-modal-label block text-sm font-medium text-slate-200">
                   {copy.companyName}
                   <input
                     required
                     value={companyName}
                     onChange={(event) => setCompanyName(event.target.value)}
-                    className="mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10"
+                    className="login-input pricing-modal-input mt-2 w-full rounded-lg border border-white/15 bg-slate-800 px-4 py-3 text-base text-white outline-none ring-0 placeholder:text-slate-500 focus:border-cyan-400/50"
+                    placeholder="PT Epson Indonesia"
                   />
                 </label>
-                <label className="block text-sm text-slate-400">
+                <label className="pricing-modal-label block text-sm font-medium text-slate-200">
                   {copy.email}
                   <input
                     required
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="mt-1.5 w-full rounded-lg border-0 bg-white/5 px-4 py-3 text-white outline-none ring-1 ring-white/10"
+                    className="login-input pricing-modal-input mt-2 w-full rounded-lg border border-white/15 bg-slate-800 px-4 py-3 text-base text-white outline-none ring-0 placeholder:text-slate-500 focus:border-cyan-400/50"
+                    placeholder="nama@perusahaan.com"
                   />
                 </label>
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-3 pt-1">
                   <Button
                     type="button"
-                    className="flex-1 border border-white/20 bg-transparent text-white"
+                    className="pricing-cancel-btn flex-1 border border-white/25 bg-slate-800 text-slate-100 hover:bg-slate-700"
                     onClick={() => setSelectedPlan(null)}
                   >
                     {copy.cancel}
