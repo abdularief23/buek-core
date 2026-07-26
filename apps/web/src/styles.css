@@ -205,6 +205,63 @@ body {
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
+/* Pricing plan CTAs — always visible and clickable in light and dark mode */
+.pricing-plan-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  min-height: 2.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  cursor: pointer;
+  pointer-events: auto;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.pricing-plan-btn:active {
+  transform: scale(0.98);
+}
+
+.pricing-plan-btn-primary {
+  background-color: #06b6d4 !important;
+  color: #ffffff !important;
+  border: 2px solid transparent !important;
+}
+
+.pricing-plan-btn-primary:hover {
+  background-color: #22d3ee !important;
+}
+
+.pricing-plan-btn-secondary {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border: 2px solid #475569 !important;
+}
+
+.pricing-plan-btn-secondary:hover {
+  background-color: #334155 !important;
+  border-color: #64748b !important;
+}
+
+.pricing-plan-card {
+  position: relative;
+  isolation: isolate;
+}
+
+.pricing-plan-cta {
+  position: relative;
+  z-index: 3;
+  margin-top: 1.5rem;
+}
+
 /* Pricing checkout modal — readable in light and dark mode */
 :root[data-appearance="light"] .pricing-checkout-modal {
   background-color: #ffffff !important;
