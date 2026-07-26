@@ -9,6 +9,7 @@ interface LoginScreenProps {
   loginError: string | null;
   onProductionSignIn: (email: string, password: string) => Promise<void>;
   onDemoLaunch: (workspaceId: string, role: string) => Promise<void>;
+  onViewPricing?: () => void;
 }
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
@@ -34,6 +35,7 @@ const LOGIN_COPY = {
     role: "Peran",
     launchDemo: "Luncurkan Demo",
     comingSoon: "Segera Hadir",
+    viewPricing: "Lihat Harga & Paket",
     appearance: "Tampilan",
     language: "Bahasa",
     aiUnderstands: "AI memahami"
@@ -54,6 +56,7 @@ const LOGIN_COPY = {
     role: "Role",
     launchDemo: "Launch Demo",
     comingSoon: "Coming Soon",
+    viewPricing: "View Pricing & Plans",
     appearance: "Appearance",
     language: "Language",
     aiUnderstands: "AI understands"
@@ -74,6 +77,7 @@ const LOGIN_COPY = {
     role: "役割",
     launchDemo: "デモを起動",
     comingSoon: "近日公開",
+    viewPricing: "料金プランを見る",
     appearance: "表示",
     language: "言語",
     aiUnderstands: "AIが理解"
@@ -168,7 +172,7 @@ const fallbackComingSoon: DemoWorkspaceOption[] = [
 
 const fallbackRoles = ["Operator", "Engineer", "Supervisor", "Plant Manager"];
 
-export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: LoginScreenProps) {
+export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch, onViewPricing }: LoginScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [workspaces, setWorkspaces] = useState<DemoWorkspaceOption[]>(fallbackWorkspaces);
@@ -248,6 +252,15 @@ export function LoginScreen({ loginError, onProductionSignIn, onDemoLaunch }: Lo
           <img src="/logo-mark.svg" alt="" className="login-logo mx-auto h-14 w-14 rounded-2xl bg-white p-2" />
           <h1 className="mt-6 text-2xl font-semibold">Buek Core</h1>
           <p className="mt-2 text-sm text-slate-500">{copy.tagline}</p>
+          {onViewPricing ? (
+            <button
+              type="button"
+              onClick={onViewPricing}
+              className="mt-3 text-sm font-medium text-cyan-300 underline-offset-2 hover:text-cyan-200 hover:underline"
+            >
+              {copy.viewPricing}
+            </button>
+          ) : null}
         </div>
 
       <form onSubmit={handleProductionSubmit} className="mt-10 space-y-4">

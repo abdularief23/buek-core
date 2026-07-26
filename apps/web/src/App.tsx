@@ -7,6 +7,7 @@ import { AppShell } from "./components/AppShell.js";
 import { HomeView } from "./components/HomeView.js";
 import { KnowledgeView } from "./components/KnowledgeView.js";
 import { LoginScreen } from "./components/LoginScreen.js";
+import { PricingPage } from "./components/PricingPage.js";
 import { NotificationsPanel } from "./components/NotificationsPanel.js";
 import { ProfileView } from "./components/ProfileView.js";
 import { WorkflowView } from "./components/WorkflowView.js";
@@ -48,6 +49,7 @@ export function App() {
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   const [roleHome, setRoleHome] = useState<RoleHomeData | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [showPricing, setShowPricing] = useState(false);
   const [modules, setModules] = useState<ModuleSummary[]>([]);
   const [activeView, setActiveView] = useState<AppNavItem>("home");
   const [status, setStatus] = useState("Loading installed modules...");
@@ -373,12 +375,21 @@ export function App() {
   }
 
   if (!isSignedIn) {
+    if (showPricing) {
+      return (
+        <main className="login-shell min-h-screen">
+          <PricingPage onBack={() => setShowPricing(false)} />
+        </main>
+      );
+    }
+
     return (
       <main className="login-shell min-h-screen">
         <LoginScreen
           loginError={loginError}
           onProductionSignIn={handleProductionSignIn}
           onDemoLaunch={handleDemoLaunch}
+          onViewPricing={() => setShowPricing(true)}
         />
       </main>
     );

@@ -14,6 +14,7 @@ import {
   getWorkOrderById,
   rejectWorkOrder
 } from "../services/data-engine.js";
+import { recordUsage } from "../billing/service.js";
 import { listActiveWorkflows } from "../services/workflow-engine.js";
 import { getNotifications } from "../services/notifications.js";
 import { getBusinessRules, evaluateBusinessRules, getCriticalAlerts } from "../services/business-rules.js";
@@ -193,6 +194,13 @@ export async function handleIssueByKey(req: Request, res: Response) {
 
 export async function handleAdvanceInvestigation(req: Request, res: Response) {
   try {
+    const slug = getSlug(req);
+    const usageCheck = await recordUsage(slug, "investigations");
+    if (!usageCheck.allowed) {
+      res.status(402).json({ error: { message: usageCheck.reason ?? "Usage limit exceeded." } });
+      return;
+    }
+
     const body = req.body as { stepKey: string; role?: string };
     const issue = await advanceInvestigationStep(
       getSlug(req),

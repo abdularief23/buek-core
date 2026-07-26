@@ -1,0 +1,222 @@
+import { prisma } from "../db.js";
+import {
+  getPlan,
+  isOverLimit,
+  isValidPlanTier,
+  type PlanDefinition,
+  type PlanTier,
+  PLANS,
+  usagePercent
+} from "./plans.js";
+
+const WORKSPACE_TO_COMPANY: Record<string, string> = {
+  "epson-factory": "company-epson-factory",
+  "toyota-plant": "company-toyota-plant",
+  "nestle-factory": "company-nestle-factory",
+  "custom-company": "company-custom-company"
+};
+
+const DEFAULT_PLAN_BY_WORKSPACE: Record<string, PlanTier> = {
+  "epson-factory": "pro",
+  "toyota-plant": "starter",
+  "nestle-factory": "starter",
+  "custom-company": "starter"
+};
+
+function currentPeriodBounds(): { start: Date; end: Date } {
+  const start = new Date();
+  start.setDate(1);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + 1);
+  return { start, end };
+}
+
+function resolveCompanyId(workspaceId: string): string {
+  return WORKSPACE_TO_COMPANY[workspaceId] ?? `company-${workspaceId}`;
+}
+
+export interface UsageSummary {
+  copilotQueries: { used: number; limit: number | null; percent: number | null };
+  investigations: { used: number; limit: number | null; percent: number | null };
+}
+
+export interface SubscriptionSummary {
+  planTier: PlanTier;
+  plan: PlanDefinition;
+  status: string;
+  billingCycle: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  usage: UsageSummary;
+  canUpgrade: boolean;
+}
+
+export function listPlans(): PlanDefinition[] {
+  return PLANS;
+}
+
+async function ensureSubscription(companyId: string, workspaceId: string) {
+  const existing = await prisma.subscription.findUnique({ where: { companyId } });
+  if (existing) return existing;
+
+  const { start, end } = currentPeriodBounds();
+  const planTier = DEFAULT_PLAN_BY_WORKSPACE[workspaceId] ?? "starter";
+
+  return prisma.subscription.create({
+    data: {
+      companyId,
+      planTier,
+      status: workspaceId === "epson-factory" ? "active" : "trial",
+      billingCycle: "monthly",
+      currentPeriodStart: start,
+      currentPeriodEnd: end
+    }
+  });
+}
+
+async function countUsage(companyId: string, metric: string): Promise<number> {
+  const { start } = currentPeriodBounds();
+  const result = await prisma.usageRecord.aggregate({
+    where: {
+      companyId,
+      metric,
+      recordedAt: { gte: start }
+    },
+    _sum: { count: true }
+  });
+  return result._sum.count ?? 0;
+}
+
+export async function getSubscriptionForWorkspace(workspaceId: string): Promise<SubscriptionSummary> {
+  const companyId = resolveCompanyId(workspaceId);
+  const subscription = await ensureSubscription(companyId, workspaceId);
+  const plan = getPlan(subscription.planTier as PlanTier);
+
+  const copilotUsed = await countUsage(companyId, "copilot_queries");
+  const investigationsUsed = await countUsage(companyId, "investigations");
+
+  return {
+    planTier: subscription.planTier as PlanTier,
+    plan,
+    status: subscription.status,
+    billingCycle: subscription.billingCycle,
+    currentPeriodStart: subscription.currentPeriodStart.toISOString(),
+    currentPeriodEnd: subscription.currentPeriodEnd.toISOString(),
+    usage: {
+      copilotQueries: {
+        used: copilotUsed,
+        limit: plan.limits.copilotQueriesPerMonth,
+        percent: usagePercent(copilotUsed, plan.limits.copilotQueriesPerMonth)
+      },
+      investigations: {
+        used: investigationsUsed,
+        limit: plan.limits.investigationsPerMonth,
+        percent: usagePercent(investigationsUsed, plan.limits.investigationsPerMonth)
+      }
+    },
+    canUpgrade: subscription.planTier !== "enterprise"
+  };
+}
+
+export async function subscribeToPlan(
+  workspaceId: string,
+  planTier: string,
+  email?: string
+): Promise<{ success: boolean; subscription: SubscriptionSummary; message: string }> {
+  if (!isValidPlanTier(planTier)) {
+    throw new Error("Invalid plan tier.");
+  }
+
+  const companyId = resolveCompanyId(workspaceId);
+  const { start, end } = currentPeriodBounds();
+
+  await prisma.subscription.upsert({
+    where: { companyId },
+    update: {
+      planTier,
+      status: "active",
+      billingCycle: "monthly",
+      currentPeriodStart: start,
+      currentPeriodEnd: end
+    },
+    create: {
+      companyId,
+      planTier,
+      status: "active",
+      billingCycle: "monthly",
+      currentPeriodStart: start,
+      currentPeriodEnd: end
+    }
+  });
+
+  const subscription = await getSubscriptionForWorkspace(workspaceId);
+  const planName = getPlan(planTier).name;
+
+  return {
+    success: true,
+    subscription,
+    message: email
+      ? `Checkout complete. ${planName} plan activated for ${email}.`
+      : `${planName} plan activated.`
+  };
+}
+
+export async function startCheckout(input: {
+  email: string;
+  companyName: string;
+  planTier: string;
+}): Promise<{ success: boolean; message: string; trialDays: number }> {
+  if (!isValidPlanTier(input.planTier)) {
+    throw new Error("Invalid plan tier.");
+  }
+
+  if (input.planTier === "enterprise") {
+    return {
+      success: true,
+      message: `Thanks ${input.email}! Our team will contact ${input.companyName} about Enterprise pricing within 1 business day.`,
+      trialDays: 0
+    };
+  }
+
+  const planName = getPlan(input.planTier).name;
+  return {
+    success: true,
+    message: `Welcome to Buek Core! Your 14-day ${planName} trial for ${input.companyName} is ready. Sign in to activate your workspace.`,
+    trialDays: 14
+  };
+}
+
+export async function recordUsage(
+  workspaceId: string,
+  metric: "copilot_queries" | "investigations"
+): Promise<{ allowed: boolean; reason?: string }> {
+  const companyId = resolveCompanyId(workspaceId);
+  const subscription = await ensureSubscription(companyId, workspaceId);
+  const plan = getPlan(subscription.planTier as PlanTier);
+
+  const limit =
+    metric === "copilot_queries"
+      ? plan.limits.copilotQueriesPerMonth
+      : plan.limits.investigationsPerMonth;
+
+  const used = await countUsage(companyId, metric);
+
+  if (isOverLimit(used, limit)) {
+    return {
+      allowed: false,
+      reason: `Monthly ${metric === "copilot_queries" ? "AI Copilot" : "investigation"} limit reached. Upgrade to Pro for unlimited access.`
+    };
+  }
+
+  await prisma.usageRecord.create({
+    data: {
+      companyId,
+      workspaceId,
+      metric,
+      count: 1
+    }
+  });
+
+  return { allowed: true };
+}

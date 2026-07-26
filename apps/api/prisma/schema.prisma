@@ -26,8 +26,38 @@ model Company {
   conversations Conversation[]
   modules       CompanyModule[]
   employees     Employee[]
+  subscription  Subscription?
+  usageRecords  UsageRecord[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  companyId            String   @unique
+  planTier             String   @default("starter")
+  status               String   @default("trial")
+  billingCycle         String   @default("monthly")
+  currentPeriodStart   DateTime @default(now())
+  currentPeriodEnd     DateTime
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model UsageRecord {
+  id          String   @id @default(cuid())
+  companyId   String
+  workspaceId String?
+  metric      String
+  count       Int      @default(1)
+  recordedAt  DateTime @default(now())
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, metric, recordedAt])
+  @@index([workspaceId])
 }
 
 model Workspace {

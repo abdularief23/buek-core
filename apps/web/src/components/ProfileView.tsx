@@ -1,5 +1,13 @@
-import { useState } from "react";
+import { Button } from "@buek/ui";
+import { useEffect, useState } from "react";
 import type { DemoUser, ModuleSummary, Workspace } from "../types.js";
+import {
+  fetchSubscription,
+  formatUsageLabel,
+  upgradePlan,
+  type PlanTier,
+  type SubscriptionSummary
+} from "../lib/billing-api.js";
 import { type AppearanceMode, getAppearanceMode, setAppearanceMode } from "../lib/user-preferences.js";
 import { useLanguage } from "../lib/language-context.js";
 
@@ -10,10 +18,43 @@ interface ProfileViewProps {
   status?: string;
 }
 
+function UsageBar({ label, metric }: { label: string; metric: { used: number; limit: number | null; percent: number | null } }) {
+  const percent = metric.percent ?? (metric.limit === null ? 0 : 0);
+  return (
+    <div>
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-slate-400">{label}</span>
+        <span className="text-slate-200">{formatUsageLabel(metric.used, metric.limit)}</span>
+      </div>
+      {metric.limit !== null ? (
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+          <div
+            className={`h-full rounded-full transition-all ${
+              percent >= 90 ? "bg-red-400" : percent >= 70 ? "bg-amber-400" : "bg-cyan-400"
+            }`}
+            style={{ width: `${Math.min(100, percent)}%` }}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function ProfileView({ workspace, user, installedModule, status }: ProfileViewProps) {
   const totalDocuments = workspace.documentStats.reduce((sum, item) => sum + item.count, 0);
   const [appearance, setAppearance] = useState<AppearanceMode>(getAppearanceMode());
   const { language, setLanguage } = useLanguage();
+  const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
+  const [billingError, setBillingError] = useState<string | null>(null);
+  const [upgrading, setUpgrading] = useState(false);
+
+  useEffect(() => {
+    fetchSubscription(workspace.id)
+      .then(setSubscription)
+      .catch((error: unknown) => {
+        setBillingError(error instanceof Error ? error.message : "Unable to load billing.");
+      });
+  }, [workspace.id]);
 
   const settings = [
     { label: "AI Provider", value: workspace.aiProvider },
@@ -22,6 +63,19 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
     { label: "Connected Systems", value: installedModule ? `${installedModule.name} v${installedModule.version}` : workspace.moduleId },
     { label: "API", value: "Connected" }
   ];
+
+  async function handleUpgrade(planTier: PlanTier) {
+    setUpgrading(true);
+    setBillingError(null);
+    try {
+      const result = await upgradePlan(workspace.id, planTier);
+      setSubscription(result.subscription);
+    } catch (error) {
+      setBillingError(error instanceof Error ? error.message : "Upgrade failed.");
+    } finally {
+      setUpgrading(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-12 pb-16">
@@ -39,6 +93,47 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
           <p className="buek-subtitle text-slate-400">{user.email}</p>
         </div>
       </div>
+
+      <section className="space-y-4">
+        <h2 className="buek-card-title text-slate-400">Plan & Billing</h2>
+        {billingError ? <p className="text-sm text-red-400">{billingError}</p> : null}
+        {subscription ? (
+          <div className="space-y-4 rounded-2xl border border-white/10 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-lg font-semibold text-white">{subscription.plan.name}</p>
+                <p className="text-sm text-slate-400">
+                  {subscription.plan.priceLabel}
+                  {subscription.plan.priceMonthlyUsd ? "/month" : ""} ·{" "}
+                  <span className="capitalize">{subscription.status}</span>
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Billing period ends{" "}
+                  {new Date(subscription.currentPeriodEnd).toLocaleDateString(
+                    language === "id" ? "id-ID" : "en-US"
+                  )}
+                </p>
+              </div>
+              {subscription.canUpgrade ? (
+                <Button
+                  type="button"
+                  disabled={upgrading || subscription.planTier === "pro"}
+                  className="shrink-0 border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/20"
+                  onClick={() => void handleUpgrade(subscription.planTier === "starter" ? "pro" : "enterprise")}
+                >
+                  {upgrading ? "Upgrading…" : subscription.planTier === "starter" ? "Upgrade to Pro" : "Contact Enterprise"}
+                </Button>
+              ) : null}
+            </div>
+            <div className="space-y-4 border-t border-white/5 pt-4">
+              <UsageBar label="AI Copilot queries" metric={subscription.usage.copilotQueries} />
+              <UsageBar label="Investigations" metric={subscription.usage.investigations} />
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">Loading billing…</p>
+        )}
+      </section>
 
       <section className="space-y-4">
         <h2 className="buek-card-title text-slate-400">Profile</h2>

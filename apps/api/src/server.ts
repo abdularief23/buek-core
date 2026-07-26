@@ -76,6 +76,12 @@ import {
 } from "./routes/knowledge.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
 import {
+  handleCheckout,
+  handleGetSubscription,
+  handleListPlans,
+  handleSubscribe
+} from "./routes/billing.js";
+import {
   authenticateDemoUser,
   authenticateProductionUser,
   demoComingSoonOptions,
@@ -319,6 +325,11 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/knowledge/search", (req, res) => {
     void handleKnowledgeSearchRequest(req, res, discovery.modules);
   });
+
+  app.get("/api/billing/plans", handleListPlans);
+  app.get("/api/billing/subscription", (req, res) => void handleGetSubscription(req, res));
+  app.post("/api/billing/subscribe", (req, res) => void handleSubscribe(req, res));
+  app.post("/api/billing/checkout", (req, res) => void handleCheckout(req, res));
 
   app.post("/api/ask", (_req, res) => {
     res.status(501).json({

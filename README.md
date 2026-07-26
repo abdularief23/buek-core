@@ -129,6 +129,20 @@ Development was also accelerated with **Cursor** AI agents for day-to-day iterat
 
 ---
 
+## Business model
+
+Usage-based B2B SaaS for manufacturing plants. View live pricing at [core.buekwebsite.com](https://core.buekwebsite.com) → **View Pricing & Plans**.
+
+| Tier | Price | Includes |
+|------|-------|----------|
+| **Starter** | $49/mo | 1 plant, 5 users, 50 investigations/mo, 200 AI queries |
+| **Pro** | $199/mo | 3 plants, unlimited investigations & AI Copilot |
+| **Enterprise** | Custom | SSO, SLA, custom domain modules |
+
+Full product requirements: [docs/galuxium-prd.md](docs/galuxium-prd.md) · Executive summary: [docs/galuxium-executive-summary.md](docs/galuxium-executive-summary.md)
+
+---
+
 ## Architecture
 
 <p align="center">
