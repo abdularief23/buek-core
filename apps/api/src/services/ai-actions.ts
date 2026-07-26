@@ -1,7 +1,8 @@
 import { prisma } from "../db.js";
 import { getTenantThemeOrDefault } from "../tenants/index.js";
 import { getIssueByKey, getWorkOrderById } from "./data-engine.js";
-import { logAgentAction, saveMemory } from "./workflow-data.js";
+import { logAiAudit } from "./audit-log.js";
+import { saveMemory } from "./workflow-data.js";
 
 export type AiActionType =
   | "create_work_order"
@@ -116,7 +117,13 @@ export async function executeAiAction(
           entityId: workOrder.id,
           data: await getWorkOrderById(slug, workOrder.id)
         };
-        await logAgentAction(slug, action, params, result);
+        await logAiAudit({
+          slug,
+          toolName: action,
+          source: "copilot",
+          input: params,
+          output: result
+        });
         return result;
       }
 
@@ -161,7 +168,13 @@ export async function executeAiAction(
           entityId: issueId,
           data: await getIssueByKey(slug, issueKey)
         };
-        await logAgentAction(slug, action, params, result);
+        await logAiAudit({
+          slug,
+          toolName: action,
+          source: "copilot",
+          input: params,
+          output: result
+        });
         return result;
       }
 
@@ -227,7 +240,13 @@ export async function executeAiAction(
           entityId: report.id,
           data: report
         };
-        await logAgentAction(slug, action, params, result);
+        await logAiAudit({
+          slug,
+          toolName: action,
+          source: "copilot",
+          input: params,
+          output: result
+        });
         return result;
       }
 
@@ -242,7 +261,13 @@ export async function executeAiAction(
           ...(issue?.id ? { entityId: issue.id } : {}),
           data: issue
         };
-        await logAgentAction(slug, action, params, result);
+        await logAiAudit({
+          slug,
+          toolName: action,
+          source: "copilot",
+          input: params,
+          output: result
+        });
         return result;
       }
 
@@ -251,7 +276,14 @@ export async function executeAiAction(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Action failed.";
-    await logAgentAction(slug, action, params, { error: message }, "failed");
+    await logAiAudit({
+      slug,
+      toolName: action,
+      source: "copilot",
+      input: params,
+      output: { error: message },
+      status: "failed"
+    });
     return { success: false, toolName: action, message };
   }
 }

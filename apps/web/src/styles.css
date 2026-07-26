@@ -349,6 +349,11 @@ body {
   box-shadow: 0 20px 40px rgba(8, 145, 178, 0.15) !important;
 }
 
+:root[data-appearance="light"] .goal-alignment-breadcrumb {
+  background-color: rgba(8, 145, 178, 0.06) !important;
+  border-color: rgba(8, 145, 178, 0.2) !important;
+}
+
 /* Pricing checkout modal — readable in light and dark mode */
 :root[data-appearance="light"] .pricing-checkout-modal {
   background-color: #ffffff !important;

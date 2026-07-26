@@ -23,6 +23,7 @@ import { getKpiDetail, getProductionDashboard } from "../services/production-das
 import { getComplaintById, getComplaints } from "../services/customer-complaints.js";
 import { submitOperatorReport } from "../services/operator-report.js";
 import { getInvestigationCopilot } from "../services/investigation-copilot.js";
+import { getGoalChainForIssue } from "../services/goal-alignment.js";
 import { getCompanyBrainHierarchy } from "../services/company-brain.js";
 import {
   approveEngineeringAnalysis,
@@ -197,7 +198,13 @@ export async function handleAdvanceInvestigation(req: Request, res: Response) {
     const slug = getSlug(req);
     const usageCheck = await recordUsage(slug, "investigations");
     if (!usageCheck.allowed) {
-      res.status(402).json({ error: { message: usageCheck.reason ?? "Usage limit exceeded." } });
+      res.status(402).json({
+        error: {
+          message: usageCheck.reason ?? "Usage limit exceeded.",
+          code: "usage_limit_exceeded",
+          usage: usageCheck
+        }
+      });
       return;
     }
 
@@ -499,12 +506,15 @@ export async function handleAiSuggestion(req: Request, res: Response) {
 
 export async function handleInvestigationCopilot(req: Request, res: Response) {
   try {
-    const copilot = await getInvestigationCopilot(getSlug(req), String(req.params.issueKey));
+    const slug = getSlug(req);
+    const issueKey = String(req.params.issueKey);
+    const copilot = await getInvestigationCopilot(slug, issueKey);
     if (!copilot) {
       res.status(404).json({ error: { message: "Issue not found" } });
       return;
     }
-    res.json({ copilot });
+    const goalChain = await getGoalChainForIssue(slug, issueKey);
+    res.json({ copilot, goalChain });
   } catch (error) {
     res.status(500).json({ error: { message: error instanceof Error ? error.message : "Failed" } });
   }

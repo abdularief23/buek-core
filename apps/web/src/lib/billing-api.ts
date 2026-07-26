@@ -28,6 +28,7 @@ export interface UsageMetric {
   used: number;
   limit: number | null;
   percent: number | null;
+  level?: "ok" | "warning" | "blocked";
 }
 
 export interface SubscriptionSummary {

@@ -9,6 +9,7 @@ import { resolve } from "node:path";
 import type { ApiEnv } from "./config/env.js";
 import { recordUsage } from "./billing/service.js";
 import { tryExecuteActionFromMessage } from "./services/ai-actions.js";
+import { logAiAudit } from "./services/audit-log.js";
 import {
   resolveChatDataContext,
   shouldUseDirectAnswer
@@ -261,10 +262,15 @@ export async function handleChatRequest(
     if (!usageCheck.allowed) {
       sendEvent(res, "error", {
         code: "usage_limit_exceeded",
-        message: usageCheck.reason ?? "Usage limit exceeded."
+        message: usageCheck.reason ?? "Usage limit exceeded.",
+        usage: usageCheck
       });
       res.end();
       return;
+    }
+
+    if (usageCheck.level === "warning") {
+      sendEvent(res, "usage_warning", usageCheck);
     }
 
     const rolePersona =
@@ -393,6 +399,21 @@ export async function handleChatRequest(
         warnings: finalOutputGuard.warnings
       });
     }
+
+    await logAiAudit({
+      slug: workspaceSlug,
+      toolName: "copilot_chat",
+      source: "copilot",
+      input: {
+        message: latestUserMessage.slice(0, 500),
+        role: requestBody.role ?? null
+      },
+      output: {
+        responsePreview: finalOutputGuard.text.slice(0, 500),
+        action: actionResult?.toolName ?? null
+      },
+      ...(typeof requestBody.role === "string" ? { actorRole: requestBody.role } : {})
+    });
 
     sendEvent(res, "done", {});
     res.end();

@@ -1,6 +1,8 @@
 import { Button } from "@buek/ui";
 import { useEffect, useState } from "react";
 import type { DemoUser, ModuleSummary, Workspace } from "../types.js";
+import { AiAuditLogPanel } from "./AiAuditLogPanel.js";
+import { UsageBudgetBanner } from "./UsageBudgetBanner.js";
 import {
   checkoutPlan,
   fetchBillingConfig,
@@ -19,8 +21,16 @@ interface ProfileViewProps {
   status?: string;
 }
 
-function UsageBar({ label, metric }: { label: string; metric: { used: number; limit: number | null; percent: number | null } }) {
+function UsageBar({ label, metric }: { label: string; metric: { used: number; limit: number | null; percent: number | null; level?: string } }) {
   const percent = metric.percent ?? (metric.limit === null ? 0 : 0);
+  const barColor =
+    metric.level === "blocked" || percent >= 100
+      ? "bg-red-400"
+      : metric.level === "warning" || percent >= 80
+        ? "bg-amber-400"
+        : percent >= 70
+          ? "bg-amber-400"
+          : "bg-cyan-400";
   return (
     <div>
       <div className="flex items-center justify-between text-sm">
@@ -30,9 +40,7 @@ function UsageBar({ label, metric }: { label: string; metric: { used: number; li
       {metric.limit !== null ? (
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
           <div
-            className={`h-full rounded-full transition-all ${
-              percent >= 90 ? "bg-red-400" : percent >= 70 ? "bg-amber-400" : "bg-cyan-400"
-            }`}
+            className={`h-full rounded-full transition-all ${barColor}`}
             style={{ width: `${Math.min(100, percent)}%` }}
           />
         </div>
@@ -151,6 +159,7 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
                 </Button>
               ) : null}
             </div>
+            <UsageBudgetBanner subscription={subscription} />
             <div className="space-y-4 border-t border-white/5 pt-4">
               <UsageBar label="AI Copilot queries" metric={subscription.usage.copilotQueries} />
               <UsageBar label="Investigations" metric={subscription.usage.investigations} />
@@ -159,6 +168,14 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
         ) : (
           <p className="text-sm text-slate-500">Loading billing…</p>
         )}
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="buek-card-title text-slate-400">AI Audit Log</h2>
+        <p className="text-sm text-slate-500">
+          Setiap aksi AI tercatat — siapa trigger, tool apa, dan hasilnya (inspirasi Paperclip).
+        </p>
+        <AiAuditLogPanel workspaceId={workspace.id} />
       </section>
 
       <section className="space-y-4">

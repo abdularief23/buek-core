@@ -15,10 +15,12 @@ import {
   type InvestigationCopilot,
   type PossibleCause
 } from "../lib/data-api.js";
+import { fetchGoalChain, type GoalLink } from "../lib/governance-api.js";
 import { useLanguage } from "../lib/language-context.js";
 import type { TranslationKey } from "../lib/i18n.js";
 import { isEngineer, isPlantManager, isSupervisor } from "../lib/roles.js";
 import type { DynamicWorkspaceState } from "./DynamicWorkspace.js";
+import { GoalAlignmentBreadcrumb } from "./GoalAlignmentBreadcrumb.js";
 import { InvestigationStepper } from "./InvestigationStepper.js";
 import { EngineeringAnalysisDocumentPreview } from "./EngineeringAnalysisDocumentPreview.js";
 
@@ -67,6 +69,7 @@ function EngineeringAnalysisWizard({
     reportedAt: string;
   } | null>(null);
   const [copilot, setCopilot] = useState<InvestigationCopilot | null>(null);
+  const [goalChain, setGoalChain] = useState<GoalLink[]>([]);
   const [showProblemDb, setShowProblemDb] = useState(false);
   const [problemDb, setProblemDb] = useState<CompanyBrainMachineNode[] | null>(null);
   const [problemDbLoading, setProblemDbLoading] = useState(false);
@@ -157,6 +160,12 @@ function EngineeringAnalysisWizard({
       cancelled = true;
     };
   }, [slug, issueKey, reloadKey]);
+
+  useEffect(() => {
+    fetchGoalChain(slug, issueKey, step)
+      .then((data) => setGoalChain(data.goalChain))
+      .catch(() => setGoalChain([]));
+  }, [slug, issueKey, step]);
 
   async function loadProblemDatabase() {
     if (problemDb) {
@@ -623,6 +632,9 @@ function EngineeringAnalysisWizard({
 
       {editable ? (
         <>
+          {goalChain.length ? (
+            <GoalAlignmentBreadcrumb goalChain={goalChain} />
+          ) : null}
           <div className="lg:hidden">
             <InvestigationStepper
               analysis={analysis}

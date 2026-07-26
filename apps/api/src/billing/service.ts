@@ -1,13 +1,13 @@
 import { prisma } from "../db.js";
 import {
   getPlan,
-  isOverLimit,
   isValidPlanTier,
   type PlanDefinition,
   type PlanTier,
   PLANS,
   usagePercent
 } from "./plans.js";
+import { buildUsageCheckResult, type UsageCheckResult } from "./usage.js";
 
 const WORKSPACE_TO_COMPANY: Record<string, string> = {
   "epson-factory": "company-epson-factory",
@@ -61,8 +61,18 @@ function resolveCompanyIdForCheckout(workspaceId: string | undefined, companyNam
 }
 
 export interface UsageSummary {
-  copilotQueries: { used: number; limit: number | null; percent: number | null };
-  investigations: { used: number; limit: number | null; percent: number | null };
+  copilotQueries: {
+    used: number;
+    limit: number | null;
+    percent: number | null;
+    level: UsageCheckResult["level"];
+  };
+  investigations: {
+    used: number;
+    limit: number | null;
+    percent: number | null;
+    level: UsageCheckResult["level"];
+  };
 }
 
 export interface SubscriptionSummary {
@@ -138,6 +148,16 @@ export async function getSubscriptionForWorkspace(workspaceId: string): Promise<
 
   const copilotUsed = await countUsage(companyId, "copilot_queries");
   const investigationsUsed = await countUsage(companyId, "investigations");
+  const copilotCheck = buildUsageCheckResult(
+    copilotUsed,
+    plan.limits.copilotQueriesPerMonth,
+    "AI Copilot"
+  );
+  const investigationsCheck = buildUsageCheckResult(
+    investigationsUsed,
+    plan.limits.investigationsPerMonth,
+    "investigasi"
+  );
 
   return {
     planTier: subscription.planTier as PlanTier,
@@ -148,14 +168,16 @@ export async function getSubscriptionForWorkspace(workspaceId: string): Promise<
     currentPeriodEnd: subscription.currentPeriodEnd.toISOString(),
     usage: {
       copilotQueries: {
-        used: copilotUsed,
-        limit: plan.limits.copilotQueriesPerMonth,
-        percent: usagePercent(copilotUsed, plan.limits.copilotQueriesPerMonth)
+        used: copilotCheck.used,
+        limit: copilotCheck.limit,
+        percent: copilotCheck.percent,
+        level: copilotCheck.level
       },
       investigations: {
-        used: investigationsUsed,
-        limit: plan.limits.investigationsPerMonth,
-        percent: usagePercent(investigationsUsed, plan.limits.investigationsPerMonth)
+        used: investigationsCheck.used,
+        limit: investigationsCheck.limit,
+        percent: investigationsCheck.percent,
+        level: investigationsCheck.level
       }
     },
     canUpgrade: subscription.planTier !== "enterprise"
@@ -315,7 +337,7 @@ export { resolveCompanyIdForCheckout };
 export async function recordUsage(
   workspaceId: string,
   metric: "copilot_queries" | "investigations"
-): Promise<{ allowed: boolean; reason?: string }> {
+): Promise<UsageCheckResult> {
   const companyId = resolveCompanyId(workspaceId);
   const subscription = await ensureSubscription(companyId, workspaceId);
   const plan = getPlan(subscription.planTier as PlanTier);
@@ -326,12 +348,11 @@ export async function recordUsage(
       : plan.limits.investigationsPerMonth;
 
   const used = await countUsage(companyId, metric);
+  const metricLabel = metric === "copilot_queries" ? "AI Copilot" : "investigasi";
+  const check = buildUsageCheckResult(used, limit, metricLabel);
 
-  if (isOverLimit(used, limit)) {
-    return {
-      allowed: false,
-      reason: `Monthly ${metric === "copilot_queries" ? "AI Copilot" : "investigation"} limit reached. Upgrade to Pro for unlimited access.`
-    };
+  if (!check.allowed) {
+    return check;
   }
 
   await prisma.usageRecord.create({
@@ -343,5 +364,6 @@ export async function recordUsage(
     }
   });
 
-  return { allowed: true };
+  const nextUsed = used + 1;
+  return buildUsageCheckResult(nextUsed, limit, metricLabel);
 }
