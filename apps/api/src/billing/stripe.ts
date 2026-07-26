@@ -23,12 +23,12 @@ export interface CheckoutSessionResult {
   trialDays?: number;
 }
 
-function planAmountCents(planTier: PlanTier): number {
+function planAmountIdr(planTier: PlanTier): number {
   const plan = getPlan(planTier);
-  if (!plan.priceMonthlyUsd) {
+  if (!plan.priceMonthlyIdr) {
     throw new Error("Enterprise plans require sales contact.");
   }
-  return plan.priceMonthlyUsd * 100;
+  return plan.priceMonthlyIdr;
 }
 
 export async function createStripeCheckoutSession(
@@ -55,8 +55,8 @@ export async function createStripeCheckoutSession(
       {
         quantity: 1,
         price_data: {
-          currency: "usd",
-          unit_amount: planAmountCents(input.planTier),
+          currency: "idr",
+          unit_amount: planAmountIdr(input.planTier),
           recurring: { interval: "month" },
           product_data: {
             name: `Buek Core ${plan.name}`,

@@ -10,7 +10,7 @@ export interface PlanLimits {
 export interface PlanDefinition {
   tier: PlanTier;
   name: string;
-  priceMonthlyUsd: number | null;
+  priceMonthlyIdr: number | null;
   priceLabel: string;
   description: string;
   limits: PlanLimits;
@@ -18,12 +18,16 @@ export interface PlanDefinition {
   highlighted?: boolean;
 }
 
+export function formatIdr(amount: number): string {
+  return `Rp ${amount.toLocaleString("id-ID")}`;
+}
+
 export const PLANS: PlanDefinition[] = [
   {
     tier: "starter",
     name: "Starter",
-    priceMonthlyUsd: 49,
-    priceLabel: "$49/mo",
+    priceMonthlyIdr: 749_000,
+    priceLabel: formatIdr(749_000),
     description: "Single-plant teams getting started with AI investigations.",
     limits: {
       plants: 1,
@@ -43,8 +47,8 @@ export const PLANS: PlanDefinition[] = [
   {
     tier: "pro",
     name: "Pro",
-    priceMonthlyUsd: 199,
-    priceLabel: "$199/mo",
+    priceMonthlyIdr: 2_999_000,
+    priceLabel: formatIdr(2_999_000),
     description: "Multi-plant operations with unlimited AI assistance.",
     limits: {
       plants: 3,
@@ -66,8 +70,8 @@ export const PLANS: PlanDefinition[] = [
   {
     tier: "enterprise",
     name: "Enterprise",
-    priceMonthlyUsd: null,
-    priceLabel: "Custom",
+    priceMonthlyIdr: null,
+    priceLabel: "Kustom",
     description: "Multi-tenant deployments with SSO, SLA, and custom modules.",
     limits: {
       plants: Number.POSITIVE_INFINITY,

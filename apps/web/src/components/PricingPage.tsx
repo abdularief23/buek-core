@@ -19,7 +19,7 @@ const SALES_EMAIL = "info@buekwebsite.com";
 const COPY = {
   id: {
     title: "Harga & Paket",
-    subtitle: "Pilih paket yang sesuai dengan skala pabrik Anda. Mulai dari $49/bulan.",
+    subtitle: "Pilih paket yang sesuai dengan skala pabrik Anda. Mulai dari Rp 749.000/bulan.",
     back: "← Kembali ke login",
     getStarted: "Mulai",
     contactSales: "Hubungi Sales",
@@ -41,7 +41,7 @@ const COPY = {
   },
   en: {
     title: "Pricing & Plans",
-    subtitle: "Choose the plan that fits your plant. Starting at $49/month.",
+    subtitle: "Choose the plan that fits your plant. Starting at Rp 749,000/month.",
     back: "← Back to login",
     getStarted: "Get Started",
     contactSales: "Contact Sales",
@@ -156,7 +156,7 @@ export function PricingPage({ onBack }: PricingPageProps) {
                 <p className="mt-1 text-sm text-slate-400">{plan.description}</p>
                 <p className="mt-4 text-3xl font-bold text-white">
                   {plan.priceLabel}
-                  {plan.priceMonthlyUsd ? (
+                  {plan.priceMonthlyIdr ? (
                     <span className="text-base font-normal text-slate-500">{copy.perMonth}</span>
                   ) : null}
                 </p>

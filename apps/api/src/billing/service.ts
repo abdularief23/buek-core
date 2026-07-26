@@ -16,6 +16,13 @@ const WORKSPACE_TO_COMPANY: Record<string, string> = {
   "custom-company": "company-custom-company"
 };
 
+const WORKSPACE_COMPANY_NAMES: Record<string, string> = {
+  "epson-factory": "Epson Demo",
+  "toyota-plant": "Toyota Demo",
+  "nestle-factory": "Nestle Demo",
+  "custom-company": "Custom Company"
+};
+
 const DEFAULT_PLAN_BY_WORKSPACE: Record<string, PlanTier> = {
   "epson-factory": "pro",
   "toyota-plant": "starter",
@@ -73,7 +80,26 @@ export function listPlans(): PlanDefinition[] {
   return PLANS;
 }
 
+async function ensureCompany(
+  companyId: string,
+  name: string,
+  industry = "Manufacturing"
+): Promise<void> {
+  await prisma.company.upsert({
+    where: { id: companyId },
+    update: { name },
+    create: {
+      id: companyId,
+      name,
+      industry
+    }
+  });
+}
+
 async function ensureSubscription(companyId: string, workspaceId: string) {
+  const companyName = WORKSPACE_COMPANY_NAMES[workspaceId] ?? companyId.replace(/^company-/, "");
+  await ensureCompany(companyId, companyName);
+
   const existing = await prisma.subscription.findUnique({ where: { companyId } });
   if (existing) return existing;
 
@@ -138,6 +164,7 @@ export async function getSubscriptionForWorkspace(workspaceId: string): Promise<
 
 export async function activateSubscriptionFromStripe(input: {
   companyId: string;
+  companyName?: string;
   planTier: PlanTier;
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
@@ -146,6 +173,8 @@ export async function activateSubscriptionFromStripe(input: {
   currentPeriodEnd?: Date;
 }): Promise<void> {
   const { start, end } = currentPeriodBounds();
+  const companyName = input.companyName ?? input.companyId.replace(/^company-/, "");
+  await ensureCompany(input.companyId, companyName);
 
   await prisma.subscription.upsert({
     where: { companyId: input.companyId },
@@ -251,12 +280,21 @@ export async function startCheckout(input: {
   }
 
   const companyId = resolveCompanyIdForCheckout(input.workspaceId, input.companyName);
+  const planTier = input.planTier as PlanTier;
+  await ensureCompany(companyId, input.companyName.trim());
+
   await prisma.subscription.upsert({
     where: { companyId },
-    update: {},
+    update: {
+      planTier,
+      status: "trial",
+      billingCycle: "monthly",
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+    },
     create: {
       companyId,
-      planTier: "starter",
+      planTier,
       status: "trial",
       billingCycle: "monthly",
       currentPeriodStart: new Date(),

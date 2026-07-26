@@ -122,7 +122,7 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
                 <p className="text-lg font-semibold text-white">{subscription.plan.name}</p>
                 <p className="text-sm text-slate-400">
                   {subscription.plan.priceLabel}
-                  {subscription.plan.priceMonthlyUsd ? "/month" : ""} ·{" "}
+                  {subscription.plan.priceMonthlyIdr ? ` ${language === "id" ? "/bulan" : "/month"}` : ""} ·{" "}
                   <span className="capitalize">{subscription.status}</span>
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
