@@ -246,6 +246,29 @@ body {
   background-color: #e2e8f0 !important;
 }
 
+:root[data-appearance="light"] .pricing-plan-btn-secondary {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #0f172a !important;
+}
+
+:root[data-appearance="light"] .pricing-plan-btn-secondary:hover {
+  background-color: #1e293b !important;
+}
+
+:root[data-appearance="light"] .pricing-plan-btn-primary {
+  background-color: #0891b2 !important;
+  color: #ffffff !important;
+}
+
+:root[data-appearance="light"] .pricing-plan-btn-primary:hover {
+  background-color: #0e7490 !important;
+}
+
+:root[data-appearance="light"] .pricing-checkout-modal a.pricing-modal-title {
+  color: #0e7490 !important;
+}
+
 :root[data-appearance="light"] .ai-copilot-panel input::placeholder {
   color: #64748b !important;
 }
