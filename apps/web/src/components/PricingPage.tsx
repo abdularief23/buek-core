@@ -88,7 +88,7 @@ export function PricingPage({ onBack }: PricingPageProps) {
 
   async function handleCheckout(event: FormEvent) {
     event.preventDefault();
-    if (!selectedPlan || selectedPlan === "enterprise") return;
+    if (!selectedPlan) return;
     setSubmitting(true);
     try {
       const result = await checkoutPlan({ email, companyName, planTier: selectedPlan });
@@ -104,25 +104,17 @@ export function PricingPage({ onBack }: PricingPageProps) {
     }
   }
 
-  function openEnterpriseContact() {
-    setResultMessage(null);
-    setSelectedPlan("enterprise");
-  }
-
-  function mailtoEnterprise() {
+  function enterpriseMailtoHref() {
     const subject = encodeURIComponent("Buek Core Enterprise Inquiry");
     const body = encodeURIComponent(
       "Halo tim Buek Core,\n\nSaya tertarik dengan paket Enterprise.\n\nNama perusahaan:\nKontak:\nKebutuhan:\n"
     );
-    window.location.href = `mailto:${SALES_EMAIL}?subject=${subject}&body=${body}`;
+    return `mailto:${SALES_EMAIL}?subject=${subject}&body=${body}`;
   }
 
   function selectPlan(plan: PlanDefinition) {
     setResultMessage(null);
-    if (plan.tier === "enterprise") {
-      openEnterpriseContact();
-      return;
-    }
+    if (plan.tier === "enterprise") return;
     setSelectedPlan(plan.tier);
   }
 
@@ -149,7 +141,7 @@ export function PricingPage({ onBack }: PricingPageProps) {
             {plans.map((plan) => (
               <article
                 key={plan.tier}
-                className={`relative flex flex-col rounded-2xl border p-6 ${
+                className={`pricing-plan-card flex flex-col rounded-2xl border p-6 ${
                   plan.highlighted
                     ? "border-cyan-400/50 bg-cyan-400/5 shadow-lg shadow-cyan-500/10"
                     : "border-white/10 bg-white/[0.02]"
@@ -176,17 +168,27 @@ export function PricingPage({ onBack }: PricingPageProps) {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  type="button"
-                  className={`pricing-plan-btn mt-6 w-full cursor-pointer ${
-                    plan.highlighted
-                      ? "pricing-plan-btn-primary bg-cyan-500 text-white hover:bg-cyan-400"
-                      : "pricing-plan-btn-secondary border-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
-                  }`}
-                  onClick={() => selectPlan(plan)}
-                >
-                  {plan.tier === "enterprise" ? copy.contactSales : copy.getStarted}
-                </Button>
+                {plan.tier === "enterprise" ? (
+                  <a
+                    href={enterpriseMailtoHref()}
+                    className="pricing-plan-cta pricing-plan-btn pricing-plan-btn-secondary w-full"
+                  >
+                    {copy.contactSales}
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    className={`pricing-plan-cta pricing-plan-btn w-full ${
+                      plan.highlighted ? "pricing-plan-btn-primary" : "pricing-plan-btn-secondary"
+                    }`}
+                    onClick={() => selectPlan(plan)}
+                  >
+                    {copy.getStarted}
+                  </button>
+                )}
+                {plan.tier === "enterprise" ? (
+                  <p className="mt-2 text-center text-xs text-cyan-400">{SALES_EMAIL}</p>
+                ) : null}
               </article>
             ))}
           </div>
@@ -215,40 +217,6 @@ export function PricingPage({ onBack }: PricingPageProps) {
                 >
                   {copy.back}
                 </Button>
-              </div>
-            ) : selectedPlan === "enterprise" ? (
-              <div className="space-y-5 text-center">
-                <div>
-                  <h3 className="pricing-modal-title text-xl font-semibold text-white">{copy.enterpriseTitle}</h3>
-                  <p className="pricing-modal-body mt-2 text-sm text-slate-200">{copy.enterpriseBody}</p>
-                </div>
-                <div className="rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-4">
-                  <p className="pricing-modal-label text-xs uppercase tracking-wide text-slate-400">
-                    {copy.enterpriseEmail}
-                  </p>
-                  <a
-                    href={`mailto:${SALES_EMAIL}`}
-                    className="pricing-modal-title mt-1 block text-lg font-semibold text-cyan-300 hover:underline"
-                  >
-                    {SALES_EMAIL}
-                  </a>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button
-                    type="button"
-                    className="pricing-cancel-btn flex-1 border border-white/25 bg-slate-800 text-slate-100 hover:bg-slate-700"
-                    onClick={() => setSelectedPlan(null)}
-                  >
-                    {copy.cancel}
-                  </Button>
-                  <Button
-                    type="button"
-                    className="flex-1 bg-cyan-400 text-slate-950 hover:bg-cyan-300"
-                    onClick={mailtoEnterprise}
-                  >
-                    {copy.openEmail}
-                  </Button>
-                </div>
               </div>
             ) : (
               <form onSubmit={(event) => void handleCheckout(event)} className="space-y-5">
