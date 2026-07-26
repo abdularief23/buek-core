@@ -94,6 +94,8 @@ model Workspace {
   checklistRuns    OperatorChecklistRun[]
   memoryRecords    MemoryRecord[]
   agentActions     AgentAction[]
+  agentHeartbeatRuns AgentHeartbeatRun[]
+  workspaceGoals   WorkspaceGoal[]
   businessRules    BusinessRule[]
   lessonsLearned   LessonLearned[]
   customerComplaints CustomerComplaint[]
@@ -511,10 +513,46 @@ model AgentAction {
   input       Json
   output      Json
   status      String    @default("completed")
+  actorRole   String?
+  actorEmail  String?
+  traceId     String?
+  source      String    @default("copilot")
+  goalChain   Json?
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
 
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, source, createdAt])
+}
+
+model AgentHeartbeatRun {
+  id          String    @id @default(cuid())
+  workspaceId String
+  agentType   String
+  status      String    @default("completed")
+  summary     String
+  output      Json?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, startedAt])
+}
+
+model WorkspaceGoal {
+  id          String    @id @default(cuid())
+  workspaceId String
+  level       String
+  title       String
+  metric      String?
+  targetLabel String?
+  priority    Int       @default(0)
+  active      Boolean   @default(true)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, active])
 }
 
 model BusinessRule {

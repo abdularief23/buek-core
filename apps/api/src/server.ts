@@ -76,6 +76,12 @@ import {
 } from "./routes/knowledge.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
 import {
+  handleAuditLog,
+  handleAgentHeartbeats,
+  handleIssueGoalChain,
+  handleWorkspaceGoals
+} from "./routes/governance.js";
+import {
   handleBillingConfig,
   handleCheckout,
   handleGetSubscription,
@@ -334,6 +340,11 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   app.get("/api/knowledge/search", (req, res) => {
     void handleKnowledgeSearchRequest(req, res, discovery.modules);
   });
+
+  app.get("/api/data/:slug/governance/audit-log", (req, res) => void handleAuditLog(req, res));
+  app.get("/api/data/:slug/governance/agent-heartbeats", (req, res) => void handleAgentHeartbeats(req, res));
+  app.get("/api/data/:slug/governance/goals", (req, res) => void handleWorkspaceGoals(req, res));
+  app.get("/api/data/:slug/issues/:issueKey/goal-chain", (req, res) => void handleIssueGoalChain(req, res));
 
   app.get("/api/billing/plans", handleListPlans);
   app.get("/api/billing/config", (req, res) => handleBillingConfig(env, req, res));

@@ -1,4 +1,5 @@
 import { tenantPrimaryIssueKey } from "../../lib/tenant-theme.js";
+import { AgentHeartbeatPanel } from "../AgentHeartbeatPanel.js";
 import { TodayTimeline } from "../TodayTimeline.js";
 import type { RoleHomeProps } from "./shared.js";
 import { RoleHomeHeader } from "./shared.js";
@@ -80,6 +81,14 @@ export function SupervisorHome({ user, workspace, roleHome, onOpenWorkspace }: R
         ) : (
           <p className="buek-body text-slate-500">Tidak ada analisa engineering yang menunggu review.</p>
         )}
+      </section>
+
+      <section className="buek-section space-y-4">
+        <h2 className="buek-card-title text-slate-400">AI Agent Background</h2>
+        <p className="buek-small text-slate-500">
+          Shift monitor berjalan otomatis setiap 4 jam — cek isu terbuka & aturan kritis.
+        </p>
+        <AgentHeartbeatPanel workspaceId={workspace.id} />
       </section>
 
       <section className="buek-section space-y-4">

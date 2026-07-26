@@ -274,6 +274,19 @@ export function App() {
             );
           }
 
+          if (streamEvent.event === "usage_warning" && streamEvent.data && typeof streamEvent.data === "object") {
+            const reason = "reason" in streamEvent.data ? String(streamEvent.data.reason) : "";
+            if (reason) {
+              setMessages((currentMessages) =>
+                currentMessages.map((message) =>
+                  message.id === assistantMessage.id
+                    ? { ...message, content: `⚠ ${reason}\n\n${message.content}` }
+                    : message
+                )
+              );
+            }
+          }
+
           if (streamEvent.event === "error" && hasErrorMessage(streamEvent.data)) {
             const errorMessage = streamEvent.data.message;
             setMessages((currentMessages) =>
