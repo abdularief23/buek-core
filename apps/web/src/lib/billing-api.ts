@@ -8,6 +8,10 @@ export interface PlanDefinition {
   name: string;
   priceMonthlyIdr: number | null;
   priceLabel: string;
+  comparePriceIdr: number | null;
+  comparePriceLabel: string | null;
+  discountPercent: number | null;
+  audienceLabel: string;
   description: string;
   limits: {
     plants: number;
@@ -17,6 +21,7 @@ export interface PlanDefinition {
   };
   features: string[];
   highlighted?: boolean;
+  badge?: string;
 }
 
 export interface UsageMetric {
