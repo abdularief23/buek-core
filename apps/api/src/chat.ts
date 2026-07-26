@@ -7,6 +7,7 @@ import type { Request, Response } from "express";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ApiEnv } from "./config/env.js";
+import { recordUsage } from "./billing/service.js";
 import { tryExecuteActionFromMessage } from "./services/ai-actions.js";
 import {
   resolveChatDataContext,
@@ -255,6 +256,17 @@ export async function handleChatRequest(
     const workspace = findWorkspace(requestBody.workspaceId);
     const workspaceModule = findWorkspaceModule(workspace, modules);
     const workspaceSlug = workspace.id;
+
+    const usageCheck = await recordUsage(workspaceSlug, "copilot_queries");
+    if (!usageCheck.allowed) {
+      sendEvent(res, "error", {
+        code: "usage_limit_exceeded",
+        message: usageCheck.reason ?? "Usage limit exceeded."
+      });
+      res.end();
+      return;
+    }
+
     const rolePersona =
       typeof requestBody.chatPersona === "string" && requestBody.chatPersona.trim()
         ? requestBody.chatPersona

@@ -69,6 +69,35 @@ async function seedWorkspace(config: (typeof WORKSPACES)[number]) {
     }
   });
 
+  const periodEnd = new Date();
+  periodEnd.setMonth(periodEnd.getMonth() + 1);
+  const planTier = config.slug === "epson-factory" ? "pro" : "starter";
+
+  await prisma.subscription.upsert({
+    where: { companyId: company.id },
+    update: { planTier, status: config.slug === "epson-factory" ? "active" : "trial" },
+    create: {
+      companyId: company.id,
+      planTier,
+      status: config.slug === "epson-factory" ? "active" : "trial",
+      billingCycle: "monthly",
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: periodEnd
+    }
+  });
+
+  if (config.slug === "epson-factory") {
+    const existingUsage = await prisma.usageRecord.count({ where: { companyId: company.id } });
+    if (existingUsage === 0) {
+      await prisma.usageRecord.createMany({
+        data: [
+          { companyId: company.id, workspaceId: `ws-${config.slug}`, metric: "copilot_queries", count: 47 },
+          { companyId: company.id, workspaceId: `ws-${config.slug}`, metric: "investigations", count: 12 }
+        ]
+      });
+    }
+  }
+
   const workspace = await prisma.workspace.upsert({
     where: { slug: config.slug },
     update: {
