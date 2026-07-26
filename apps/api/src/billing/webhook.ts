@@ -46,6 +46,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
 
   await activateSubscriptionFromStripe({
     companyId,
+    companyName,
     planTier,
     stripeCustomerId:
       (typeof session.customer === "string" ? session.customer : session.customer?.id) ?? null,

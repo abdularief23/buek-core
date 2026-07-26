@@ -6,7 +6,7 @@ export type BillingProvider = "stripe" | "mock";
 export interface PlanDefinition {
   tier: PlanTier;
   name: string;
-  priceMonthlyUsd: number | null;
+  priceMonthlyIdr: number | null;
   priceLabel: string;
   description: string;
   limits: {
