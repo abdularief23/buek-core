@@ -32,6 +32,12 @@ model Company {
   updatedAt     DateTime            @updatedAt
 }
 
+model StripeWebhookEvent {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+}
+
 model Subscription {
   id                   String   @id @default(cuid())
   companyId            String   @unique

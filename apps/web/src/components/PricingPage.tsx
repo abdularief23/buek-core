@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { PreferencesMenu } from "./PreferencesMenu.js";
 import {
   checkoutPlan,
+  fetchBillingConfig,
   fetchPlans,
   type PlanDefinition,
   type PlanTier
@@ -26,7 +27,9 @@ const COPY = {
     email: "Email kerja",
     cancel: "Batal",
     confirm: "Aktifkan trial",
-    success: "Berhasil!"
+    confirmStripe: "Lanjut ke Stripe",
+    success: "Berhasil!",
+    stripeNote: "Pembayaran aman via Stripe · Trial 14 hari · Batal kapan saja"
   },
   en: {
     title: "Pricing & Plans",
@@ -40,7 +43,9 @@ const COPY = {
     email: "Work email",
     cancel: "Cancel",
     confirm: "Activate trial",
-    success: "Success!"
+    confirmStripe: "Continue to Stripe",
+    success: "Success!",
+    stripeNote: "Secure checkout via Stripe · 14-day trial · Cancel anytime"
   }
 } as const;
 
@@ -54,12 +59,17 @@ export function PricingPage({ onBack }: PricingPageProps) {
   const [companyName, setCompanyName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [stripeEnabled, setStripeEnabled] = useState(false);
 
   useEffect(() => {
     fetchPlans()
       .then(setPlans)
       .catch(() => undefined)
       .finally(() => setLoading(false));
+
+    fetchBillingConfig()
+      .then((config) => setStripeEnabled(config.stripeEnabled))
+      .catch(() => undefined);
   }, []);
 
   async function handleCheckout(event: FormEvent) {
@@ -68,7 +78,11 @@ export function PricingPage({ onBack }: PricingPageProps) {
     setSubmitting(true);
     try {
       const result = await checkoutPlan({ email, companyName, planTier: selectedPlan });
-      setResultMessage(result.message);
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+      setResultMessage(result.message ?? "Checkout complete.");
     } catch (error) {
       setResultMessage(error instanceof Error ? error.message : "Checkout failed.");
     } finally {
@@ -150,7 +164,9 @@ export function PricingPage({ onBack }: PricingPageProps) {
         )}
 
         <p className="mt-8 text-center text-xs text-slate-500">
-          Demo checkout — Stripe integration coming soon. All demo workspaces remain free.
+          {stripeEnabled
+            ? copy.stripeNote
+            : "Demo checkout — configure STRIPE_SECRET_KEY on the API for live Stripe billing."}
         </p>
       </section>
 
@@ -211,7 +227,11 @@ export function PricingPage({ onBack }: PricingPageProps) {
                     disabled={submitting}
                     className="flex-1 bg-cyan-400 text-slate-950 hover:bg-cyan-300"
                   >
-                    {copy.confirm}
+                    {submitting
+                      ? "…"
+                      : stripeEnabled && selectedPlan !== "enterprise"
+                        ? copy.confirmStripe
+                        : copy.confirm}
                   </Button>
                 </div>
               </form>

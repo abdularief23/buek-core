@@ -36,6 +36,23 @@ function resolveCompanyId(workspaceId: string): string {
   return WORKSPACE_TO_COMPANY[workspaceId] ?? `company-${workspaceId}`;
 }
 
+function slugifyCompanyName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
+function resolveCompanyIdForCheckout(workspaceId: string | undefined, companyName: string): string {
+  if (workspaceId) {
+    return resolveCompanyId(workspaceId);
+  }
+  const slug = slugifyCompanyName(companyName) || "new-customer";
+  return `company-${slug}`;
+}
+
 export interface UsageSummary {
   copilotQueries: { used: number; limit: number | null; percent: number | null };
   investigations: { used: number; limit: number | null; percent: number | null };
@@ -119,6 +136,59 @@ export async function getSubscriptionForWorkspace(workspaceId: string): Promise<
   };
 }
 
+export async function activateSubscriptionFromStripe(input: {
+  companyId: string;
+  planTier: PlanTier;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  status?: string;
+  currentPeriodStart?: Date;
+  currentPeriodEnd?: Date;
+}): Promise<void> {
+  const { start, end } = currentPeriodBounds();
+
+  await prisma.subscription.upsert({
+    where: { companyId: input.companyId },
+    update: {
+      planTier: input.planTier,
+      status: input.status ?? "active",
+      billingCycle: "monthly",
+      currentPeriodStart: input.currentPeriodStart ?? start,
+      currentPeriodEnd: input.currentPeriodEnd ?? end,
+      ...(input.stripeCustomerId ? { stripeCustomerId: input.stripeCustomerId } : {}),
+      ...(input.stripeSubscriptionId ? { stripeSubscriptionId: input.stripeSubscriptionId } : {})
+    },
+    create: {
+      companyId: input.companyId,
+      planTier: input.planTier,
+      status: input.status ?? "active",
+      billingCycle: "monthly",
+      currentPeriodStart: input.currentPeriodStart ?? start,
+      currentPeriodEnd: input.currentPeriodEnd ?? end,
+      stripeCustomerId: input.stripeCustomerId ?? null,
+      stripeSubscriptionId: input.stripeSubscriptionId ?? null
+    }
+  });
+}
+
+export async function cancelSubscriptionByStripeId(stripeSubscriptionId: string): Promise<void> {
+  const existing = await prisma.subscription.findFirst({
+    where: { stripeSubscriptionId }
+  });
+  if (!existing) return;
+
+  const { start, end } = currentPeriodBounds();
+  await prisma.subscription.update({
+    where: { id: existing.id },
+    data: {
+      planTier: "starter",
+      status: "cancelled",
+      currentPeriodStart: start,
+      currentPeriodEnd: end
+    }
+  });
+}
+
 export async function subscribeToPlan(
   workspaceId: string,
   planTier: string,
@@ -166,6 +236,7 @@ export async function startCheckout(input: {
   email: string;
   companyName: string;
   planTier: string;
+  workspaceId?: string;
 }): Promise<{ success: boolean; message: string; trialDays: number }> {
   if (!isValidPlanTier(input.planTier)) {
     throw new Error("Invalid plan tier.");
@@ -179,6 +250,20 @@ export async function startCheckout(input: {
     };
   }
 
+  const companyId = resolveCompanyIdForCheckout(input.workspaceId, input.companyName);
+  await prisma.subscription.upsert({
+    where: { companyId },
+    update: {},
+    create: {
+      companyId,
+      planTier: "starter",
+      status: "trial",
+      billingCycle: "monthly",
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+    }
+  });
+
   const planName = getPlan(input.planTier).name;
   return {
     success: true,
@@ -186,6 +271,8 @@ export async function startCheckout(input: {
     trialDays: 14
   };
 }
+
+export { resolveCompanyIdForCheckout };
 
 export async function recordUsage(
   workspaceId: string,

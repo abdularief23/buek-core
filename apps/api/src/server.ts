@@ -76,10 +76,11 @@ import {
 } from "./routes/knowledge.js";
 import { handleKnowledgeSearchRequest } from "./knowledge.js";
 import {
+  handleBillingConfig,
   handleCheckout,
   handleGetSubscription,
   handleListPlans,
-  handleSubscribe
+  handleStripeWebhook
 } from "./routes/billing.js";
 import {
   authenticateDemoUser,
@@ -105,6 +106,13 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   platform.installDomainModules(discovery.modules);
 
   app.use(cors({ origin: env.corsOrigin }));
+
+  app.post(
+    "/api/billing/webhook",
+    express.raw({ type: "application/json" }),
+    (req, res) => void handleStripeWebhook(env, req, res)
+  );
+
   app.use(express.json());
 
   const chatRateLimit = rateLimit({
@@ -128,7 +136,8 @@ export async function createServer(env: ApiEnv): Promise<Express> {
       build: process.env.GIT_COMMIT ?? "dev",
       features: {
         engineeringAnalysis: true,
-        loginPreferences: true
+        loginPreferences: true,
+        stripeBilling: Boolean(env.stripeSecretKey && env.stripeWebhookSecret)
       }
     });
   });
@@ -327,9 +336,9 @@ export async function createServer(env: ApiEnv): Promise<Express> {
   });
 
   app.get("/api/billing/plans", handleListPlans);
+  app.get("/api/billing/config", (req, res) => handleBillingConfig(env, req, res));
   app.get("/api/billing/subscription", (req, res) => void handleGetSubscription(req, res));
-  app.post("/api/billing/subscribe", (req, res) => void handleSubscribe(req, res));
-  app.post("/api/billing/checkout", (req, res) => void handleCheckout(req, res));
+  app.post("/api/billing/checkout", (req, res) => void handleCheckout(env, req, res));
 
   app.post("/api/ask", (_req, res) => {
     res.status(501).json({

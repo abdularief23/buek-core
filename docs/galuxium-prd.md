@@ -164,9 +164,11 @@ Buek Core separates AI reasoning (AI Core) from industry knowledge (Domain Modul
 
 | Phase | Integration | Status |
 |-------|-------------|--------|
-| MVP (Galuxium) | Mock checkout + plan upgrade API | **This release** |
-| Phase 2 | Stripe Checkout + webhooks | Post-hackathon |
+| MVP (Galuxium) | Stripe Checkout + webhooks + usage metering | **This release** |
+| Phase 2 | Stripe Customer Portal + annual billing | Post-hackathon |
 | Phase 3 | Midtrans (IDR) for Indonesia market | Q4 2026 |
+
+See [docs/stripe-billing.md](./stripe-billing.md) for setup instructions.
 
 ---
 

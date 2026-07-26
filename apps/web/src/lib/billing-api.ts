@@ -1,6 +1,7 @@
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
 
 export type PlanTier = "starter" | "pro" | "enterprise";
+export type BillingProvider = "stripe" | "mock";
 
 export interface PlanDefinition {
   tier: PlanTier;
@@ -38,6 +39,26 @@ export interface SubscriptionSummary {
   canUpgrade: boolean;
 }
 
+export interface CheckoutResult {
+  provider: BillingProvider;
+  checkoutUrl?: string;
+  sessionId?: string;
+  success?: boolean;
+  message?: string;
+  trialDays?: number;
+}
+
+export interface BillingConfig {
+  provider: BillingProvider;
+  stripeEnabled: boolean;
+}
+
+export async function fetchBillingConfig(): Promise<BillingConfig> {
+  const response = await fetch(`${configuredApiUrl}/api/billing/config`);
+  if (!response.ok) throw new Error("Unable to load billing config.");
+  return (await response.json()) as BillingConfig;
+}
+
 export async function fetchPlans(): Promise<PlanDefinition[]> {
   const response = await fetch(`${configuredApiUrl}/api/billing/plans`);
   if (!response.ok) throw new Error("Unable to load plans.");
@@ -58,7 +79,8 @@ export async function checkoutPlan(input: {
   email: string;
   companyName: string;
   planTier: PlanTier;
-}): Promise<{ success: boolean; message: string; trialDays: number }> {
+  workspaceId?: string;
+}): Promise<CheckoutResult> {
   const response = await fetch(`${configuredApiUrl}/api/billing/checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -68,27 +90,7 @@ export async function checkoutPlan(input: {
     const error = (await response.json()) as { error?: { message?: string } };
     throw new Error(error.error?.message ?? "Checkout failed.");
   }
-  return (await response.json()) as { success: boolean; message: string; trialDays: number };
-}
-
-export async function upgradePlan(
-  workspaceId: string,
-  planTier: PlanTier
-): Promise<{ success: boolean; message: string; subscription: SubscriptionSummary }> {
-  const response = await fetch(`${configuredApiUrl}/api/billing/subscribe`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ workspaceId, planTier })
-  });
-  if (!response.ok) {
-    const error = (await response.json()) as { error?: { message?: string } };
-    throw new Error(error.error?.message ?? "Unable to upgrade plan.");
-  }
-  return (await response.json()) as {
-    success: boolean;
-    message: string;
-    subscription: SubscriptionSummary;
-  };
+  return (await response.json()) as CheckoutResult;
 }
 
 export function formatUsageLabel(used: number, limit: number | null): string {
