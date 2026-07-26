@@ -12,23 +12,38 @@ export interface PlanDefinition {
   name: string;
   priceMonthlyIdr: number | null;
   priceLabel: string;
+  comparePriceIdr: number | null;
+  comparePriceLabel: string | null;
+  discountPercent: number | null;
+  audienceLabel: string;
   description: string;
   limits: PlanLimits;
   features: string[];
   highlighted?: boolean;
+  badge?: string;
 }
 
 export function formatIdr(amount: number): string {
   return `Rp ${amount.toLocaleString("id-ID")}`;
 }
 
+function discountPercent(original: number, current: number): number {
+  return Math.round((1 - current / original) * 100);
+}
+
+/** Market-aligned launch pricing (survey: BPS SME bands + ERP benchmark IDR 1.5–10 jt/bulan). */
 export const PLANS: PlanDefinition[] = [
   {
     tier: "starter",
     name: "Starter",
-    priceMonthlyIdr: 749_000,
-    priceLabel: formatIdr(749_000),
-    description: "Single-plant teams getting started with AI investigations.",
+    priceMonthlyIdr: 599_000,
+    priceLabel: formatIdr(599_000),
+    comparePriceIdr: 1_290_000,
+    comparePriceLabel: formatIdr(1_290_000),
+    discountPercent: discountPercent(1_290_000, 599_000),
+    audienceLabel: "5–19 karyawan · 1 pabrik",
+    badge: "Paling hemat",
+    description: "Pabrik kecil & UMKM manufaktur yang mulai digitalisasi investigasi AI.",
     limits: {
       plants: 1,
       users: 5,
@@ -36,20 +51,25 @@ export const PLANS: PlanDefinition[] = [
       copilotQueriesPerMonth: 200
     },
     features: [
-      "1 plant workspace",
-      "Up to 5 users",
-      "50 investigations/month",
-      "200 AI Copilot queries/month",
-      "Knowledge base sync",
-      "Email support"
+      "1 workspace pabrik",
+      "Hingga 5 pengguna",
+      "50 investigasi/bulan",
+      "200 query AI Copilot/bulan",
+      "Sinkronisasi knowledge base",
+      "Dukungan email"
     ]
   },
   {
     tier: "pro",
     name: "Pro",
-    priceMonthlyIdr: 2_999_000,
-    priceLabel: formatIdr(2_999_000),
-    description: "Multi-plant operations with unlimited AI assistance.",
+    priceMonthlyIdr: 1_999_000,
+    priceLabel: formatIdr(1_999_000),
+    comparePriceIdr: 4_990_000,
+    comparePriceLabel: formatIdr(4_990_000),
+    discountPercent: discountPercent(4_990_000, 1_999_000),
+    audienceLabel: "20–99 karyawan · 2–3 pabrik",
+    badge: "Paling populer",
+    description: "Operasi multi-pabrik dengan AI Copilot tanpa batas untuk tim produksi.",
     limits: {
       plants: 3,
       users: 25,
@@ -57,22 +77,27 @@ export const PLANS: PlanDefinition[] = [
       copilotQueriesPerMonth: null
     },
     features: [
-      "Up to 3 plant workspaces",
-      "Up to 25 users",
-      "Unlimited investigations",
-      "Unlimited AI Copilot",
-      "Supervisor approval workflow",
-      "PDF report export",
-      "Priority support"
+      "Hingga 3 workspace pabrik",
+      "Hingga 25 pengguna",
+      "Investigasi tanpa batas",
+      "AI Copilot tanpa batas",
+      "Workflow persetujuan supervisor",
+      "Ekspor laporan PDF",
+      "Dukungan prioritas"
     ],
     highlighted: true
   },
   {
     tier: "enterprise",
     name: "Enterprise",
-    priceMonthlyIdr: null,
-    priceLabel: "Kustom",
-    description: "Multi-tenant deployments with SSO, SLA, and custom modules.",
+    priceMonthlyIdr: 7_500_000,
+    priceLabel: `Mulai ${formatIdr(7_500_000)}`,
+    comparePriceIdr: 15_000_000,
+    comparePriceLabel: formatIdr(15_000_000),
+    discountPercent: discountPercent(15_000_000, 7_500_000),
+    audienceLabel: "100+ karyawan · multi-tenant",
+    badge: "Korporasi",
+    description: "Deployment multi-tenant dengan SSO, audit log, dan modul kustom.",
     limits: {
       plants: Number.POSITIVE_INFINITY,
       users: Number.POSITIVE_INFINITY,
@@ -80,12 +105,12 @@ export const PLANS: PlanDefinition[] = [
       copilotQueriesPerMonth: null
     },
     features: [
-      "Unlimited plants & users",
-      "SSO & audit logs",
-      "Custom domain modules",
+      "Pabrik & pengguna tanpa batas",
+      "SSO & audit log",
+      "Modul domain kustom",
       "Dedicated support & SLA",
-      "On-premise option",
-      "Volume pricing"
+      "Opsi on-premise",
+      "Harga volume"
     ]
   }
 ];
