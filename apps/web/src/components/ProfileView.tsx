@@ -2,9 +2,10 @@ import { Button } from "@buek/ui";
 import { useEffect, useState } from "react";
 import type { DemoUser, ModuleSummary, Workspace } from "../types.js";
 import {
+  checkoutPlan,
+  fetchBillingConfig,
   fetchSubscription,
   formatUsageLabel,
-  upgradePlan,
   type PlanTier,
   type SubscriptionSummary
 } from "../lib/billing-api.js";
@@ -47,6 +48,7 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
   const [upgrading, setUpgrading] = useState(false);
+  const [stripeEnabled, setStripeEnabled] = useState(false);
 
   useEffect(() => {
     fetchSubscription(workspace.id)
@@ -54,6 +56,10 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
       .catch((error: unknown) => {
         setBillingError(error instanceof Error ? error.message : "Unable to load billing.");
       });
+
+    fetchBillingConfig()
+      .then((config) => setStripeEnabled(config.stripeEnabled))
+      .catch(() => undefined);
   }, [workspace.id]);
 
   const settings = [
@@ -68,8 +74,20 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
     setUpgrading(true);
     setBillingError(null);
     try {
-      const result = await upgradePlan(workspace.id, planTier);
-      setSubscription(result.subscription);
+      const result = await checkoutPlan({
+        email: user.email,
+        companyName: workspace.organization,
+        planTier,
+        workspaceId: workspace.id
+      });
+
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
+      const refreshed = await fetchSubscription(workspace.id);
+      setSubscription(refreshed);
     } catch (error) {
       setBillingError(error instanceof Error ? error.message : "Upgrade failed.");
     } finally {
@@ -121,7 +139,15 @@ export function ProfileView({ workspace, user, installedModule, status }: Profil
                   className="shrink-0 border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/20"
                   onClick={() => void handleUpgrade(subscription.planTier === "starter" ? "pro" : "enterprise")}
                 >
-                  {upgrading ? "Upgrading…" : subscription.planTier === "starter" ? "Upgrade to Pro" : "Contact Enterprise"}
+                  {upgrading
+                    ? "Redirecting…"
+                    : stripeEnabled
+                      ? subscription.planTier === "starter"
+                        ? "Upgrade via Stripe"
+                        : "Contact Enterprise"
+                      : subscription.planTier === "starter"
+                        ? "Upgrade to Pro"
+                        : "Contact Enterprise"}
                 </Button>
               ) : null}
             </div>

@@ -139,7 +139,7 @@ Usage-based B2B SaaS for manufacturing plants. View live pricing at [core.buekwe
 | **Pro** | $199/mo | 3 plants, unlimited investigations & AI Copilot |
 | **Enterprise** | Custom | SSO, SLA, custom domain modules |
 
-Full product requirements: [docs/galuxium-prd.md](docs/galuxium-prd.md) · Executive summary: [docs/galuxium-executive-summary.md](docs/galuxium-executive-summary.md)
+Full product requirements: [docs/galuxium-prd.md](docs/galuxium-prd.md) · Executive summary: [docs/galuxium-executive-summary.md](docs/galuxium-executive-summary.md) · Stripe setup: [docs/stripe-billing.md](docs/stripe-billing.md)
 
 ---
 

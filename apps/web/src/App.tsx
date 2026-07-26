@@ -50,6 +50,7 @@ export function App() {
   const [roleHome, setRoleHome] = useState<RoleHomeData | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showPricing, setShowPricing] = useState(false);
+  const [billingNotice, setBillingNotice] = useState<string | null>(null);
   const [modules, setModules] = useState<ModuleSummary[]>([]);
   const [activeView, setActiveView] = useState<AppNavItem>("home");
   const [status, setStatus] = useState("Loading installed modules...");
@@ -132,6 +133,24 @@ export function App() {
       setAiContext(contextForView(activeView, currentUser.role, roleHome));
     }
   }, [activeView, isSignedIn, currentUser, roleHome]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const billing = params.get("billing");
+    if (!billing) return;
+
+    if (billing === "success") {
+      setBillingNotice("Payment successful. Your subscription will activate shortly.");
+      setActiveView("profile");
+    } else if (billing === "cancelled") {
+      setBillingNotice("Checkout cancelled. You can upgrade anytime from Profile.");
+    }
+
+    params.delete("billing");
+    params.delete("session_id");
+    const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+    window.history.replaceState({}, "", next);
+  }, []);
 
   function completeSignIn(data: LoginResponse) {
     setCurrentUser(data.user);
@@ -399,6 +418,18 @@ export function App() {
 
   return (
     <main className="app-shell min-h-screen">
+      {billingNotice ? (
+        <div className="border-b border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-center text-sm text-cyan-100">
+          {billingNotice}
+          <button
+            type="button"
+            className="ml-3 underline underline-offset-2"
+            onClick={() => setBillingNotice(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      ) : null}
       <AppShell
         activeView={activeView}
         user={currentUser}
