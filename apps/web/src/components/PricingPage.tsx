@@ -292,11 +292,7 @@ export function PricingPage({ onBack }: PricingPageProps) {
                     disabled={submitting}
                     className="flex-1 bg-cyan-400 text-slate-950 hover:bg-cyan-300"
                   >
-                    {submitting
-                      ? "…"
-                      : stripeEnabled && selectedPlan !== "enterprise"
-                        ? copy.confirmStripe
-                        : copy.confirm}
+                    {submitting ? "…" : stripeEnabled ? copy.confirmStripe : copy.confirm}
                   </Button>
                 </div>
               </form>
