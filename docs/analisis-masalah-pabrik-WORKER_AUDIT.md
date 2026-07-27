@@ -1,7 +1,7 @@
 # Analisis Masalah Pabrik — Worker Audit (`worker/index.ts`)
 
 > **Status:** ⏳ **MENUNGGU SOURCE** — audit belum bisa diisi sampai `worker/index.ts` di-import ke repo  
-> **Tanggal kerangka:** 2026-07-27 (diperbarui: +Audit 11–18 knowledge & AI quality)  
+> **Tanggal kerangka:** 2026-07-27 (diperbarui: Audit 19–22 AI Engineering Platform)  
 > **Gate:** Sprint AI-1 **DIBLOKIR** sampai **semua Audit P0** selesai (lihat prioritas di bawah)
 
 **Konteks terkait:**
@@ -12,14 +12,27 @@
 
 ---
 
-## Dua dimensi audit
+## Tiga pertanyaan framework
 
-Dokumen ini bukan sekadar review kode — ini **framework evaluasi AI Manufacturing**:
+Framework ini tidak hanya menjawab **"apakah AI bekerja?"**, tetapi juga:
+
+| Pertanyaan | Audit yang menjawab |
+|------------|---------------------|
+| Apakah kode & data siap? | 1–10, 12–13 |
+| Apakah AI bekerja **dengan cara yang benar**? | 7, 11, 14–15, **19–21** |
+| Apakah AI **dapat diaudit & dikembangkan** jangka panjang? | **19–22**, 16–18 |
+
+Ini membedakan **AI Engineering Platform** dari aplikasi yang sekadar menambahkan fitur AI.
+
+---
+
+## Dimensi audit
 
 | Dimensi | Audit | Fokus |
 |---------|-------|-------|
 | **Kode & arsitektur** | 1–10 | Endpoint, flow, AI entry, event, dependency, refactor |
 | **Pengetahuan & AI quality** | 11–18 | Domain rules, data quality, retrieval, explainability, learning loop |
+| **AI Engineering Platform** | **19–22** | Reasoning pipeline, knowledge lifecycle, safety, prompt governance |
 
 Keberhasilan AI di proyek ini lebih banyak ditentukan oleh **kualitas alur, data, dan pengambilan keputusan** daripada sekadar implementasi model.
 
@@ -36,6 +49,8 @@ Keberhasilan AI di proyek ini lebih banyak ditentukan oleh **kualitas alur, data
 | 7 | Decision Boundary |
 | 12 | Knowledge Quality |
 | 13 | Retrieval Readiness |
+| **19** | **AI Reasoning Pipeline** |
+| **20** | **Knowledge Lifecycle** |
 
 Plus **minimum kode** agar hook AI teridentifikasi: Audit **1, 2, 3, 8**.
 
@@ -46,12 +61,14 @@ Plus **minimum kode** agar hook AI teridentifikasi: Audit **1, 2, 3, 8**.
 | 11 | Domain Rule |
 | 14 | AI Explainability |
 | 15 | Human-in-the-Loop |
+| **21** | **AI Safety for Manufacturing** |
+| **22** | **Prompt Governance** |
 
 ### P2 — Peningkatan berkelanjutan
 
 | Audit | Nama |
 |-------|------|
-| 4 | Prompt Analysis (jika AI sudah ada) |
+| 4 | Prompt Analysis (jika AI sudah ada — detail di Audit 22) |
 | 9 | Dependency Graph |
 | 10 | Refactor Opportunity |
 | 16 | Learning Loop |
@@ -86,7 +103,9 @@ Audit membutuhkan file berikut (dari ZIP Vantis/AMP):
 | `seeds/local.sql` | Sampel kualitas data (Audit 12) |
 | `.jatevo/agent-memory.json` | Requirement AI asli dari builder |
 | `wrangler.jsonc` | Binding AI (env, secrets, AI gateway) |
-| `src/**/*.ts` | Frontend AI calls, HITL UI (Audit 15) |
+| `src/**/*.ts` | Frontend AI calls, HITL UI (Audit 15), safety guards (Audit 21) |
+| `prompts/` atau inline prompts | Audit 4, 22 — governance & versioning |
+| `packages/prompts/` (Buek Core) | Cross-ref prompt reuse saat bridge |
 
 **Lokasi target di monorepo (disarankan):**
 
@@ -129,6 +148,12 @@ worker/index.ts + schema + seeds
 │   ├── 17. AI Confidence
 │   └── 18. Knowledge Coverage
 │
+├── AI ENGINEERING PLATFORM (Audit 19–22)
+│   ├── 19. AI Reasoning Pipeline    ⭐ P0
+│   ├── 20. Knowledge Lifecycle      ⭐ P0
+│   ├── 21. AI Safety (Manufacturing)  P1
+│   └── 22. Prompt Governance          P1
+│
 └── DELIVERABLE
     ├── A. AI Integration Points
     ├── B. Sprint Recommendation
@@ -149,6 +174,10 @@ worker/index.ts + schema + seeds
 | Domain rules terimplementasi | _TBD_ | Audit 11 — X/Y rules |
 | Knowledge quality score | _TBD_ | Audit 12 — rendah/sedang/tinggi |
 | Retrieval readiness | _TBD_ | FTS / hybrid / embedding (Audit 13) |
+| Reasoning pipeline | _TBD_ | Monolith LLM vs staged (Audit 19) |
+| Knowledge lifecycle | _TBD_ | Auto-index vs review gate (Audit 20) |
+| AI safety violations | _TBD_ | Audit 21 — count of forbidden patterns |
+| Prompt governance | _TBD_ | Audit 22 — versioned / per-task |
 | Knowledge coverage (tahap investigasi) | _TBD_ | Audit 18 — X/Y tahap siap |
 | Stage AI 1–10 (dari AI_COPILOT) | _TBD_ | X/10 implemented |
 | Rekomendasi refactor prioritas | _TBD_ | Audit 10 |
@@ -840,6 +869,279 @@ Karena:
 
 ---
 
+# Audit 19 — AI Reasoning Pipeline ⭐⭐⭐⭐⭐ (P0)
+
+**Tujuan:** Audit **bagaimana AI berpikir** — bukan hanya data apa yang dibaca atau output apa yang dikeluarkan.
+
+Ini pembeda terbesar antara platform AI engineering dan aplikasi RCA yang sekadar `Problem → LLM → Jawaban`.
+
+### Anti-pattern (terlalu sederhana, sulit diaudit)
+
+```text
+Problem → LLM → Jawaban
+```
+
+### Target pipeline (setiap tahap terpisah & dapat diaudit)
+
+```text
+Problem
+      │
+      ▼
+Understanding          (Stage 1 — intent, entities, keywords)
+      │
+      ▼
+Classification         (quality / mechanical / electrical / material)
+      │
+      ▼
+Knowledge Retrieval    (similar cases, SOP — SEBELUM reasoning)
+      │
+      ▼
+Evidence Ranking       (rank retrieved items + historis)
+      │
+      ▼
+Reasoning              (LLM pada context terkurung + evidence)
+      │
+      ▼
+Recommendation         (ranked suggestions + confidence + evidence)
+      │
+      ▼
+Engineer Decision      (HITL — tidak ada auto-commit)
+```
+
+### Pipeline audit checklist
+
+| # | Pertanyaan | Ya / Tidak / Partial | Bukti (file:function) | Gap |
+|---|------------|----------------------|----------------------|-----|
+| 1 | Setiap tahap terpisah (fungsi/modul sendiri)? | _TBD_ | _TBD_ | _TBD_ |
+| 2 | Retrieval terjadi **sebelum** reasoning/LLM? | _TBD_ | _TBD_ | _TBD_ |
+| 3 | AI selalu punya evidence object (bukan hanya teks)? | _TBD_ | _TBD_ | _TBD_ |
+| 4 | Reasoning berdasarkan data historis + retrieval, bukan prompt saja? | _TBD_ | _TBD_ | _TBD_ |
+| 5 | Reasoning reproducible (same input → same retrieval set)? | _TBD_ | _TBD_ | _TBD_ |
+| 6 | Setiap tahap loggable (input/output per stage)? | _TBD_ | _TBD_ | _TBD_ |
+| 7 | Bisa swap model tanpa rewrite seluruh flow? | _TBD_ | _TBD_ | _TBD_ |
+| 8 | Classification deterministic atau LLM-assisted terpisah? | _TBD_ | _TBD_ | _TBD_ |
+
+### Pipeline map (isi setelah audit — actual vs target)
+
+| Tahap | Target module | Actual implementation | Terpisah? | Logged? |
+|-------|---------------|----------------------|-----------|---------|
+| Understanding | `services/ai/understanding.ts` | _TBD_ | _TBD_ | _TBD_ |
+| Classification | `services/ai/classify.ts` | _TBD_ | _TBD_ | _TBD_ |
+| Retrieval | `services/ai/retrieval.ts` | _TBD_ | _TBD_ | _TBD_ |
+| Evidence ranking | `services/ai/evidence-rank.ts` | _TBD_ | _TBD_ | _TBD_ |
+| Reasoning | `services/ai/reason.ts` | _TBD_ | _TBD_ | _TBD_ |
+| Recommendation | `services/ai/recommend.ts` | _TBD_ | _TBD_ | _TBD_ |
+
+### Dampak jika pipeline tidak ada
+
+| Risiko | Dampak saat model berubah |
+|--------|---------------------------|
+| Monolith prompt | Sulit debug regression |
+| Retrieval setelah LLM | Hallucination — model "mengarang" kasus serupa |
+| No stage logs | Tidak bisa audit keputusan di pabrik |
+| No evidence object | Explainability (Audit 14) mustahil |
+
+### Temuan Audit 19
+
+<!-- HASIL -->
+- _Belum diisi_
+
+**Gate Sprint AI-1:** Minimal retrieval → evidence → reasoning → recommendation sebagai **stage terpisah** (boleh stub, tidak boleh monolith `Problem → LLM`).
+
+---
+
+# Audit 20 — Knowledge Lifecycle ⭐⭐⭐⭐⭐ (P0)
+
+**Tujuan:** Knowledge tidak berhenti saat Problem ditutup — audit **alur dari kasus ke index AI** dan gate review.
+
+### Target lifecycle
+
+```text
+Problem Created
+        │
+        ▼
+Investigation
+        │
+        ▼
+Root Cause
+        │
+        ▼
+Corrective Action
+        │
+        ▼
+Verification
+        │
+        ▼
+Problem Closed
+        │
+        ▼
+Knowledge Candidate      ← auto atau manual trigger
+        │
+        ▼
+Knowledge Review         ← engineer / supervisor
+        │
+        ▼
+Knowledge Approved
+        │
+        ▼
+Knowledge Index          ← FTS / vector update
+        │
+        ▼
+AI Retrieval             ← Stage 2, 5, 10
+```
+
+### Pertanyaan audit wajib
+
+| # | Pertanyaan | Ya / Tidak / Partial | Implementasi aktual | Gap |
+|---|------------|----------------------|---------------------|-----|
+| 1 | Semua kasus closed otomatis jadi knowledge? | _TBD_ | _TBD_ | _TBD_ |
+| 2 | Ada proses review sebelum index? | _TBD_ | _TBD_ | _TBD_ |
+| 3 | Siapa yang menyetujui (role)? | _TBD_ | _TBD_ | _TBD_ |
+| 4 | Solusi tidak efektif bisa di-deprecate / flag? | _TBD_ | _TBD_ | _TBD_ |
+| 5 | Knowledge bisa diperbarui saat temuan baru? | _TBD_ | _TBD_ | _TBD_ |
+| 6 | Index di-update on approve (bukan on close langsung)? | _TBD_ | _TBD_ | _TBD_ |
+| 7 | Lesson learned terpisah dari raw problem record? | _TBD_ | _TBD_ | _TBD_ |
+| 8 | Audit trail: siapa approve/reject knowledge? | _TBD_ | _TBD_ | _TBD_ |
+
+### Status lifecycle per kasus (sample)
+
+| Status knowledge | Jumlah kasus (sample) | Masuk AI retrieval? | Risiko |
+|------------------|----------------------|---------------------|--------|
+| Tidak di-index | _TBD_ | Tidak | AI buta |
+| Candidate (belum review) | _TBD_ | **Tidak** (harusnya) | AI belajar prematur |
+| Approved | _TBD_ | Ya | OK |
+| Deprecated / failed solution | _TBD_ | Tidak / negative signal | Harus di-exclude |
+
+### Hubungan dengan audit lain
+
+| Audit | Relasi |
+|-------|--------|
+| 16 Learning Loop | Audit 20 = implementasi formal learning loop |
+| 12 Knowledge Quality | Review gate mencegah garbage masuk index |
+| 19 Reasoning Pipeline | Retrieval hanya dari `approved` knowledge |
+
+### Temuan Audit 20
+
+<!-- HASIL -->
+- _Belum diisi_
+
+**Gate Sprint AI-1:** Tidak boleh index semua closed problems tanpa review gate — atau dokumentasikan eksplisit sebagai tech debt + mitigasi.
+
+---
+
+# Audit 21 — AI Safety for Manufacturing ⭐⭐⭐⭐⭐ (P1)
+
+**Tujuan:** Domain manufaktur membutuhkan **batasan eksplisit** — AI sebagai copilot, bukan autonomous agent.
+
+### AI BOLEH ✅
+
+| # | Aksi | Endpoint / fitur | Terimplementasi? | Guard |
+|---|------|------------------|------------------|-------|
+| 1 | Sarankan kemungkinan Root Cause (ranked) | _TBD_ | _TBD_ | _TBD_ |
+| 2 | Tampilkan kasus serupa | _TBD_ | _TBD_ | _TBD_ |
+| 3 | Sarankan SOP / WI relevan | _TBD_ | _TBD_ | _TBD_ |
+| 4 | Hasilkan pertanyaan investigasi | _TBD_ | _TBD_ | _TBD_ |
+| 5 | Pre-fill corrective action (draft) | _TBD_ | _TBD_ | _TBD_ |
+| 6 | Bandingkan metric before/after (saran) | _TBD_ | _TBD_ | _TBD_ |
+| 7 | Generate draft lesson learned | _TBD_ | _TBD_ | _TBD_ |
+
+### AI TIDAK BOLEH ❌
+
+| # | Aksi terlarang | Ditemukan di kode? | Lokasi | Severity |
+|---|----------------|-------------------|--------|----------|
+| 1 | Menutup Problem otomatis | _TBD_ | _TBD_ | Critical |
+| 2 | Mengubah Root Cause tanpa persetujuan engineer | _TBD_ | _TBD_ | Critical |
+| 3 | Menghapus Corrective Action | _TBD_ | _TBD_ | Critical |
+| 4 | Mengubah data historis / closed records | _TBD_ | _TBD_ | Critical |
+| 5 | Menyetujui hasil verifikasi | _TBD_ | _TBD_ | Critical |
+| 6 | Mengubah priority tanpa role check | _TBD_ | _TBD_ | High |
+| 7 | Auto-select satu RCA tanpa HITL | _TBD_ | _TBD_ | High |
+
+### Safety enforcement layer
+
+| Layer | Ada? | Lokasi | Cakup semua endpoint AI? |
+|-------|------|--------|--------------------------|
+| Worker validation (reject forbidden writes) | _TBD_ | _TBD_ | _TBD_ |
+| DB permissions / triggers | _TBD_ | _TBD_ | _TBD_ |
+| UI disable (no button) | _TBD_ | _TBD_ | _TBD_ |
+| Tool guard di LLM (function allowlist) | _TBD_ | _TBD_ | _TBD_ |
+| Audit log on violation attempt | _TBD_ | _TBD_ | _TBD_ |
+
+### Cross-ref Buek Core
+
+- `packages/guardrails/` — manufacturing capabilities allowlist
+- `apps/api/src/billing/usage.ts` — hard limits
+- `apps/api/src/services/audit-log.ts` — trace AI actions
+
+### Temuan Audit 21
+
+<!-- HASIL -->
+- _Belum diisi_
+
+**Gate production pilot:** Zero critical violations di tabel "AI TIDAK BOLEH".
+
+---
+
+# Audit 22 — Prompt Governance ⭐⭐⭐⭐⭐ (P1)
+
+**Tujuan:** Seiring fitur bertambah, prompt adalah **aset sistem** — harus dapat dikelola, diuji, dan diganti saat model berubah.
+
+Melengkapi Audit 4 (analisis kualitas prompt) dengan **tata kelola operasional**.
+
+### Prompt inventory & separation
+
+| Task / stage | File prompt terpisah? | Path | Version | Last changed | Owner |
+|--------------|----------------------|------|---------|--------------|-------|
+| Understanding | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Classification | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Similar case summary | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| RCA suggestion | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Corrective action | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Lesson learned | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Chat / copilot umum | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+
+### Governance checklist
+
+| # | Pertanyaan | Ya / Tidak | Bukti |
+|---|------------|------------|-------|
+| 1 | Prompt dipisah per tugas (bukan satu mega-prompt)? | _TBD_ | _TBD_ |
+| 2 | Prompt memiliki versi (semver / git tag / id)? | _TBD_ | _TBD_ |
+| 3 | Ada pengujian prompt (fixture input → expected shape)? | _TBD_ | _TBD_ |
+| 4 | Perubahan prompt terdokumentasi (changelog)? | _TBD_ | _TBD_ |
+| 5 | Prompt mudah diganti saat model AI berubah? | _TBD_ | _TBD_ |
+| 6 | Prompt tidak hardcoded tersebar di 10+ file? | _TBD_ | _TBD_ |
+| 7 | System prompt terpisah dari user context injection? | _TBD_ | _TBD_ |
+| 8 | Prompt ID tercatat di audit log per AI call? | _TBD_ | _TBD_ |
+
+### Target struktur (AMP & Buek Core)
+
+```text
+prompts/
+├── understanding/v1.md
+├── classification/v1.md
+├── rca-suggest/v2.md
+├── lesson-learned/v1.md
+└── CHANGELOG.md
+
+worker/services/ai/
+└── loadPrompt(name, version)  → inject context at runtime
+```
+
+### Hubungan Audit 4 vs 22
+
+| Audit 4 | Audit 22 |
+|---------|----------|
+| Kualitas isi prompt | Tata kelola & operasional |
+| Hallucination risk | Versioning & regression test |
+| One-time review | Ongoing maintenance |
+
+### Temuan Audit 22
+
+<!-- HASIL -->
+- _Belum diisi_
+
+---
+
 # Deliverable A — AI Integration Points
 
 **Diisi setelah Audit P0 selesai.** Titik hook terbaik untuk setiap Stage AI tanpa merusak flow existing.
@@ -872,11 +1174,13 @@ Sprint 0b — Data quality fix (jika Audit 12–13 rendah)
     ↓
 Sprint A — Refactor hook yang sudah ada (Audit 10, jika perlu)
     ↓
-Sprint AI-1 — Hanya hook Deliverable A + retrieval strategy Audit 13
+Sprint AI-1 — Staged pipeline (Audit 19) + retrieval (13) + hooks (Deliverable A)
     ↓
-Sprint AI-2 — Explainability + HITL (Audit 14–15)
+Sprint AI-1b — Knowledge lifecycle review gate (Audit 20)
     ↓
-Sprint B+ — Master data, indexes, learning loop
+Sprint AI-2 — Explainability + HITL + Safety (Audit 14–15, 21)
+    ↓
+Sprint AI-3 — Prompt governance + learning loop (Audit 22, 16)
 ```
 
 ### Sprint AI-1 scope (isi setelah audit)
@@ -889,17 +1193,12 @@ Sprint B+ — Master data, indexes, learning loop
 
 - Fitur AI yang bentrok dengan handler existing (tanpa refactor)
 - Duplikasi helper yang sudah ada di worker
-- Auto-write ke DB tanpa engineer confirm
-
----
-
-### Yang TIDAK boleh masuk Sprint AI-1
-
-- Fitur AI yang bentrok dengan handler existing (tanpa refactor)
-- Duplikasi helper yang sudah ada di worker
-- Auto-write ke DB tanpa engineer confirm (Audit 7, 15)
-- Similar case search jika Audit 12–13 = data tidak siap (kecuali ada rencana enrichment Stage 1)
+- Auto-write ke DB tanpa engineer confirm (Audit 7, 15, 21)
+- Monolith `Problem → LLM → answer` tanpa staged pipeline (Audit 19)
+- Index semua closed cases tanpa review gate (Audit 20)
+- Similar case search jika Audit 12–13 = data tidak siap (kecuali enrichment Stage 1)
 - Confidence score tanpa explainability (Audit 14, 17)
+- Prompt hardcoded di handler tanpa rencana governance (Audit 22)
 
 ---
 
@@ -907,8 +1206,8 @@ Sprint B+ — Master data, indexes, learning loop
 
 Setelah audit selesai, perbarui:
 
-- [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — Implementation Status Matrix (kolom AMP)
-- [`ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md) — gap baru dari Audit 11–18 jika perlu
+- [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — Implementation Status Matrix + target reasoning pipeline
+- [`ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md) — gap dari Audit 11–22 jika perlu
 
 ---
 
@@ -929,6 +1228,8 @@ Setelah audit selesai, perbarui:
 - [ ] Audit 8 — Event flow actual vs target
 - [ ] Audit 12 — Knowledge Quality score ⭐
 - [ ] Audit 13 — Retrieval readiness + strategi FTS/hybrid ⭐
+- [ ] Audit 19 — AI Reasoning Pipeline (staged, bukan monolith) ⭐
+- [ ] Audit 20 — Knowledge Lifecycle (review gate sebelum index) ⭐
 - [ ] Deliverable A — AI Integration Points
 - [ ] Deliverable B — Sprint AI-1 scope
 - [ ] Deliverable C — Update `AI_COPILOT.md`
@@ -939,6 +1240,8 @@ Setelah audit selesai, perbarui:
 - [ ] Audit 11 — Domain Rule (implemented / missing / hardcoded)
 - [ ] Audit 14 — Explainability per output type
 - [ ] Audit 15 — Human-in-the-Loop UI/API
+- [ ] Audit 21 — AI Safety for Manufacturing (zero critical violations)
+- [ ] Audit 22 — Prompt Governance (separation + versioning)
 
 ### P2 — Peningkatan berkelanjutan
 
@@ -965,17 +1268,23 @@ Setelah audit selesai, perbarui:
 
 ### Fase 2 — Pengetahuan & AI quality (P0 gate)
 
-8. Baca `migrations/` CHECK + validasi worker — domain rules (Audit 11, bisa parallel P1)
-9. Sample 10–20 records — skor kualitas deskripsi, RCA, action (Audit 12)
-10. Field readiness + pilih FTS vs hybrid vs embedding (Audit 13)
-11. Cek evidence pada output AI existing (Audit 14, P1)
-12. Cek UI: pilih / edit / tolak suggestion (Audit 15, P1)
-13. Cek closed → knowledge index (Audit 16–18, P2)
+8. Sample records — skor kualitas (Audit 12)
+9. Field readiness + strategi search (Audit 13)
+10. Map reasoning pipeline actual vs target (Audit 19) ⭐
+11. Trace knowledge: close → index → retrieval (Audit 20) ⭐
+12. Domain rules di migrations/worker (Audit 11, parallel P1)
 
-### Fase 3 — Deliverable
+### Fase 3 — Platform & governance (P1)
 
-14. Isi Deliverable A–C → lift gate Sprint AI-1
+13. Safety matrix: boleh vs tidak boleh (Audit 21)
+14. Prompt inventory + versioning (Audit 22)
+15. Explainability & HITL (Audit 14–15)
+16. Learning loop & coverage (Audit 16–18, P2)
+
+### Fase 4 — Deliverable
+
+17. Isi Deliverable A–C → lift gate Sprint AI-1
 
 ---
 
-*Dokumen ini adalah framework evaluasi AI Manufacturing — gate wajib sebelum Sprint AI-1. Jangan implementasi fitur AI sampai Audit P0 tercentang.*
+*Framework evaluasi AI Manufacturing Platform (22 audit) — gate wajib sebelum Sprint AI-1.*

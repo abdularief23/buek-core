@@ -37,7 +37,9 @@ AMP dirancang sebagai **AI Manufacturing Copilot**. Data schema (Problem, RCA, P
 
 **Jangan** implementasi chatbot generik — ikuti spesifikasi lengkap di [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md).
 
-**Buek Core partial:** `apps/api/src/services/investigation-copilot.ts` sudah punya similar cases, possible causes, countermeasures, SOP refs — reuse saat bridge.
+**Buek Core partial:** `investigation-copilot.ts` — reuse saat bridge; target AMP harus **staged reasoning pipeline** (Audit 19), bukan monolith LLM.
+
+**Platform audits (P0):** Reasoning Pipeline + Knowledge Lifecycle — lihat [`WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md) Audit 19–20.
 
 ---
 
@@ -371,7 +373,7 @@ Lihat [`analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORK
 6. **Cek mapping layer** — jangan expose raw DB row ke frontend
 7. **Baca PROJECT_CONTEXT.md** untuk visi Buek Core sebelum fitur besar
 8. **Baca AI_COPILOT.md** sebelum menambah fitur AI — AI adalah copilot, bukan add-on
-9. **Jangan mulai Sprint AI-1** sebelum Audit P0 di `WORKER_AUDIT.md` selesai (termasuk Knowledge Quality & Retrieval Readiness)
+9. **Jangan mulai Sprint AI-1** sebelum Audit P0 — termasuk **19** (reasoning pipeline) & **20** (knowledge lifecycle)
 
 ---
 

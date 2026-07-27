@@ -293,6 +293,23 @@ Engineer baru pun dapat menyelesaikan lebih cepat — ini adalah **compound valu
 
 ---
 
+## AI Reasoning Pipeline (wajib — bukan Problem → LLM → jawaban)
+
+Setiap stage AI harus mengikuti **pipeline bernalar terpisah** yang dapat diaudit. Detail audit: [`WORKER_AUDIT.md` Audit 19–20](./analisis-masalah-pabrik-WORKER_AUDIT.md).
+
+```text
+Problem → Understanding → Classification → Retrieval → Evidence Rank → Reasoning → Recommendation → Engineer Decision
+```
+
+| Prinsip | Artinya |
+|---------|---------|
+| Retrieval **sebelum** reasoning | LLM tidak mengarang kasus serupa |
+| Evidence object wajib | Setiap rekomendasi punya dasar ter trace |
+| Stages terpisah & loggable | Model bisa diganti tanpa rewrite monolith |
+| Knowledge lifecycle | Close → candidate → review → approved → index (Audit 20) |
+
+---
+
 ## AI Architecture (target)
 
 ### Event-driven pipeline
@@ -436,13 +453,11 @@ Saat implementasi prompt (Worker atau Buek Core):
 
 ## Audit Checklist: `worker/index.ts` (wajib sebelum Sprint AI-1)
 
-**Jangan audit ad-hoc** — gunakan metodologi **18 audit** di [`WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md):
+**Jangan audit ad-hoc** — gunakan metodologi **22 audit** di [`WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md):
 
-**Kode (1–10):** Entry point, business flow, AI entry, prompt, knowledge flow, memory, decision boundary, event, dependency, refactor.
+**Kode (1–10)** · **Pengetahuan (11–18)** · **AI Engineering Platform (19–22):** Reasoning pipeline, knowledge lifecycle, manufacturing safety, prompt governance.
 
-**Pengetahuan & AI quality (11–18):** Domain rules, knowledge quality, retrieval readiness, explainability, human-in-the-loop, learning loop, confidence, knowledge coverage.
-
-**Gate Sprint AI-1:** Audit **P0** selesai (5, 6, 7, 12, 13 + minimum 1, 2, 3, 8).
+**Gate Sprint AI-1:** Audit **P0** — termasuk **19** (staged pipeline) dan **20** (knowledge lifecycle).
 
 **Status saat ini:** ⏳ menunggu import source AMP ke repo.
 
