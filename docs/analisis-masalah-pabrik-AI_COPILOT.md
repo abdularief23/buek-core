@@ -436,20 +436,13 @@ Saat implementasi prompt (Worker atau Buek Core):
 
 ## Audit Checklist: `worker/index.ts` (wajib sebelum Sprint AI-1)
 
-**Jangan audit ad-hoc** — gunakan metodologi lengkap 10 audit di [`WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md):
+**Jangan audit ad-hoc** — gunakan metodologi **18 audit** di [`WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md):
 
-1. Entry Point (endpoint map)
-2. Business Flow (trace per operasi)
-3. AI Entry (semua pemanggilan model)
-4. Prompt Analysis
-5. Knowledge Flow
-6. Memory strategy
-7. Decision Boundary
-8. Event Flow
-9. Dependency Graph
-10. Refactor Opportunity
+**Kode (1–10):** Entry point, business flow, AI entry, prompt, knowledge flow, memory, decision boundary, event, dependency, refactor.
 
-**Hasil audit** → isi Implementation Status Matrix di atas + §11 AI Integration Points + §12 Sprint Recommendation.
+**Pengetahuan & AI quality (11–18):** Domain rules, knowledge quality, retrieval readiness, explainability, human-in-the-loop, learning loop, confidence, knowledge coverage.
+
+**Gate Sprint AI-1:** Audit **P0** selesai (5, 6, 7, 12, 13 + minimum 1, 2, 3, 8).
 
 **Status saat ini:** ⏳ menunggu import source AMP ke repo.
 

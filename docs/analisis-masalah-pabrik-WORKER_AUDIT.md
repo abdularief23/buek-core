@@ -1,8 +1,8 @@
 # Analisis Masalah Pabrik — Worker Audit (`worker/index.ts`)
 
 > **Status:** ⏳ **MENUNGGU SOURCE** — audit belum bisa diisi sampai `worker/index.ts` di-import ke repo  
-> **Tanggal kerangka:** 2026-07-27  
-> **Gate:** Sprint AI-1 **DIBLOKIR** sampai dokumen ini selesai diisi (semua Audit 1–10)
+> **Tanggal kerangka:** 2026-07-27 (diperbarui: +Audit 11–18 knowledge & AI quality)  
+> **Gate:** Sprint AI-1 **DIBLOKIR** sampai **semua Audit P0** selesai (lihat prioritas di bawah)
 
 **Konteks terkait:**
 
@@ -11,6 +11,54 @@
 - [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md)
 
 ---
+
+## Dua dimensi audit
+
+Dokumen ini bukan sekadar review kode — ini **framework evaluasi AI Manufacturing**:
+
+| Dimensi | Audit | Fokus |
+|---------|-------|-------|
+| **Kode & arsitektur** | 1–10 | Endpoint, flow, AI entry, event, dependency, refactor |
+| **Pengetahuan & AI quality** | 11–18 | Domain rules, data quality, retrieval, explainability, learning loop |
+
+Keberhasilan AI di proyek ini lebih banyak ditentukan oleh **kualitas alur, data, dan pengambilan keputusan** daripada sekadar implementasi model.
+
+---
+
+## Prioritas audit (dampak untuk AI Manufacturing)
+
+### P0 — Wajib sebelum Sprint AI-1 (gate)
+
+| Audit | Nama |
+|-------|------|
+| 5 | Knowledge Flow |
+| 6 | Memory Strategy |
+| 7 | Decision Boundary |
+| 12 | Knowledge Quality |
+| 13 | Retrieval Readiness |
+
+Plus **minimum kode** agar hook AI teridentifikasi: Audit **1, 2, 3, 8**.
+
+### P1 — Sebelum AI digunakan luas (production pilot)
+
+| Audit | Nama |
+|-------|------|
+| 11 | Domain Rule |
+| 14 | AI Explainability |
+| 15 | Human-in-the-Loop |
+
+### P2 — Peningkatan berkelanjutan
+
+| Audit | Nama |
+|-------|------|
+| 4 | Prompt Analysis (jika AI sudah ada) |
+| 9 | Dependency Graph |
+| 10 | Refactor Opportunity |
+| 16 | Learning Loop |
+| 17 | AI Confidence |
+| 18 | Knowledge Coverage |
+
+**Gate Sprint AI-1:** P0 checklist ✅ + Deliverable A (integration points) + Deliverable B (sprint scope).
 
 ## Mengapa audit ini wajib sebelum Sprint AI-1
 
@@ -31,13 +79,14 @@ Audit membutuhkan file berikut (dari ZIP Vantis/AMP):
 
 | File / folder | Untuk audit |
 |---------------|-------------|
-| `worker/index.ts` | Audit 1–10 (utama) |
+| `worker/index.ts` | Audit 1–10 (kode & arsitektur) |
 | `worker/**/*.ts` | Jika sudah dipecah |
-| `src/db/schema.ts` | Audit 5, 7 (knowledge & decision boundary) |
-| `migrations/` | Konfirmasi tabel yang tersedia untuk AI context |
+| `src/db/schema.ts` | Audit 5, 7, 11, 13, 18 |
+| `migrations/` | CHECK constraints, domain rules (Audit 11) |
+| `seeds/local.sql` | Sampel kualitas data (Audit 12) |
 | `.jatevo/agent-memory.json` | Requirement AI asli dari builder |
 | `wrangler.jsonc` | Binding AI (env, secrets, AI gateway) |
-| `src/**/*.ts` | Frontend AI calls (fetch ke worker) |
+| `src/**/*.ts` | Frontend AI calls, HITL UI (Audit 15) |
 
 **Lokasi target di monorepo (disarankan):**
 
@@ -56,20 +105,34 @@ Setelah import, jalankan audit dan isi semua section `<!-- HASIL -->` di bawah.
 ## Struktur deliverable akhir
 
 ```text
-worker/index.ts
+worker/index.ts + schema + seeds
 │
-├── 1. Endpoint Map
-├── 2. Database Flow (per operasi bisnis)
-├── 3. AI Flow (jika ada)
-├── 4. Prompt Review (jika ada)
-├── 5. Event Lifecycle
-├── 6. Knowledge Flow
-├── 7. Decision Boundary
-├── 8. Dependency Graph
-├── 9. Sequence Diagram
-├── 10. Refactor Recommendation
-├── 11. AI Integration Points (rekomendasi hook)
-└── 12. Sprint Recommendation (post-audit)
+├── KODE & ARSITEKTUR (Audit 1–10)
+│   ├── 1. Endpoint Map
+│   ├── 2. Database / Business Flow
+│   ├── 3. AI Flow (entry points)
+│   ├── 4. Prompt Review
+│   ├── 5. Knowledge Flow          ⭐ P0
+│   ├── 6. Memory Strategy         ⭐ P0
+│   ├── 7. Decision Boundary       ⭐ P0
+│   ├── 8. Event Lifecycle
+│   ├── 9. Dependency Graph
+│   └── 10. Refactor Recommendation
+│
+├── PENGETAHUAN & AI QUALITY (Audit 11–18)
+│   ├── 11. Domain Rule Audit
+│   ├── 12. Knowledge Quality      ⭐ P0
+│   ├── 13. Retrieval Readiness    ⭐ P0
+│   ├── 14. AI Explainability
+│   ├── 15. Human-in-the-Loop
+│   ├── 16. Learning Loop
+│   ├── 17. AI Confidence
+│   └── 18. Knowledge Coverage
+│
+└── DELIVERABLE
+    ├── A. AI Integration Points
+    ├── B. Sprint Recommendation
+    └── C. Update AI_COPILOT status matrix
 ```
 
 ---
@@ -83,9 +146,13 @@ worker/index.ts
 | Pemanggilan AI ditemukan | _TBD_ | 0 = belum ada di worker |
 | AI trigger on `problem.created` | _TBD_ | Ya / Tidak |
 | Decision boundary benar | _TBD_ | Suggestion vs auto-write |
+| Domain rules terimplementasi | _TBD_ | Audit 11 — X/Y rules |
+| Knowledge quality score | _TBD_ | Audit 12 — rendah/sedang/tinggi |
+| Retrieval readiness | _TBD_ | FTS / hybrid / embedding (Audit 13) |
+| Knowledge coverage (tahap investigasi) | _TBD_ | Audit 18 — X/Y tahap siap |
 | Stage AI 1–10 (dari AI_COPILOT) | _TBD_ | X/10 implemented |
-| Rekomendasi refactor prioritas | _TBD_ | Module pertama yang dipecah |
-| Sprint AI-1 siap? | **Tidak** | Tunggu audit selesai |
+| Rekomendasi refactor prioritas | _TBD_ | Audit 10 |
+| Sprint AI-1 siap? | **Tidak** | Tunggu Audit P0 selesai |
 
 ---
 
@@ -239,7 +306,7 @@ workers-ai | vectorize | embedding
 
 ---
 
-# Audit 5 — Knowledge Flow (apa yang dibaca AI?)
+# Audit 5 — Knowledge Flow (apa yang dibaca AI?) ⭐ P0
 
 **Tujuan:** Tentukan apakah AI hanya membaca Problem atau seluruh histori.
 
@@ -276,7 +343,7 @@ Problem
 
 ---
 
-# Audit 6 — Memory (strategi konteks AI)
+# Audit 6 — Memory (strategi konteks AI) ⭐ P0
 
 **Tujuan:** Identifikasi mekanisme memori / retrieval.
 
@@ -300,7 +367,7 @@ Problem
 
 ---
 
-# Audit 7 — Decision Boundary (sangat kritis)
+# Audit 7 — Decision Boundary (sangat kritis) ⭐ P0
 
 **Tujuan:** Pastikan AI tidak langsung menulis keputusan engineer ke database.
 
@@ -475,9 +542,307 @@ lib/response.ts
 
 ---
 
-# 11. AI Integration Points (rekomendasi setelah audit)
+# Audit 11 — Domain Rule Audit ⭐⭐⭐⭐⭐ (P1)
 
-**Diisi setelah Audit 1–10.** Titik hook terbaik untuk setiap Stage AI tanpa merusak flow existing.
+**Tujuan:** AI tidak boleh hanya memahami struktur tabel — AI harus mengikuti **aturan bisnis manufaktur** yang sama dengan engineer.
+
+**Sumber temuan:** `worker/index.ts` (validasi), `migrations/` (CHECK constraints), `schema.ts`, UI guards.
+
+### Pertanyaan audit wajib
+
+| # | Business Rule | Implemented | Missing | Hardcoded | Lokasi (file:line / migration) | AI harus tahu? |
+|---|---------------|-------------|---------|-----------|-------------------------------|----------------|
+| 1 | Satu Problem boleh >1 Root Cause? | _TBD_ | _TBD_ | _TBD_ | _TBD_ | Ya |
+| 2 | Kapan status boleh `closed`? | _TBD_ | _TBD_ | _TBD_ | _TBD_ | Ya |
+| 3 | Semua Corrective Action harus selesai sebelum close? | _TBD_ | _TBD_ | _TBD_ | _TBD_ | Ya |
+| 4 | Kaizen wajib setelah verifikasi? | _TBD_ | _TBD_ | _TBD_ | _TBD_ | Ya |
+| 5 | Siapa berwenang ubah Priority? | _TBD_ | _TBD_ | _TBD_ | _TBD_ | Ya |
+| 6 | Downtime selalu terkait Problem? | _TBD_ | _TBD_ | _TBD_ | _TBD_ | Ya |
+| 7 | Verification wajib sebelum close? | _TBD_ | _TBD_ | _TBD_ | _TBD_ | Ya |
+| 8 | Root Cause harus linked sebelum Action? | _TBD_ | _TBD_ | _TBD_ | _TBD_ | Ya |
+
+### Ringkasan status aturan
+
+```text
+Business Rule
+├── Implemented   → enforce di worker +/atau DB CHECK
+├── Missing       → tidak ada validasi — AI bisa sarankan langkah ilegal
+└── Hardcoded     → magic string / if di satu tempat — risiko drift
+```
+
+### Dampak ke AI
+
+| Status aturan | Risiko jika AI tidak diberi konteks |
+|---------------|-------------------------------------|
+| Missing | AI sarankan close tanpa verification |
+| Hardcoded | AI tidak tahu rule berubah di branch lain |
+| Implemented | Rule bisa di-inject ke system prompt / tool guard |
+
+### Temuan Audit 11
+
+<!-- HASIL -->
+- _Belum diisi_
+
+---
+
+# Audit 12 — Knowledge Quality Audit ⭐⭐⭐⭐⭐ (P0)
+
+**Tujuan:** AI hanya sebaik kualitas data yang dimilikinya — **garbage in, garbage out**.
+
+**Sumber:** Sample 10–20 Problem dari `seeds/local.sql` atau production anonymized; inspeksi field di schema + isi aktual.
+
+### Checklist kualitas per entitas
+
+| Field / aspek | Kriteria baik | Kriteria buruk | Sample audit (n=__) | Skor |
+|---------------|---------------|----------------|---------------------|------|
+| Problem Description | Kalimat lengkap: gejala + frekuensi + konteks | "error", "rusak", satu kata | _TBD_ | _TBD_ |
+| Root Cause | Kalimat bermakna, spesifik | "human error", "mesin" | _TBD_ | _TBD_ |
+| Corrective Action | Tindakan spesifik + PIC + due date | "perbaiki", tanpa detail | _TBD_ | _TBD_ |
+| Lesson Learned | Ada dan actionable | Tidak ada / kosong | _TBD_ | _TBD_ |
+| Evidence | Foto, metric, link attachment | Tidak ada | _TBD_ | _TBD_ |
+| Metadata | area, line, machine, shift, product | String bebas / kosong | _TBD_ | _TBD_ |
+
+### Skor agregat (isi setelah audit)
+
+| Level | Definisi | Implikasi Sprint AI-1 |
+|-------|----------|----------------------|
+| **Rendah** | >50% record minim / satu kata | Similar case search tidak berguna — perbaiki data dulu atau enrichment AI Stage 1 |
+| **Sedang** | Deskripsi OK, metadata lemah | FTS + metadata filter; prioritaskan master data (Sprint B) |
+| **Tinggi** | Deskripsi + metadata + RCA lengkap | Siap Similar Case + embedding |
+
+### Rekomendasi perbaikan data (pre/post AI)
+
+<!-- HASIL -->
+- _TBD_
+
+### Temuan Audit 12
+
+<!-- HASIL -->
+- _Belum diisi_
+
+---
+
+# Audit 13 — Retrieval Readiness ⭐⭐⭐⭐⭐ (P0)
+
+**Tujuan:** Apakah data **siap** untuk Similar Case Search (Stage 2)?
+
+### Field readiness matrix
+
+| Field | Ada di schema | Terisi konsisten | Dipakai worker | Siap retrieval | Catatan |
+|-------|---------------|------------------|----------------|----------------|---------|
+| Title / summary | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Description | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Category | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Machine | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Line | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Area | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Shift | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Root Cause (historis) | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Corrective Action (historis) | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Result / outcome (closed) | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+
+### Strategi pencarian yang direkomendasikan
+
+| Opsi | Syarat data | Cocok jika… | Rekomendasi |
+|------|-------------|-------------|-------------|
+| **Full-Text Search (D1 FTS)** | Description + title terisi | <10k problems, MVP | _TBD_ |
+| **Metadata filter + FTS** | area/line/machine konsisten | Master data rapi | _TBD_ |
+| **Embedding / vector** | Volume besar, synonym banyak | >10k cases | _TBD_ |
+| **Hybrid (FTS + vector + metadata)** | Semua field + index | Production enterprise | _TBD_ |
+| **Metadata tambahan diperlukan** | Field kosong | Audit 12 rendah | _TBD_ |
+
+### Index / migration yang dibutuhkan
+
+<!-- HASIL -->
+- _TBD_
+
+### Temuan Audit 13
+
+<!-- HASIL -->
+- _Belum diisi_
+
+---
+
+# Audit 14 — AI Explainability Audit ⭐⭐⭐⭐⭐ (P1)
+
+**Tujuan:** Setiap rekomendasi AI harus punya **dasar yang dapat ditelusuri** — kritis di lingkungan manufaktur.
+
+### Contoh standar
+
+| Kualitas | Contoh |
+|----------|--------|
+| ✅ Baik | "Kasus mirip Problem #248 — mesin sama (M-312), gejala serupa (garis vertikal), RCA historis: encoder kotor, action sukses 3x" |
+| ❌ Buruk | "Kemungkinan bearing rusak." |
+
+### Explainability checklist (per jenis output AI)
+
+| Output AI | Evidence wajib | Ada di implementasi? | Lokasi | Gap |
+|-----------|----------------|----------------------|--------|-----|
+| Similar case | problem_id, similarity %, alasan match | _TBD_ | _TBD_ | _TBD_ |
+| Root cause ranking | evidence bullets dari data | _TBD_ | _TBD_ | _TBD_ |
+| Corrective action | link ke cause + historis sukses | _TBD_ | _TBD_ | _TBD_ |
+| Knowledge ref | SOP ID, judul, kutipan | _TBD_ | _TBD_ | _TBD_ |
+| Verification | before/after metric | _TBD_ | _TBD_ | _TBD_ |
+
+### Temuan Audit 14
+
+<!-- HASIL -->
+- _Belum diisi_
+
+**Gate production pilot:** Tidak ada rekomendasi AI tanpa ≥1 evidence bullet yang bisa diklik/ditelusuri.
+
+---
+
+# Audit 15 — Human-in-the-Loop Audit ⭐⭐⭐⭐⭐ (P1)
+
+**Tujuan:** Melengkapi Audit 7 — engineer harus bisa **mengendalikan** keputusan AI, bukan hanya "siapa yang write DB".
+
+### Flow yang diharapkan
+
+```text
+AI memberikan N kandidat (mis. 5 Root Cause)
+    ↓
+Engineer memilih salah satu
+    ↓
+Engineer boleh mengubah teks
+    ↓
+Engineer boleh menolak semua → input manual
+    ↓
+Baru disimpan ke database
+```
+
+### HITL capability matrix
+
+| Kemampuan UI/API | Root Cause | Corrective Action | Close Problem | Similar case apply | Status |
+|------------------|------------|-------------------|---------------|-------------------|--------|
+| Lihat saran AI | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Pilih satu dari list | _TBD_ | _TBD_ | — | _TBD_ | |
+| Edit sebelum save | _TBD_ | _TBD_ | — | _TBD_ | |
+| Tolak / dismiss | _TBD_ | _TBD_ | — | _TBD_ | |
+| Audit: diterima vs ditolak | _TBD_ | _TBD_ | — | _TBD_ | |
+
+### Anti-pattern terdeteksi
+
+- [ ] AI suggestion auto-selected tanpa klik engineer
+- [ ] Tidak bisa edit suggestion
+- [ ] Tidak ada log "rejected AI suggestion"
+- [ ] Chat-only tanpa bind ke Problem entity
+
+### Temuan Audit 15
+
+<!-- HASIL -->
+- _Belum diisi_
+
+---
+
+# Audit 16 — Learning Loop Audit ⭐⭐⭐⭐☆ (P2)
+
+**Tujuan:** AI harus **belajar** dari penyelesaian masalah — bukan rekomendasi statis selamanya.
+
+### Pertanyaan audit
+
+| # | Pertanyaan | Ya / Tidak / Partial | Bukti (tabel/flow) |
+|---|------------|----------------------|-------------------|
+| 1 | Kasus closed masuk knowledge base? | _TBD_ | _TBD_ |
+| 2 | AI tahu action mana yang efektif (historis)? | _TBD_ | _TBD_ |
+| 3 | Sistem catat solusi yang gagal? | _TBD_ | _TBD_ |
+| 4 | Ada mekanisme enrich knowledge (manual/AI)? | _TBD_ | _TBD_ |
+| 5 | Similar case index di-update on close? | _TBD_ | _TBD_ |
+| 6 | Feedback loop: engineer rate AI suggestion? | _TBD_ | _TBD_ |
+
+### Learning loop diagram (target)
+
+```text
+Problem closed
+    ↓
+Lesson learned generated (Stage 9)
+    ↓
+Index updated (FTS / vector)
+    ↓
+Next similar problem → better Stage 2 results
+```
+
+### Temuan Audit 16
+
+<!-- HASIL -->
+- _Belum diisi_
+
+---
+
+# Audit 17 — AI Confidence Audit ⭐⭐⭐⭐☆ (P2)
+
+**Tujuan:** Confidence score harus punya **dasar perhitungan yang transparan** — bukan angka dekoratif.
+
+### Contoh standar
+
+```text
+Bearing Wear — Confidence: 84%
+
+Karena:
+- Machine sama (M-312)
+- Symptom sama (garis vertikal setiap 10 lembar)
+- Root Cause historis sama pada 4 kasus
+- Action "replace bearing" berhasil pada 12/14 kasus serupa
+```
+
+### Confidence audit table
+
+| Output | Ada score? | Formula / sumber | Evidence shown? | Engineer bisa lihat breakdown? | Status |
+|--------|------------|------------------|-----------------|-------------------------------|--------|
+| Similar case % | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Root cause % | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+| Action effectiveness % | _TBD_ | _TBD_ | _TBD_ | _TBD_ | |
+
+### Anti-pattern
+
+- [ ] Confidence hardcoded di prompt
+- [ ] Random / model logprob tanpa penjelasan user-facing
+- [ ] Score tanpa link ke kasus historis
+
+### Temuan Audit 17
+
+<!-- HASIL -->
+- _Belum diisi_
+
+---
+
+# Audit 18 — Knowledge Coverage Audit ⭐⭐⭐⭐☆ (P2)
+
+**Tujuan:** Peta tahap investigasi mana yang **sudah terdokumentasi** vs mana yang AI masih buta.
+
+### Coverage matrix
+
+| Tahap investigasi | Data tersedia (schema) | Data terisi (sample) | Worker baca | AI Stage | AI siap |
+|-------------------|------------------------|----------------------|-------------|----------|---------|
+| Problem | _TBD_ | _TBD_ | _TBD_ | 1–2 | _TBD_ |
+| Investigation Q&A | _TBD_ | _TBD_ | _TBD_ | 3 | _TBD_ |
+| Root Cause | _TBD_ | _TBD_ | _TBD_ | 4 | _TBD_ |
+| Corrective Action | _TBD_ | _TBD_ | _TBD_ | 6 | _TBD_ |
+| Verification | _TBD_ | _TBD_ | _TBD_ | 8 | _TBD_ |
+| Lesson Learned | _TBD_ | _TBD_ | _TBD_ | 9 | _TBD_ |
+| Downtime context | _TBD_ | _TBD_ | _TBD_ | 4, 7 | _TBD_ |
+| Production context | _TBD_ | _TBD_ | _TBD_ | 4, 8 | _TBD_ |
+| Kaizen | _TBD_ | _TBD_ | _TBD_ | 9 | _TBD_ |
+
+**Legenda AI siap:** ✅ / ⚠️ Partial / ❌ Tidak
+
+### Prioritas pengembangan berdasarkan gap coverage
+
+| Prioritas | Tahap gap | Rekomendasi |
+|-----------|-----------|-------------|
+| 1 | _TBD_ | _TBD_ |
+| 2 | _TBD_ | _TBD_ |
+
+### Temuan Audit 18
+
+<!-- HASIL -->
+- _Belum diisi_
+
+---
+
+# Deliverable A — AI Integration Points
+
+**Diisi setelah Audit P0 selesai.** Titik hook terbaik untuk setiap Stage AI tanpa merusak flow existing.
 
 | Stage | Hook function / event | File:line (existing) | Perlu buat baru? | Reuse dari existing |
 |-------|----------------------|----------------------|------------------|---------------------|
@@ -494,20 +859,24 @@ lib/response.ts
 
 ---
 
-# 12. Sprint Recommendation (post-audit only)
+# Deliverable B — Sprint Recommendation (post-audit only)
 
-**Jangan isi sebelum Audit 1–10 selesai.**
+**Jangan isi sebelum Audit P0 selesai.**
 
 ### Urutan sprint yang disarankan (template)
 
 ```text
-Sprint 0 — Worker audit ✅ (dokumen ini)
+Sprint 0 — Worker + Knowledge audit (dokumen ini, Audit P0)
     ↓
-Sprint A — Refactor hook yang sudah ada (jika Audit 10 menemukan modul siap dipisah)
+Sprint 0b — Data quality fix (jika Audit 12–13 rendah)
     ↓
-Sprint AI-1 — Hanya hook yang sudah teridentifikasi di §11
+Sprint A — Refactor hook yang sudah ada (Audit 10, jika perlu)
     ↓
-Sprint B+ — Master data, indexes, dll. (parallel jika tidak bentrok)
+Sprint AI-1 — Hanya hook Deliverable A + retrieval strategy Audit 13
+    ↓
+Sprint AI-2 — Explainability + HITL (Audit 14–15)
+    ↓
+Sprint B+ — Master data, indexes, learning loop
 ```
 
 ### Sprint AI-1 scope (isi setelah audit)
@@ -524,39 +893,89 @@ Sprint B+ — Master data, indexes, dll. (parallel jika tidak bentrok)
 
 ---
 
+### Yang TIDAK boleh masuk Sprint AI-1
+
+- Fitur AI yang bentrok dengan handler existing (tanpa refactor)
+- Duplikasi helper yang sudah ada di worker
+- Auto-write ke DB tanpa engineer confirm (Audit 7, 15)
+- Similar case search jika Audit 12–13 = data tidak siap (kecuali ada rencana enrichment Stage 1)
+- Confidence score tanpa explainability (Audit 14, 17)
+
+---
+
+# Deliverable C — Update dokumen terkait
+
+Setelah audit selesai, perbarui:
+
+- [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — Implementation Status Matrix (kolom AMP)
+- [`ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md) — gap baru dari Audit 11–18 jika perlu
+
+---
+
 ## Checklist penyelesaian audit
 
+### Prasyarat
+
 - [ ] Source di-import ke `apps/amp/` (atau path yang disepakati)
-- [ ] Audit 1 — Endpoint Map lengkap
-- [ ] Audit 2 — Business flow semua operasi utama
-- [ ] Audit 3 — AI Entry (atau dikonfirmasi nol temuan)
-- [ ] Audit 4 — Prompt Analysis (atau N/A)
-- [ ] Audit 5 — Knowledge Flow matrix
-- [ ] Audit 6 — Memory strategy
-- [ ] Audit 7 — Decision boundary ✅/❌ per operasi
+
+### P0 — Gate Sprint AI-1 (wajib)
+
+- [ ] Audit 1 — Endpoint Map (minimum)
+- [ ] Audit 2 — Business flow `createProblem` + update/close
+- [ ] Audit 3 — AI Entry (konfirmasi nol atau isi tabel)
+- [ ] Audit 5 — Knowledge Flow matrix ⭐
+- [ ] Audit 6 — Memory strategy ⭐
+- [ ] Audit 7 — Decision boundary ⭐
 - [ ] Audit 8 — Event flow actual vs target
+- [ ] Audit 12 — Knowledge Quality score ⭐
+- [ ] Audit 13 — Retrieval readiness + strategi FTS/hybrid ⭐
+- [ ] Deliverable A — AI Integration Points
+- [ ] Deliverable B — Sprint AI-1 scope
+- [ ] Deliverable C — Update `AI_COPILOT.md`
+- [ ] **Gate lifted:** Sprint AI-1 boleh dimulai
+
+### P1 — Sebelum production pilot
+
+- [ ] Audit 11 — Domain Rule (implemented / missing / hardcoded)
+- [ ] Audit 14 — Explainability per output type
+- [ ] Audit 15 — Human-in-the-Loop UI/API
+
+### P2 — Peningkatan berkelanjutan
+
+- [ ] Audit 4 — Prompt Analysis (jika ada AI)
 - [ ] Audit 9 — Dependency graph
 - [ ] Audit 10 — Refactor recommendations
-- [ ] §11 AI Integration Points
-- [ ] §12 Sprint Recommendation
-- [ ] Update status matrix di [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md)
-- [ ] **Gate lifted:** Sprint AI-1 boleh dimulai
+- [ ] Audit 16 — Learning loop
+- [ ] Audit 17 — Confidence transparency
+- [ ] Audit 18 — Knowledge coverage matrix
 
 ---
 
 ## Cara menjalankan audit (untuk Cursor / kontributor)
 
+### Fase 1 — Kode & arsitektur
+
 1. Import source AMP
-2. Baca `worker/index.ts` dari atas ke bawah — buat Endpoint Map (Audit 1)
-3. Untuk setiap `POST`/`PUT` penting, trace function calls (Audit 2)
+2. Baca `worker/index.ts` — Endpoint Map (Audit 1)
+3. Trace `createProblem`, close, RCA, action (Audit 2, 8)
 4. `rg -i "openai|gemini|anthropic|llm|prompt|@cf/ai|embedding" worker/ src/` (Audit 3–4)
-5. Untuk setiap AI call, trace input query — tabel mana yang di-SELECT (Audit 5–6)
-6. Cek apakah AI output → `INSERT`/`UPDATE` langsung atau return JSON dulu (Audit 7)
-7. Gambar sequence actual vs target (Audit 8)
-8. Catat import/call graph antar handler (Audit 9)
-9. Hitung baris, duplikasi, rekomendasi split (Audit 10)
-10. Isi §11–12 → update AI_COPILOT status matrix → lift gate
+5. Trace SELECT/join per handler (Audit 5–6)
+6. Cek AI → INSERT/UPDATE langsung vs suggestion JSON (Audit 7)
+7. Dependency & refactor (Audit 9–10)
+
+### Fase 2 — Pengetahuan & AI quality (P0 gate)
+
+8. Baca `migrations/` CHECK + validasi worker — domain rules (Audit 11, bisa parallel P1)
+9. Sample 10–20 records — skor kualitas deskripsi, RCA, action (Audit 12)
+10. Field readiness + pilih FTS vs hybrid vs embedding (Audit 13)
+11. Cek evidence pada output AI existing (Audit 14, P1)
+12. Cek UI: pilih / edit / tolak suggestion (Audit 15, P1)
+13. Cek closed → knowledge index (Audit 16–18, P2)
+
+### Fase 3 — Deliverable
+
+14. Isi Deliverable A–C → lift gate Sprint AI-1
 
 ---
 
-*Dokumen ini adalah gate wajib sebelum Sprint AI-1. Jangan implementasi fitur AI di worker sampai checklist penyelesaian audit tercentang.*
+*Dokumen ini adalah framework evaluasi AI Manufacturing — gate wajib sebelum Sprint AI-1. Jangan implementasi fitur AI sampai Audit P0 tercentang.*

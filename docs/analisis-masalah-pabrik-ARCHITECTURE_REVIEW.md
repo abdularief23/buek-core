@@ -371,7 +371,7 @@ Lihat [`analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORK
 6. **Cek mapping layer** — jangan expose raw DB row ke frontend
 7. **Baca PROJECT_CONTEXT.md** untuk visi Buek Core sebelum fitur besar
 8. **Baca AI_COPILOT.md** sebelum menambah fitur AI — AI adalah copilot, bukan add-on
-9. **Jangan mulai Sprint AI-1** sebelum `WORKER_AUDIT.md` selesai (10 audit)
+9. **Jangan mulai Sprint AI-1** sebelum Audit P0 di `WORKER_AUDIT.md` selesai (termasuk Knowledge Quality & Retrieval Readiness)
 
 ---
 

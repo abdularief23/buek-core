@@ -286,7 +286,7 @@ Saat membaca atau mengubah kode:
 
 > **Prioritas teknis detail:** lihat [`analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md) — scorecard, gap P0–P3, worker refactor plan, index & master data migration.
 
-> **Gate AI:** [`analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md) — reverse engineering `worker/index.ts` (10 audit) **wajib sebelum Sprint AI-1**.
+> **Gate AI:** [`analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md) — 18 audit (kode + knowledge quality); **P0 wajib sebelum Sprint AI-1**.
 
 ### Fase saat ini — MVP AMP (Cloudflare)
 
@@ -330,7 +330,7 @@ Saat membaca atau mengubah kode:
 Urutan baca untuk memahami codebase:
 
 1. `docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md` (dokumen ini)
-2. **`docs/analisis-masalah-pabrik-WORKER_AUDIT.md`** — reverse engineering worker (wajib sebelum AI)
+2. **`docs/analisis-masalah-pabrik-WORKER_AUDIT.md`** — 18 audit: kode + knowledge quality (P0 gate sebelum AI)
 3. **`docs/analisis-masalah-pabrik-AI_COPILOT.md`** — AI sebagai copilot engineer (10 stage)
 4. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — temuan review schema/worker, gap analysis
 5. `src/db/schema.ts` — entitas & relasi
