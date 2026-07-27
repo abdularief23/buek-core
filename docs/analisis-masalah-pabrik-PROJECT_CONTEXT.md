@@ -280,6 +280,8 @@ Saat membaca atau mengubah kode:
 
 ## 11. Long-Term Roadmap
 
+> **Prioritas teknis detail:** lihat [`analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md) — scorecard, gap P0–P3, worker refactor plan, index & master data migration.
+
 ### Fase saat ini — MVP AMP (Cloudflare)
 
 - [x] CRUD Problem, Root Cause, Corrective Action
@@ -318,7 +320,8 @@ Saat membaca atau mengubah kode:
 Urutan baca untuk memahami codebase:
 
 1. `docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md` (dokumen ini)
-2. `src/db/schema.ts` — entitas & relasi
+2. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — temuan review schema/worker, gap analysis, backlog prioritas
+3. `src/db/schema.ts` — entitas & relasi
 3. `migrations/` — evolusi schema
 4. `worker/index.ts` — API surface & business rules
 5. `src/routes/` — routing & halaman utama
