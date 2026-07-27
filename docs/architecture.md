@@ -52,7 +52,8 @@ operations should follow this shape.
 A Cloudflare-based manufacturing problem analysis app (Vantis/Pabrik origin) that will integrate
 with Buek Core. See [`docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md`](./analisis-masalah-pabrik-PROJECT_CONTEXT.md)
 for architecture, domain entities, investigation workflow, and integration rules. **AI copilot spec:**
-[`docs/analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — 10-stage manufacturing AI workflow.
+[`docs/analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md). **Worker audit (gate before AI):**
+[`docs/analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md).
 Read these documents before working on AMP `src/`, `worker/`, or `migrations/` code.
 
 ## Packages

@@ -405,9 +405,11 @@ Saat implementasi prompt (Worker atau Buek Core):
 
 ## Backlog AI (untuk Cursor)
 
-### Sprint AI-1 — Foundation (setelah Sprint A architecture)
+### Sprint AI-1 — Foundation (setelah **Worker Audit** selesai)
 
-- [ ] Event `problem.created` → trigger Stage 1–2
+> **Gate:** [`WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md) wajib selesai (Audit 1–10) sebelum Sprint AI-1 dimulai.
+
+- [ ] Event `problem.created` → trigger Stage 1–2 (hook dari §11 Integration Points)
 - [ ] Tabel/kolom `ai_understanding` + `problem_similar_cases`
 - [ ] UI banner similar case
 - [ ] Audit log untuk setiap AI call
@@ -432,18 +434,24 @@ Saat implementasi prompt (Worker atau Buek Core):
 
 ---
 
-## Audit Checklist: `worker/index.ts` (pending source import)
+## Audit Checklist: `worker/index.ts` (wajib sebelum Sprint AI-1)
 
-Setelah source AMP di-import, audit file ini dan isi status aktual:
+**Jangan audit ad-hoc** — gunakan metodologi lengkap 10 audit di [`WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md):
 
-- [ ] Bagian mana yang sudah memanggil AI / OpenAI?
-- [ ] Prompt atau alur AI apa yang digunakan?
-- [ ] Data apa saja yang dikirim ke model?
-- [ ] Keputusan apa yang dibuat AI vs engineer?
-- [ ] Apakah ada endpoint terpisah atau inline di POST problem?
-- [ ] Apakah hasil AI disimpan atau hanya dikembalikan ke client?
+1. Entry Point (endpoint map)
+2. Business Flow (trace per operasi)
+3. AI Entry (semua pemanggilan model)
+4. Prompt Analysis
+5. Knowledge Flow
+6. Memory strategy
+7. Decision Boundary
+8. Event Flow
+9. Dependency Graph
+10. Refactor Opportunity
 
-**Hasil audit** → update kolom "AMP" di Implementation Status Matrix di atas.
+**Hasil audit** → isi Implementation Status Matrix di atas + §11 AI Integration Points + §12 Sprint Recommendation.
+
+**Status saat ini:** ⏳ menunggu import source AMP ke repo.
 
 ---
 

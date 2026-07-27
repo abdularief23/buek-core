@@ -286,6 +286,8 @@ Saat membaca atau mengubah kode:
 
 > **Prioritas teknis detail:** lihat [`analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md) — scorecard, gap P0–P3, worker refactor plan, index & master data migration.
 
+> **Gate AI:** [`analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md) — reverse engineering `worker/index.ts` (10 audit) **wajib sebelum Sprint AI-1**.
+
 ### Fase saat ini — MVP AMP (Cloudflare)
 
 - [x] CRUD Problem, Root Cause, Corrective Action
@@ -303,7 +305,8 @@ Saat membaca atau mengubah kode:
 
 ### Fase 3 — AI Manufacturing Copilot (inti produk, bukan add-on)
 
-> Spesifikasi lengkap 10 stage: [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md)
+> Spesifikasi lengkap 10 stage: [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md)  
+> **Prasyarat:** Worker audit selesai — [`analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md)
 
 - [ ] Stage 1–2: Problem understanding + similar case search (trigger on create)
 - [ ] Stage 3: Investigation assistant (checklist questions)
@@ -327,14 +330,15 @@ Saat membaca atau mengubah kode:
 Urutan baca untuk memahami codebase:
 
 1. `docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md` (dokumen ini)
-2. **`docs/analisis-masalah-pabrik-AI_COPILOT.md`** — AI sebagai copilot engineer (10 stage, wajib sebelum fitur AI)
-3. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — temuan review schema/worker, gap analysis, backlog prioritas
-4. `src/db/schema.ts` — entitas & relasi
-5. `migrations/` — evolusi schema
-6. `worker/index.ts` — API surface & business rules (+ audit AI calls, lihat AI_COPILOT.md)
-7. `src/routes/` — routing & halaman utama
-8. `.jatevo/agent-memory.json` — requirement asli dari AI builder
-9. `wrangler.jsonc` — D1 binding & env
+2. **`docs/analisis-masalah-pabrik-WORKER_AUDIT.md`** — reverse engineering worker (wajib sebelum AI)
+3. **`docs/analisis-masalah-pabrik-AI_COPILOT.md`** — AI sebagai copilot engineer (10 stage)
+4. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — temuan review schema/worker, gap analysis
+5. `src/db/schema.ts` — entitas & relasi
+6. `migrations/` — evolusi schema
+7. `worker/index.ts` — API surface & business rules (isi WORKER_AUDIT.md dari file ini)
+8. `src/routes/` — routing & halaman utama
+9. `.jatevo/agent-memory.json` — requirement asli dari AI builder
+10. `wrangler.jsonc` — D1 binding & env
 
 ---
 

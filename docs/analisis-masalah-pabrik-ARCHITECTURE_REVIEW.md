@@ -355,9 +355,9 @@ const row = await db.select().from(problems).where(eq(problems.id, id)).get();
 - [ ] Shared auth
 - [ ] AI copilot Stages 1–10 via `investigation-copilot.ts` + Memory/Knowledge packages
 
-### Sprint AI (parallel track)
+### Sprint AI (parallel track — **setelah WORKER_AUDIT**)
 
-Lihat backlog detail di [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — Sprint AI-1 s/d AI-4.
+Lihat [`analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md) (gate) lalu [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) Sprint AI-1 s/d AI-4.
 
 ---
 
@@ -371,6 +371,7 @@ Lihat backlog detail di [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-mas
 6. **Cek mapping layer** — jangan expose raw DB row ke frontend
 7. **Baca PROJECT_CONTEXT.md** untuk visi Buek Core sebelum fitur besar
 8. **Baca AI_COPILOT.md** sebelum menambah fitur AI — AI adalah copilot, bukan add-on
+9. **Jangan mulai Sprint AI-1** sebelum `WORKER_AUDIT.md` selesai (10 audit)
 
 ---
 
