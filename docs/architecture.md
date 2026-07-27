@@ -47,6 +47,13 @@ tools, prompts, workflows, and agent configuration. It does not modify or live i
 Future verticals such as website builder, customer support, sales, HR, maintenance, and business
 operations should follow this shape.
 
+### Analisis Masalah Pabrik (AMP) — Vertical #1 (in progress)
+
+A Cloudflare-based manufacturing problem analysis app (Vantis/Pabrik origin) that will integrate
+with Buek Core. See [`docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md`](./analisis-masalah-pabrik-PROJECT_CONTEXT.md)
+for architecture, domain entities, investigation workflow, and integration rules. Read that document
+before working on AMP `src/`, `worker/`, or `migrations/` code.
+
 ## Packages
 
 ### `packages/ai-core`
