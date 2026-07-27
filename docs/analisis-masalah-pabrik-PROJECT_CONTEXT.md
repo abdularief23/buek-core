@@ -218,7 +218,13 @@ Closed                  (status: closed → knowledge)
 Knowledge Base          (similar case lookup, AI lesson learned)
 ```
 
-**Begitu Problem dibuat, AI Stage 1–2 harus berjalan** (understanding + similar case search). Detail lengkap: [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md).
+```
+Source code  →  Codebase Guide  →  WORKER_AUDIT  →  Sprint AI-1
+```
+
+Lihat [`analisis-masalah-pabrik-CODEBASE_GUIDE.md`](./analisis-masalah-pabrik-CODEBASE_GUIDE.md) — dokumentasi semantik per file (`schema`, `worker`, `migrations`, `routes`, AI).
+
+**Begitu Problem dibuat, AI Stage 1–2 harus berjalan** (understanding + similar case search). Detail: [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md).
 
 **Setiap transisi status penting harus tercatat di `Problem Activity`.**
 
@@ -330,15 +336,16 @@ Saat membaca atau mengubah kode:
 Urutan baca untuk memahami codebase:
 
 1. `docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md` (dokumen ini)
-2. **`docs/analisis-masalah-pabrik-WORKER_AUDIT.md`** — 22 audit: kode, knowledge, reasoning pipeline, lifecycle, safety
-3. **`docs/analisis-masalah-pabrik-AI_COPILOT.md`** — AI sebagai copilot engineer (10 stage)
-4. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — temuan review schema/worker, gap analysis
-5. `src/db/schema.ts` — entitas & relasi
-6. `migrations/` — evolusi schema
-7. `worker/index.ts` — API surface & business rules (isi WORKER_AUDIT.md dari file ini)
-8. `src/routes/` — routing & halaman utama
-9. `.jatevo/agent-memory.json` — requirement asli dari AI builder
-10. `wrangler.jsonc` — D1 binding & env
+2. **`docs/analisis-masalah-pabrik-CODEBASE_GUIDE.md`** + **`docs/amp-codebase/`** — semantic guide (purpose, flow, trade-off)
+3. **`docs/analisis-masalah-pabrik-WORKER_AUDIT.md`** — 22 audit (evaluasi)
+4. **`docs/analisis-masalah-pabrik-AI_COPILOT.md`** — AI copilot 10 stage
+5. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — gap & refactor plan
+6. `src/db/schema.ts` — entitas & relasi (isi `amp-codebase/01-schema.md` dari sini)
+7. `migrations/` — evolusi schema → `amp-codebase/03-migrations.md`
+8. `worker/index.ts` — API & business rules → `amp-codebase/02-worker.md`
+9. `src/routes/` — alur engineer → `amp-codebase/04-routes.md`
+10. `.jatevo/agent-memory.json` — requirement asli dari AI builder
+11. `wrangler.jsonc` — D1 binding & env
 
 ---
 
@@ -380,8 +387,9 @@ Product:  Analisis Masalah Pabrik (AMP)
 Stack:    React 19 + Vite + CF Worker + D1 + Drizzle
 Parent:   Buek Core — Vertical #1 Manufacturing
 Flow:     Problem → RCA → CAPA → Verify → Closed → Knowledge
-Schema:   src/db/schema.ts
-API:      worker/index.ts
+Schema:   src/db/schema.ts  →  docs/amp-codebase/01-schema.md
+API:      worker/index.ts  →  docs/amp-codebase/02-worker.md
+Guide:    docs/analisis-masalah-pabrik-CODEBASE_GUIDE.md
 Rules:    migration-first, strict TS, activity log, manufacturing terms
 Vision:   AI Manufacturing Copilot — engineer decides, AI accelerates
 AI Spec:  docs/analisis-masalah-pabrik-AI_COPILOT.md (10 stages)

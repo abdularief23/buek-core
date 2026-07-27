@@ -9,8 +9,7 @@
 - [`PROJECT_CONTEXT.md`](./analisis-masalah-pabrik-PROJECT_CONTEXT.md)
 - [`ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md)
 - [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md)
-
----
+- [`CODEBASE_GUIDE.md`](./analisis-masalah-pabrik-CODEBASE_GUIDE.md) — semantic layer (Deliverable D)
 
 ## Tiga pertanyaan framework
 
@@ -157,7 +156,8 @@ worker/index.ts + schema + seeds
 └── DELIVERABLE
     ├── A. AI Integration Points
     ├── B. Sprint Recommendation
-    └── C. Update AI_COPILOT status matrix
+    ├── C. Update AI_COPILOT status matrix
+    └── D. Codebase Guide (semantic) → [`amp-codebase/`](./amp-codebase/)
 ```
 
 ---
@@ -1208,6 +1208,25 @@ Setelah audit selesai, perbarui:
 
 - [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — Implementation Status Matrix + target reasoning pipeline
 - [`ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md) — gap dari Audit 11–22 jika perlu
+- [`CODEBASE_GUIDE.md`](./analisis-masalah-pabrik-CODEBASE_GUIDE.md) + [`amp-codebase/`](./amp-codebase/) — semantic documentation (Deliverable D)
+
+---
+
+# Deliverable D — Codebase Guide (semantic layer)
+
+**Diisi paralel dengan audit** — bukan setelah audit selesai.
+
+Dokumentasi **mengapa** kode ada, format kanonik per fungsi/tabel/route/prompt. Lihat [`CODEBASE_GUIDE.md`](./analisis-masalah-pabrik-CODEBASE_GUIDE.md).
+
+| File | Konten |
+|------|--------|
+| [`amp-codebase/01-schema.md`](./amp-codebase/01-schema.md) | Setiap tabel, relasi, field rationale |
+| [`amp-codebase/02-worker.md`](./amp-codebase/02-worker.md) | Fungsi & endpoint — format `createProblem()` |
+| [`amp-codebase/03-migrations.md`](./amp-codebase/03-migrations.md) | Evolusi DB & dampak |
+| [`amp-codebase/04-routes.md`](./amp-codebase/04-routes.md) | Alur engineer & UI |
+| [`amp-codebase/05-ai.md`](./amp-codebase/05-ai.md) | Prompt, context, I/O |
+
+**Gate:** Minimal `02-worker.md` (semua endpoint) + `01-schema.md` (semua tabel) sebelum lift Sprint AI-1.
 
 ---
 
@@ -1233,6 +1252,7 @@ Setelah audit selesai, perbarui:
 - [ ] Deliverable A — AI Integration Points
 - [ ] Deliverable B — Sprint AI-1 scope
 - [ ] Deliverable C — Update `AI_COPILOT.md`
+- [ ] Deliverable D — [`CODEBASE_GUIDE`](./analisis-masalah-pabrik-CODEBASE_GUIDE.md) + `amp-codebase/01–02` minimum
 - [ ] **Gate lifted:** Sprint AI-1 boleh dimulai
 
 ### P1 — Sebelum production pilot
