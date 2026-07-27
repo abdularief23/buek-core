@@ -2,7 +2,7 @@
 
 > **Status:** Review kode berdasarkan `src/db/schema.ts`, `migrations/`, dan `worker/index.ts`  
 > **Tanggal:** 2026-07-27  
-> **Konteks:** Lihat [`analisis-masalah-pabrik-PROJECT_CONTEXT.md`](./analisis-masalah-pabrik-PROJECT_CONTEXT.md)
+> **Konteks:** Lihat [`analisis-masalah-pabrik-PROJECT_CONTEXT.md`](./analisis-masalah-pabrik-PROJECT_CONTEXT.md) · [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md)
 
 Dokumen ini mencatat temuan review arsitektur agar Cursor **tidak mengulang kesalahan** dan **tahu prioritas refactor** sebelum menambah fitur baru.
 
@@ -19,6 +19,25 @@ Proyek ini **bukan CRUD biasa** — sudah memodelkan incident management manufak
 3. Migrasi SQL manual → Drizzle ORM
 4. Fitur enterprise (RCA tree, CAPA, approval, attachment)
 5. Persiapan multi-factory
+6. **AI Copilot 10-stage** — [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) (bukan chatbot add-on)
+
+---
+
+## AI Copilot (bukan fitur tambahan)
+
+AMP dirancang sebagai **AI Manufacturing Copilot**. Data schema (Problem, RCA, Production, Downtime, Kaizen) sudah siap sebagai bahan AI; yang kurang adalah orchestration layer dan trigger otomatis saat Problem dibuat.
+
+| Prioritas AI | Stage | Catatan |
+|--------------|-------|---------|
+| **P0** | 2 Similar Problem Search | Fitur AI paling penting — trigger on `problem.created` |
+| **P0** | 4 Root Cause Suggestion | Ranked causes, engineer picks |
+| **P0** | 6 Corrective Action Rec. | Pre-fill actions, engineer confirms |
+| P1 | 1, 3, 5, 8 | Understanding, investigation Q, knowledge, verification |
+| P2 | 7, 9, 10 | Risk analysis, lesson learned, closed loop |
+
+**Jangan** implementasi chatbot generik — ikuti spesifikasi lengkap di [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md).
+
+**Buek Core partial:** `apps/api/src/services/investigation-copilot.ts` sudah punya similar cases, possible causes, countermeasures, SOP refs — reuse saat bridge.
 
 ---
 
@@ -334,7 +353,11 @@ const row = await db.select().from(problems).where(eq(problems.id, id)).get();
 
 - [ ] API sync Problem ↔ Buek `Issue`
 - [ ] Shared auth
-- [ ] AI copilot untuk similar case + RCA suggestion
+- [ ] AI copilot Stages 1–10 via `investigation-copilot.ts` + Memory/Knowledge packages
+
+### Sprint AI (parallel track)
+
+Lihat backlog detail di [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — Sprint AI-1 s/d AI-4.
 
 ---
 
@@ -347,6 +370,7 @@ const row = await db.select().from(problems).where(eq(problems.id, id)).get();
 5. **Refactor incremental** — satu domain per PR
 6. **Cek mapping layer** — jangan expose raw DB row ke frontend
 7. **Baca PROJECT_CONTEXT.md** untuk visi Buek Core sebelum fitur besar
+8. **Baca AI_COPILOT.md** sebelum menambah fitur AI — AI adalah copilot, bukan add-on
 
 ---
 

@@ -13,7 +13,8 @@
 | **Status** | Vertical manufacturing #1 — bukan aplikasi standalone jangka panjang |
 | **Platform induk** | [Buek Core](https://core.buekwebsite.com) — AI platform + domain modules |
 | **Origin** | Dibangun awal di [Vantis Pabrik](https://app.vantis.sh) (Cloudflare template) |
-| **Target akhir** | **AI Manufacturing Agent** terintegrasi dengan Memory, Workflow, Knowledge, dan Agent engines Buek Core |
+| **Target akhir** | **AI Manufacturing Copilot** — bukan fitur tambahan, melainkan inti workflow investigasi |
+| **Spesifikasi AI** | [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — 10 stage AI, trigger, aturan "engineer decides" |
 
 ### Yang akan terhubung ke Buek Core (roadmap)
 
@@ -43,7 +44,7 @@ Analisis Masalah Pabrik (AMP)
 
 ## 2. Product Purpose
 
-Aplikasi internal untuk tim manufacturing **mencatat, menganalisis, dan menyelesaikan masalah produksi secara terstruktur**.
+Aplikasi internal untuk tim manufacturing **mencatat, menganalisis, dan menyelesaikan masalah produksi secara terstruktur** — dengan **AI sebagai copilot engineer**, bukan pengganti engineer.
 
 Bukan ticketing generik — ini **pusat continuous improvement** yang menghubungkan:
 
@@ -214,8 +215,10 @@ Verification            (bukti: metric, foto, PPM, dll.)
       ↓
 Closed                  (status: closed → knowledge)
       ↓
-Knowledge Base          (similar case lookup, future AI)
+Knowledge Base          (similar case lookup, AI lesson learned)
 ```
+
+**Begitu Problem dibuat, AI Stage 1–2 harus berjalan** (understanding + similar case search). Detail lengkap: [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md).
 
 **Setiap transisi status penting harus tercatat di `Problem Activity`.**
 
@@ -274,6 +277,7 @@ Saat membaca atau mengubah kode:
 - [ ] Apakah types Drizzle dipakai (bukan string bebas)?
 - [ ] Apakah komponen UI tidak mengandung query DB langsung?
 - [ ] Apakah perubahan mendukung visi integrasi Buek Core (§1)?
+- [ ] Jika menyentuh AI: apakah masuk Stage 1–10 di AI_COPILOT.md dan engineer tetap yang memutuskan?
 - [ ] Refactor minimal — jangan ubah file tidak terkait
 
 ---
@@ -297,13 +301,16 @@ Saat membaca atau mengubah kode:
 - Line/shift comparison
 - KPI cards (OEE, NG rate, downtime %)
 
-### Fase 3 — AI (via Buek Core)
+### Fase 3 — AI Manufacturing Copilot (inti produk, bukan add-on)
 
-- AI Root Cause suggestion
-- AI Corrective Action recommendation
-- Similar problem detection
-- Knowledge search (SOP + histori)
-- Predictive quality signals
+> Spesifikasi lengkap 10 stage: [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md)
+
+- [ ] Stage 1–2: Problem understanding + similar case search (trigger on create)
+- [ ] Stage 3: Investigation assistant (checklist questions)
+- [ ] Stage 4–6: Root cause ranking, knowledge retrieval, corrective action rec.
+- [ ] Stage 7–8: Risk analysis + verification assistant
+- [ ] Stage 9–10: Auto lesson learned + closed-loop knowledge
+- Bridge ke Buek Core `investigation-copilot.ts` + `packages/memory` + `packages/knowledge`
 
 ### Fase 4 — Enterprise
 
@@ -320,13 +327,14 @@ Saat membaca atau mengubah kode:
 Urutan baca untuk memahami codebase:
 
 1. `docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md` (dokumen ini)
-2. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — temuan review schema/worker, gap analysis, backlog prioritas
-3. `src/db/schema.ts` — entitas & relasi
-3. `migrations/` — evolusi schema
-4. `worker/index.ts` — API surface & business rules
-5. `src/routes/` — routing & halaman utama
-6. `.jatevo/agent-memory.json` — requirement asli dari AI builder
-7. `wrangler.jsonc` — D1 binding & env
+2. **`docs/analisis-masalah-pabrik-AI_COPILOT.md`** — AI sebagai copilot engineer (10 stage, wajib sebelum fitur AI)
+3. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — temuan review schema/worker, gap analysis, backlog prioritas
+4. `src/db/schema.ts` — entitas & relasi
+5. `migrations/` — evolusi schema
+6. `worker/index.ts` — API surface & business rules (+ audit AI calls, lihat AI_COPILOT.md)
+7. `src/routes/` — routing & halaman utama
+8. `.jatevo/agent-memory.json` — requirement asli dari AI builder
+9. `wrangler.jsonc` — D1 binding & env
 
 ---
 
@@ -371,7 +379,8 @@ Flow:     Problem → RCA → CAPA → Verify → Closed → Knowledge
 Schema:   src/db/schema.ts
 API:      worker/index.ts
 Rules:    migration-first, strict TS, activity log, manufacturing terms
-Vision:   AI Manufacturing Agent on Buek Core platform
+Vision:   AI Manufacturing Copilot — engineer decides, AI accelerates
+AI Spec:  docs/analisis-masalah-pabrik-AI_COPILOT.md (10 stages)
 ```
 
 ---
