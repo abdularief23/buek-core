@@ -1,0 +1,73 @@
+# Phase 2 (opsional) — Custom GPT Action
+# Tujuan: MyGPT bisa membaca file docs dari GitHub tanpa upload manual.
+#
+# Setup di ChatGPT:
+# 1. Configure → Actions → Import from OpenAPI schema (paste file ini)
+# 2. Authentication → API Key
+#    - Auth Type: Bearer
+#    - API Key: GitHub PAT (classic) dengan scope contents:read saja
+# 3. Privacy: jelas bahwa Action memanggil api.github.com
+#
+# Uji: "Ambil isi docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md dari repo abdularief23/buek-core branch main"
+
+openapi: 3.1.0
+info:
+  title: Buek Core Docs (GitHub)
+  version: 1.0.0
+  description: >
+    Read-only access to documentation files in abdularief23/buek-core.
+    Used by Custom GPT to refresh architecture context.
+servers:
+  - url: https://api.github.com
+paths:
+  /repos/{owner}/{repo}/contents/{path}:
+    get:
+      operationId: getRepoFile
+      summary: Get a file from the repository
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+            default: abdularief23
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+            default: buek-core
+        - name: path
+          in: path
+          required: true
+          description: Path to file, e.g. docs/architecture.md
+          schema:
+            type: string
+        - name: ref
+          in: query
+          required: false
+          description: Branch or commit SHA (default main)
+          schema:
+            type: string
+            default: main
+      responses:
+        "200":
+          description: File metadata and base64 content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  path:
+                    type: string
+                  sha:
+                    type: string
+                  encoding:
+                    type: string
+                  content:
+                    type: string
+                    description: Base64-encoded file content; decode before use
+        "404":
+          description: File not found

@@ -54,6 +54,11 @@ with Buek Core. See [`docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md`](./analis
 for architecture, domain entities, investigation workflow, and integration rules. Read that document
 before working on AMP `src/`, `worker/`, or `migrations/` code.
 
+### Cursor ↔ MyGPT Bridge
+
+Shared operating model between Cursor (code) and ChatGPT Custom GPT (domain/strategy).
+See [`docs/cursor-mygpt-bridge.md`](./cursor-mygpt-bridge.md) and [`docs/mygpt/`](./mygpt/).
+
 ## Packages
 
 ### `packages/ai-core`
