@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Buek Copilot — Privacy Policy</title>
+  <style>
+    :root {
+      --bg: #f6f3ee;
+      --ink: #1a1f1c;
+      --muted: #4a554e;
+      --line: #d5d0c6;
+      --accent: #0f3d2e;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(180deg, #e8efe9 0%, var(--bg) 40%, #f0ebe3 100%);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.25rem 4rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
+      color: var(--accent);
+    }
+    .meta { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
+    h2 { font-size: 1.15rem; margin-top: 1.75rem; color: var(--accent); }
+    p, li { color: var(--ink); }
+    ul { padding-left: 1.2rem; }
+    .box {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.65);
+      padding: 1rem 1.1rem;
+      margin: 1.25rem 0;
+    }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Buek Copilot — Privacy Policy</h1>
+    <p class="meta">
+      Last updated: 3 August 2026<br />
+      Product: Buek Copilot (Custom GPT) for
+      <a href="https://core.buekwebsite.com">Buek Core</a> /
+      <a href="https://github.com/abdularief23/buek-core">abdularief23/buek-core</a>
+    </p>
+
+    <div class="box">
+      <strong>Ringkas:</strong> Buek Copilot menggunakan GitHub API (read-only)
+      untuk membaca repository publik/privat Anda berdasarkan token yang Anda
+      konfigurasi sendiri. Percakapan diproses oleh OpenAI sesuai kebijakan OpenAI.
+      Kami tidak menjual data pengguna.
+    </div>
+
+    <h2>1. Siapa yang bertanggung jawab</h2>
+    <p>
+      Kebijakan ini berlaku untuk Custom GPT “Buek Copilot” yang dikonfigurasi
+      oleh pemilik proyek Buek Core. Kontak: <a href="mailto:info@buekwebsite.com">info@buekwebsite.com</a>.
+    </p>
+
+    <h2>2. Data yang diproses</h2>
+    <ul>
+      <li><strong>Pesan chat</strong> yang Anda kirim ke Buek Copilot (diproses oleh OpenAI).</li>
+      <li><strong>Permintaan ke GitHub API</strong> yang dibuat Action GPT (path file, nomor PR, query pencarian, dll.).</li>
+      <li><strong>Personal Access Token (PAT)</strong> GitHub yang Anda masukkan sebagai secret di GPT Builder — disimpan oleh platform OpenAI sesuai konfigurasi Action Anda; tidak disimpan di server Buek Core.</li>
+    </ul>
+
+    <h2>3. Layanan pihak ketiga</h2>
+    <ul>
+      <li>
+        <strong>OpenAI / ChatGPT</strong> — platform Custom GPT.
+        Lihat: <a href="https://openai.com/policies/privacy-policy">OpenAI Privacy Policy</a>.
+      </li>
+      <li>
+        <strong>GitHub API</strong> (<code>api.github.com</code>) — Action read-only untuk membaca isi repository, PR, dan commit.
+        Lihat: <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a>.
+      </li>
+    </ul>
+
+    <h2>4. Tujuan pemrosesan</h2>
+    <p>
+      Memberikan jawaban arsitektur/review berdasarkan isi repository terbaru
+      (docs, PR, commit) tanpa mengunggah dokumen secara manual setiap kali berubah.
+    </p>
+
+    <h2>5. Apa yang tidak kami lakukan</h2>
+    <ul>
+      <li>Tidak menulis, menghapus, atau menggabungkan kode di GitHub melalui Action (read-only).</li>
+      <li>Tidak menjual atau menyewakan data chat.</li>
+      <li>Tidak meminta Anda menempelkan PAT di dalam percakapan chat.</li>
+    </ul>
+
+    <h2>6. Retensi</h2>
+    <p>
+      Retensi percakapan mengikuti pengaturan akun ChatGPT / OpenAI Anda.
+      Data di GitHub tetap berada di GitHub sesuai kebijakan GitHub dan pengaturan repository Anda.
+    </p>
+
+    <h2>7. Keamanan token</h2>
+    <p>
+      Gunakan Fine-grained PAT dengan izin baca seminimal mungkin (Contents, Pull requests, Metadata).
+      Rotasi token secara berkala. Cabut token jika bocor.
+    </p>
+
+    <h2>8. Perubahan</h2>
+    <p>
+      Kebijakan ini dapat diperbarui. Versi terbaru dipublikasikan di URL ini
+      dan/atau di repository <code>docs/mygpt/PRIVACY_POLICY.md</code>.
+    </p>
+
+    <h2>9. Kontak</h2>
+    <p>
+      Pertanyaan privasi: <a href="mailto:info@buekwebsite.com">info@buekwebsite.com</a>
+    </p>
+  </main>
+</body>
+</html>
