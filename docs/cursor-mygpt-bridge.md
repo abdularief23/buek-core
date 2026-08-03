@@ -1,181 +1,140 @@
-# Cursor ↔ MyGPT Bridge — Setup & Pembagian Tugas
+# Cursor ↔ Buek Copilot Bridge — Setup & Pembagian Tugas
 
-> **Status:** Siap dipakai  
+> **Status:** Siap dipakai (Phase 2 GitHub Action = jalur utama)  
 > **Pemilik:** Abdul Arief  
-> **Tujuan:** Berbagi konteks Buek Core / AMP antara **Cursor** (kode) dan **Custom GPT ChatGPT** (strategi & domain) tanpa duplikasi atau konflik
+> **Tujuan:** Cursor (executor) dan Buek Copilot (architect/reviewer) membaca **sumber yang sama** di GitHub
 
 ---
 
-## Realita teknis (penting)
+## Realita teknis
 
-ChatGPT Custom GPT dan Cursor **tidak terhubung otomatis**. Tidak ada sync real-time bawaan.
-
-Yang **bisa** kita bangun:
+| Bisa | Tidak bisa |
+|------|------------|
+| Custom GPT Action → GitHub REST API | Custom GPT `git clone` / SSH |
+| PAT read-only sebagai secret di GPT Builder | Cursor/Chat menyimpan PAT Anda secara permanen |
+| Baca docs, PR, commit, compare branch setiap pertanyaan | Write/merge dari dalam ChatGPT Action (kita sengaja tidak expose) |
 
 ```text
-                    ┌─────────────────┐
-                    │  Source of Truth │
-                    │  GitHub repo     │
-                    │  docs/ + code    │
-                    └────────┬────────┘
-           ┌─────────────────┼─────────────────┐
-           ▼                                   ▼
-    ┌─────────────┐                     ┌─────────────┐
-    │   Cursor    │                     │   MyGPT     │
-    │  baca repo  │                     │ Knowledge + │
-    │  tulis kode │                     │ Instructions│
-    └──────┬──────┘                     └──────┬──────┘
-           │                                   │
-           └──────────► Anda (Abdul) ◄─────────┘
-                    Handoff Template
+GitHub Repository (Source of Truth)
+            │
+            ▼
+      GitHub REST API
+            │
+    PAT Read-only (secret di GPT Builder — milik Anda)
+            │
+     ┌──────┴──────┐
+     ▼             ▼
+ Cursor         Buek Copilot
+ (ubah kode)    (Action baca repo)
+     │             │
+     └──────┬──────┘
+            ▼
+         Anda (Abdul)
+      keputusan + HANDOFF
 ```
-
-**Anda** adalah jembatan. Bridge ini membuat handoff itu **terstruktur** supaya Cursor dan MyGPT tidak saling bertolak belakang.
 
 ---
 
 ## Pembagian tugas
 
-| Area | **MyGPT** | **Cursor** | **Anda (Abdul)** |
-|------|-----------|------------|------------------|
-| Visi produk & positioning | ✅ Utama | Baca dari docs | Putuskan |
-| Domain manufaktur (RCA, Kaizen, CAPA) | ✅ Utama | Implement sesuai docs | Validasi |
-| Arsitektur AI (10 stage, audit 1–22) | Desain & review | Tulis/isi docs + kode | Approve |
-| Membaca / mengubah kode | ❌ Tidak | ✅ Utama | Review PR |
-| Schema, migration, worker | Spesifikasi | Implement & audit | Review |
-| Sprint AI-1 / refactor | Usulkan scope | Eksekusi di repo | Prioritas |
-| Pricing, pitch, narasi bisnis | ✅ Utama | Update UI/docs jika diminta | Final |
-| Secret / API key | ❌ Jangan simpan di GPT | Env lokal / VPS | Kelola |
-| Knowledge update MyGPT | Minta daftar file | Generate/update docs | Upload ke GPT |
+| Area | **Buek Copilot** | **Cursor** | **Anda** |
+|------|------------------|------------|----------|
+| Baca docs/PR terbaru dari GitHub | ✅ Action | ✅ native | — |
+| Visi / domain / AI architecture | ✅ Utama | Update docs sesuai HANDOFF | Approve |
+| Ubah kode, migration, PR | ❌ | ✅ Utama | Review |
+| HANDOFF spec | ✅ hasilkan | Eksekusi | Paste antar tool |
+| STATUS implementasi | Review | ✅ hasilkan | Paste ke Copilot |
+| PAT / secrets | Hanya di GPT Builder | Env lokal/VPS | Kelola & rotate |
+| Upload Knowledge manual | Opsional fallback | — | Jarang (Action utama) |
 
 ### Satu kalimat
 
-- **MyGPT** = otak strategi & domain (berpikir bersama Anda)
-- **Cursor** = tangan teknik (kode, PR, audit terhadap source)
-- **Repo `docs/`** = memori bersama (source of truth)
-- **Anda** = sinkronisasi & keputusan akhir
+- **Buek Copilot** = architect/reviewer yang selalu bisa tarik repo terbaru  
+- **Cursor** = executor kode  
+- **GitHub** = source of truth  
+- **Anda** = keputusan & jembatan HANDOFF/STATUS  
 
 ---
 
-## Kebutuhan dari Anda (checklist setup)
+## Setup yang perlu Anda siapkan
 
-### Wajib (Phase 1 — Knowledge Sync)
+### A) Fine-grained PAT (wajib untuk Action)
 
-- [ ] **Custom GPT ID** (dari URL: `g-...`) — catat di bawah / private note, jangan commit secret
-- [ ] Nama GPT (contoh: `Buek Core Architect`)
-- [ ] Akses edit ke Custom GPT tersebut
-- [ ] Repo GitHub: `abdularief23/buek-core` (sudah ada)
-- [ ] Salin isi [`docs/mygpt/INSTRUCTIONS.md`](./mygpt/INSTRUCTIONS.md) → **Configure → Instructions** di ChatGPT
-- [ ] Upload file Knowledge sesuai [`docs/mygpt/KNOWLEDGE_MANIFEST.md`](./mygpt/KNOWLEDGE_MANIFEST.md)
-- [ ] Set **Conversation starters** (disarankan di Instructions)
-- [ ] Matikan / jangan aktifkan Actions dulu (Phase 2 opsional)
+| Setting | Nilai |
+|---------|--------|
+| Repository | `buek-core` saja |
+| Contents | Read |
+| Pull requests | Read |
+| Metadata | Read |
+| Issues | Read (opsional) |
 
-### Opsional (Phase 2 — GPT Actions baca GitHub)
+**Jangan kirim PAT ke Cursor atau ke chat ini.**  
+Panduan lengkap: [`mygpt/GITHUB_ACTION_SETUP.md`](./mygpt/GITHUB_ACTION_SETUP.md)
 
-- [ ] GitHub Personal Access Token (read-only, scope `contents:read`) — **jangan** taruh di chat publik; simpan di GPT Action auth
-- [ ] Aktifkan Action dengan schema di [`docs/mygpt/openapi-github-docs.yaml`](./mygpt/openapi-github-docs.yaml)
-- [ ] Tes: tanya MyGPT “Ambil PROJECT_CONTEXT dari repo”
+### B) Custom GPT “Buek Copilot”
 
-### Opsional (Phase 3 — sync otomatis)
+1. Paste Instructions: [`mygpt/INSTRUCTIONS.md`](./mygpt/INSTRUCTIONS.md)  
+2. Actions → Import: [`mygpt/openapi-buek-copilot-github.yaml`](./mygpt/openapi-buek-copilot-github.yaml)  
+3. Auth = Bearer + PAT (secret)  
+4. (Opsional) Knowledge Tier A sebagai fallback — [`mygpt/KNOWLEDGE_MANIFEST.md`](./mygpt/KNOWLEDGE_MANIFEST.md)  
+5. Tes dengan prompt di GITHUB_ACTION_SETUP.md  
 
-- [ ] Script / GitHub Action yang meng-export `docs/` ke zip knowledge pack
-- [ ] Reminder mingguan: sync Knowledge MyGPT
-
----
-
-## Alur kerja harian yang disarankan
-
-### A) Ide / arsitektur (mulai di MyGPT)
+### C) Alur kerja
 
 ```text
-Anda → MyGPT: diskusi desain / domain
-    ↓
-MyGPT: hasilkan HANDOFF block (template)
-    ↓
-Anda → Cursor: paste HANDOFF + “implement / update docs”
-    ↓
-Cursor: commit ke docs/ atau kode + PR
-    ↓
-Anda: merge → re-upload Knowledge ke MyGPT (jika docs berubah)
+Cursor mengubah kode / docs → push GitHub
+        │
+        ▼
+Anda tanya Buek Copilot → Action baca GitHub terbaru
+        │
+        ▼
+Copilot: review / HANDOFF
+        │
+        ▼
+Anda paste HANDOFF → Cursor
 ```
 
-### B) Kode / bug / audit (mulai di Cursor)
-
-```text
-Anda → Cursor: kerjakan di repo
-    ↓
-Cursor: hasil + ringkasan STATUS block
-    ↓
-Anda → MyGPT: paste STATUS + minta review domain/strategi
-    ↓
-MyGPT: feedback → jika perlu, HANDOFF balik ke Cursor
-```
-
-Template siap pakai: [`docs/mygpt/HANDOFF_TEMPLATE.md`](./mygpt/HANDOFF_TEMPLATE.md)
+Knowledge **tidak perlu** di-upload ulang setiap perubahan docs jika Action sudah jalan.
 
 ---
 
-## Aturan anti-konflik
+## Kemampuan Buek Copilot (via Action)
 
-1. **Source of truth = GitHub `docs/`**, bukan chat MyGPT dan bukan memory chat Cursor
-2. MyGPT **tidak boleh** mengklaim “sudah diimplementasi di kode” tanpa STATUS dari Cursor
-3. Cursor **tidak boleh** mengubah visi domain tanpa HANDOFF / docs yang Anda approve
-4. Secret (`OPENAI_API_KEY`, token, password) **tidak pernah** di-upload ke Knowledge MyGPT
-5. Setelah PR docs merge → sync Knowledge MyGPT (lihat checklist)
+Contoh pertanyaan yang didukung:
+
+- "Baca `docs/architecture.md` dan jelaskan alur AI."
+- "Bandingkan PR #55 dengan architecture."
+- "Apakah HANDOFF ini sesuai template di repo?"
+- "Apa perubahan sejak commit terakhir di `docs/`?"
+- "Ringkas semua perubahan di `docs/mygpt/`."
+- "Compare `main...cursor/cursor-mygpt-bridge-e866`."
+
+Endpoint: lihat OpenAPI (`getContents`, `listPullRequests`, `compareCommits`, dll.).
 
 ---
 
-## File di repo ini
+## File di repo
 
 | File | Fungsi |
 |------|--------|
 | [`cursor-mygpt-bridge.md`](./cursor-mygpt-bridge.md) | Dokumen ini |
-| [`mygpt/INSTRUCTIONS.md`](./mygpt/INSTRUCTIONS.md) | Paste ke Custom GPT Instructions |
-| [`mygpt/KNOWLEDGE_MANIFEST.md`](./mygpt/KNOWLEDGE_MANIFEST.md) | Daftar file yang di-upload |
-| [`mygpt/HANDOFF_TEMPLATE.md`](./mygpt/HANDOFF_TEMPLATE.md) | Template tukar info Cursor ↔ MyGPT |
-| [`mygpt/SYNC_CHECKLIST.md`](./mygpt/SYNC_CHECKLIST.md) | Checklist sync berkala |
-| [`mygpt/openapi-github-docs.yaml`](./mygpt/openapi-github-docs.yaml) | Phase 2: Action baca docs dari GitHub |
+| [`mygpt/GITHUB_ACTION_SETUP.md`](./mygpt/GITHUB_ACTION_SETUP.md) | Setup PAT + Action + tes |
+| [`mygpt/openapi-buek-copilot-github.yaml`](./mygpt/openapi-buek-copilot-github.yaml) | OpenAPI Action (utama) |
+| [`mygpt/INSTRUCTIONS.md`](./mygpt/INSTRUCTIONS.md) | Instructions GPT |
+| [`mygpt/HANDOFF_TEMPLATE.md`](./mygpt/HANDOFF_TEMPLATE.md) | Template tukar info |
+| [`mygpt/KNOWLEDGE_MANIFEST.md`](./mygpt/KNOWLEDGE_MANIFEST.md) | Knowledge opsional |
+| [`mygpt/FIRST_MESSAGE.md`](./mygpt/FIRST_MESSAGE.md) | Pesan pertama setelah setup |
+| [`mygpt/SYNC_CHECKLIST.md`](./mygpt/SYNC_CHECKLIST.md) | Health check (lebih ringan jika Action aktif) |
 
 ---
 
-## Langkah setup 15 menit (Phase 1)
+## Batasan yang perlu diingat
 
-1. Buka ChatGPT → **My GPTs** → Create / Edit GPT  
-2. **Name:** `Buek Core — Manufacturing Architect` (atau nama Anda)  
-3. **Instructions:** paste seluruh isi `docs/mygpt/INSTRUCTIONS.md`  
-4. **Knowledge:** upload file dari manifest (yang sudah ada di `main` dulu; tambah dari PR #54 setelah merge)  
-5. **Capabilities:** Web Browsing ON jika ingin riset; Code Interpreter opsional; **Actions OFF** dulu  
-6. Simpan → salin URL → catat Custom GPT ID (`g-...`) di note pribadi  
-7. Tes conversation starter:  
-   > “Ringkas posisi AMP sebagai Vertical #1 Buek Core dan apa yang boleh/tidak boleh diubah.”  
-8. Dari Cursor, minta generate STATUS; paste ke MyGPT dengan template HANDOFF
+1. Action hanya aktif di **Custom GPT** yang Anda konfigurasi — bukan di ChatGPT umum.  
+2. Buek Copilot **tidak otomatis ingat** repo di semua percakapan lain.  
+3. Cursor/Chat di sini **tidak menyimpan** kredensial GitHub Anda.  
+4. Jangan beri permission Write pada PAT.  
 
 ---
 
-## Info yang perlu Anda berikan ke MyGPT (setelah setup)
-
-Setelah Instructions + Knowledge terpasang, berikan ke MyGPT (boleh sekali di chat pertama):
-
-```text
-Saya Abdul Arief, founder Buek Core.
-Repo: https://github.com/abdularief23/buek-core
-Live: https://core.buekwebsite.com
-Cursor adalah eksekutor kode; kamu adalah arsitek domain.
-Gunakan HANDOFF_TEMPLATE saat ada keputusan yang harus dieksekusi di repo.
-Custom GPT ID saya: g-________ (isi sendiri)
-```
-
-Jangan berikan API key ke MyGPT.
-
----
-
-## Status docs AMP (penting untuk Knowledge)
-
-| Dokumen | Status di `main` (cek sebelum upload) |
-|---------|----------------------------------------|
-| `analisis-masalah-pabrik-PROJECT_CONTEXT.md` | Ada (PR #53) |
-| `ARCHITECTURE_REVIEW`, `AI_COPILOT`, `WORKER_AUDIT`, `CODEBASE_GUIDE`, `amp-codebase/*` | Di branch `cursor/amp-architecture-review-e866` (PR #54) — upload setelah merge, atau download dari branch |
-
----
-
-*Bridge ini membuat MyGPT dan Cursor bekerja sebagai satu tim dengan memori bersama di GitHub.*
+*Bridge ini membuat Cursor dan Buek Copilot bekerja dari GitHub yang sama tanpa upload dokumen berulang.*

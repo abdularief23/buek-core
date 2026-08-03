@@ -1,51 +1,49 @@
-# Sync Checklist — Cursor ↔ MyGPT
+# Sync Checklist — Cursor ↔ Buek Copilot
 
-Jalankan setelah kerja docs/kode penting, atau **mingguan** (mis. setiap Senin).
-
----
-
-## Mingguan (5–10 menit)
-
-- [ ] `git pull` di `main` (atau cek GitHub)
-- [ ] Ada PR docs baru yang sudah merge? → download file Knowledge terbaru
-- [ ] Replace file di Custom GPT Knowledge (Tier A + Tier B)
-- [ ] Kirim ke MyGPT blok `KNOWLEDGE SYNC` dari [`HANDOFF_TEMPLATE.md`](./HANDOFF_TEMPLATE.md)
-- [ ] Tanya MyGPT: “Apa 3 perubahan paling penting sejak sync terakhir?”
-- [ ] Jika MyGPT mengusulkan fitur baru → buat HANDOFF → Cursor (jangan implement di chat saja)
+Dengan **GitHub Action** aktif, sync Knowledge jarang diperlukan. Fokus pada health check Action + alur HANDOFF.
 
 ---
 
-## Setelah sesi Cursor selesai
+## Setelah setup Action (sekali)
 
-- [ ] Cursor kasih STATUS block
-- [ ] Paste STATUS ke MyGPT
-- [ ] MyGPT review → HANDOFF berikutnya atau “tidak ada aksi”
-- [ ] Jika docs berubah di PR → tandai untuk sync Knowledge
-
----
-
-## Setelah sesi MyGPT selesai (desain besar)
-
-- [ ] Ada HANDOFF → Cursor?
-- [ ] Paste HANDOFF ke Cursor Cloud / Cursor IDE
-- [ ] Jangan biarkan keputusan besar hanya di chat MyGPT tanpa update `docs/`
+- [ ] PAT fine-grained: Contents/PR/Metadata read-only, hanya `buek-core`
+- [ ] OpenAPI `openapi-buek-copilot-github.yaml` ter-import
+- [ ] Auth Bearer secret terpasang (bukan di chat)
+- [ ] Instructions versi terbaru (termasuk aturan Actions)
+- [ ] Uji prompt #1–4 di [`GITHUB_ACTION_SETUP.md`](./GITHUB_ACTION_SETUP.md)
 
 ---
 
-## Health check (bulanan)
+## Setiap sesi kerja (2 menit)
 
-- [ ] Instructions MyGPT masih selaras dengan `docs/mygpt/INSTRUCTIONS.md` di repo
-- [ ] Tidak ada secret di Knowledge
-- [ ] Custom GPT ID tercatat di note pribadi
-- [ ] Phase 2 Actions (jika aktif): token GitHub masih valid & read-only
+- [ ] Cursor selesai → minta **STATUS** block  
+- [ ] Paste STATUS ke **Buek Copilot** (Custom GPT dengan Action)  
+- [ ] Jika Copilot usulkan kerja baru → ambil **HANDOFF** → paste ke Cursor  
+- [ ] Tidak perlu re-upload Knowledge
 
 ---
 
-## Indikator bridge sehat
+## Mingguan (opsional)
 
-| Gejala | Artinya | Perbaikan |
-|--------|---------|-----------|
-| MyGPT bilang fitur “sudah ada” tapi Cursor bilang belum | Knowledge usang | Sync Knowledge + STATUS |
-| Cursor mengubah visi domain sendiri | Bridge dilanggar | MyGPT + DECISION dulu |
-| Dua versi arsitektur berbeda | Docs tidak jadi SoT | Update `docs/`, re-upload |
-| Chat MyGPT penuh detail kode | Salah peran | Pindah ke Cursor + Codebase Guide |
+- [ ] Di Buek Copilot: “List open PR terkait docs/AMP”  
+- [ ] Cek token expiration (GitHub settings)  
+- [ ] Jika Instructions di repo berubah → re-paste ke GPT Builder  
+
+---
+
+## Bulanan
+
+- [ ] Rotate / perpanjang PAT jika perlu  
+- [ ] Bandingkan Instructions di GPT vs `docs/mygpt/INSTRUCTIONS.md`  
+- [ ] Pastikan tidak ada Write permission pada token  
+
+---
+
+## Indikator sehat
+
+| Gejala | Perbaikan |
+|--------|-----------|
+| Copilot mengarang isi file | Paksa: “panggil getContents dulu” |
+| 401/403 dari Action | Cek PAT + Bearer auth |
+| Jawaban usang meski Action ada | Instructions belum update — re-paste |
+| ChatGPT biasa “tidak bisa baca repo” | Buka **Buek Copilot** (Custom GPT), bukan chat umum |

@@ -1,36 +1,42 @@
-# Pesan pertama ke MyGPT (setelah setup)
+# Pesan pertama ke Buek Copilot (setelah Action terpasang)
 
-Setelah Instructions + Knowledge terpasang, **kirim pesan ini** di chat baru MyGPT:
+Kirim di chat **Custom GPT Buek Copilot** (bukan ChatGPT umum):
 
 ---
 
 ```text
-Saya Abdul Arief, founder Buek Core (Indonesia).
+Saya Abdul Arief, founder Buek Core.
 
-Repo: https://github.com/abdularief23/buek-core
+Repo: abdularief23/buek-core
 Live: https://core.buekwebsite.com
 
-Pembagian kerja:
-- Kamu (MyGPT) = arsitek domain & strategi AI Manufacturing
-- Cursor = eksekutor kode di GitHub
-- docs/ di repo = source of truth
-- Saya = keputusan akhir & sync Knowledge
+Peran:
+- Kamu (Buek Copilot) = architect/reviewer — baca GitHub via Action
+- Cursor = executor kode
+- docs/ + kode di GitHub = source of truth
+- Saya = keputusan akhir + HANDOFF/STATUS
 
-Custom GPT ID saya: g-______________   ← isi dari URL GPT
+Custom GPT ID: g-______________
 
-Konfirmasi:
-1) Kamu sudah membaca Knowledge yang di-upload
-2) Ringkas posisi AMP sebagai Vertical #1 (5 bullet)
-3) Apa yang boleh dan tidak boleh dilakukan AI di manufaktur (dari prinsip copilot)
-4) Siap pakai format HANDOFF → CURSOR dan STATUS ← CURSOR
+Konfirmasi dengan Action (jangan mengarang):
+1) Panggil getContents untuk docs/architecture.md (ref=main), decode base64, ringkas alur AI dalam 5 bullet
+2) listPullRequests (state=open) — sebutkan PR terkait docs/bridge jika ada
+3) Konfirmasi kamu siap format HANDOFF → CURSOR dan STATUS ← CURSOR
 
-Jangan minta atau simpan API key.
+Jangan minta PAT di chat. Auth hanya di GPT Builder.
 ```
 
 ---
 
-Lalu uji dengan:
+## Uji lanjutan
 
 ```text
-Buatkan HANDOFF → CURSOR untuk: merge / pastikan dokumentasi AMP architecture + AI copilot tersedia di main dan daftar Knowledge Manifest sudah akurat.
+Bandingkan PR #55 dengan docs/architecture.md — apakah bridge Cursor↔MyGPT sudah tercermin di architecture?
+```
+
+```text
+Ambil docs/mygpt/HANDOFF_TEMPLATE.md lalu cek apakah HANDOFF berikut sesuai template:
+=== HANDOFF → CURSOR ===
+Goal: contoh
+=== END HANDOFF ===
 ```
