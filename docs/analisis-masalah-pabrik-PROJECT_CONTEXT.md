@@ -13,7 +13,8 @@
 | **Status** | Vertical manufacturing #1 — bukan aplikasi standalone jangka panjang |
 | **Platform induk** | [Buek Core](https://core.buekwebsite.com) — AI platform + domain modules |
 | **Origin** | Dibangun awal di [Vantis Pabrik](https://app.vantis.sh) (Cloudflare template) |
-| **Target akhir** | **AI Manufacturing Agent** terintegrasi dengan Memory, Workflow, Knowledge, dan Agent engines Buek Core |
+| **Target akhir** | **AI Manufacturing Copilot** — bukan fitur tambahan, melainkan inti workflow investigasi |
+| **Spesifikasi AI** | [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md) — 10 stage AI, trigger, aturan "engineer decides" |
 
 ### Yang akan terhubung ke Buek Core (roadmap)
 
@@ -43,7 +44,7 @@ Analisis Masalah Pabrik (AMP)
 
 ## 2. Product Purpose
 
-Aplikasi internal untuk tim manufacturing **mencatat, menganalisis, dan menyelesaikan masalah produksi secara terstruktur**.
+Aplikasi internal untuk tim manufacturing **mencatat, menganalisis, dan menyelesaikan masalah produksi secara terstruktur** — dengan **AI sebagai copilot engineer**, bukan pengganti engineer.
 
 Bukan ticketing generik — ini **pusat continuous improvement** yang menghubungkan:
 
@@ -214,8 +215,16 @@ Verification            (bukti: metric, foto, PPM, dll.)
       ↓
 Closed                  (status: closed → knowledge)
       ↓
-Knowledge Base          (similar case lookup, future AI)
+Knowledge Base          (similar case lookup, AI lesson learned)
 ```
+
+```
+Source code  →  Codebase Guide  →  WORKER_AUDIT  →  Sprint AI-1
+```
+
+Lihat [`analisis-masalah-pabrik-CODEBASE_GUIDE.md`](./analisis-masalah-pabrik-CODEBASE_GUIDE.md) — dokumentasi semantik per file (`schema`, `worker`, `migrations`, `routes`, AI).
+
+**Begitu Problem dibuat, AI Stage 1–2 harus berjalan** (understanding + similar case search). Detail: [`AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md).
 
 **Setiap transisi status penting harus tercatat di `Problem Activity`.**
 
@@ -274,11 +283,16 @@ Saat membaca atau mengubah kode:
 - [ ] Apakah types Drizzle dipakai (bukan string bebas)?
 - [ ] Apakah komponen UI tidak mengandung query DB langsung?
 - [ ] Apakah perubahan mendukung visi integrasi Buek Core (§1)?
+- [ ] Jika menyentuh AI: apakah masuk Stage 1–10 di AI_COPILOT.md dan engineer tetap yang memutuskan?
 - [ ] Refactor minimal — jangan ubah file tidak terkait
 
 ---
 
 ## 11. Long-Term Roadmap
+
+> **Prioritas teknis detail:** lihat [`analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`](./analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md) — scorecard, gap P0–P3, worker refactor plan, index & master data migration.
+
+> **Gate AI:** [`WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md) — **22 audit** (kode + knowledge + AI Engineering Platform); P0 termasuk reasoning pipeline & knowledge lifecycle.
 
 ### Fase saat ini — MVP AMP (Cloudflare)
 
@@ -295,13 +309,17 @@ Saat membaca atau mengubah kode:
 - Line/shift comparison
 - KPI cards (OEE, NG rate, downtime %)
 
-### Fase 3 — AI (via Buek Core)
+### Fase 3 — AI Manufacturing Copilot (inti produk, bukan add-on)
 
-- AI Root Cause suggestion
-- AI Corrective Action recommendation
-- Similar problem detection
-- Knowledge search (SOP + histori)
-- Predictive quality signals
+> Spesifikasi lengkap 10 stage: [`analisis-masalah-pabrik-AI_COPILOT.md`](./analisis-masalah-pabrik-AI_COPILOT.md)  
+> **Prasyarat:** Worker audit selesai — [`analisis-masalah-pabrik-WORKER_AUDIT.md`](./analisis-masalah-pabrik-WORKER_AUDIT.md)
+
+- [ ] Stage 1–2: Problem understanding + similar case search (trigger on create)
+- [ ] Stage 3: Investigation assistant (checklist questions)
+- [ ] Stage 4–6: Root cause ranking, knowledge retrieval, corrective action rec.
+- [ ] Stage 7–8: Risk analysis + verification assistant
+- [ ] Stage 9–10: Auto lesson learned + closed-loop knowledge
+- Bridge ke Buek Core `investigation-copilot.ts` + `packages/memory` + `packages/knowledge`
 
 ### Fase 4 — Enterprise
 
@@ -318,12 +336,16 @@ Saat membaca atau mengubah kode:
 Urutan baca untuk memahami codebase:
 
 1. `docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md` (dokumen ini)
-2. `src/db/schema.ts` — entitas & relasi
-3. `migrations/` — evolusi schema
-4. `worker/index.ts` — API surface & business rules
-5. `src/routes/` — routing & halaman utama
-6. `.jatevo/agent-memory.json` — requirement asli dari AI builder
-7. `wrangler.jsonc` — D1 binding & env
+2. **`docs/analisis-masalah-pabrik-CODEBASE_GUIDE.md`** + **`docs/amp-codebase/`** — semantic guide (purpose, flow, trade-off)
+3. **`docs/analisis-masalah-pabrik-WORKER_AUDIT.md`** — 22 audit (evaluasi)
+4. **`docs/analisis-masalah-pabrik-AI_COPILOT.md`** — AI copilot 10 stage
+5. **`docs/analisis-masalah-pabrik-ARCHITECTURE_REVIEW.md`** — gap & refactor plan
+6. `src/db/schema.ts` — entitas & relasi (isi `amp-codebase/01-schema.md` dari sini)
+7. `migrations/` — evolusi schema → `amp-codebase/03-migrations.md`
+8. `worker/index.ts` — API & business rules → `amp-codebase/02-worker.md`
+9. `src/routes/` — alur engineer → `amp-codebase/04-routes.md`
+10. `.jatevo/agent-memory.json` — requirement asli dari AI builder
+11. `wrangler.jsonc` — D1 binding & env
 
 ---
 
@@ -365,10 +387,12 @@ Product:  Analisis Masalah Pabrik (AMP)
 Stack:    React 19 + Vite + CF Worker + D1 + Drizzle
 Parent:   Buek Core — Vertical #1 Manufacturing
 Flow:     Problem → RCA → CAPA → Verify → Closed → Knowledge
-Schema:   src/db/schema.ts
-API:      worker/index.ts
+Schema:   src/db/schema.ts  →  docs/amp-codebase/01-schema.md
+API:      worker/index.ts  →  docs/amp-codebase/02-worker.md
+Guide:    docs/analisis-masalah-pabrik-CODEBASE_GUIDE.md
 Rules:    migration-first, strict TS, activity log, manufacturing terms
-Vision:   AI Manufacturing Agent on Buek Core platform
+Vision:   AI Manufacturing Copilot — engineer decides, AI accelerates
+AI Spec:  docs/analisis-masalah-pabrik-AI_COPILOT.md (10 stages)
 ```
 
 ---
