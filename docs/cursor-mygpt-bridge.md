@@ -119,6 +119,7 @@ Endpoint: lihat OpenAPI (`getContents`, `listPullRequests`, `compareCommits`, dl
 |------|--------|
 | [`cursor-mygpt-bridge.md`](./cursor-mygpt-bridge.md) | Dokumen ini |
 | [`mygpt/GITHUB_ACTION_SETUP.md`](./mygpt/GITHUB_ACTION_SETUP.md) | Setup PAT + Action + tes |
+| [`mygpt/OPERATIONS.md`](./mygpt/OPERATIONS.md) | Map `read_file` → Action + aturan kejujuran |
 | [`mygpt/openapi-buek-copilot-github.yaml`](./mygpt/openapi-buek-copilot-github.yaml) | OpenAPI Action (utama) |
 | [`mygpt/INSTRUCTIONS.md`](./mygpt/INSTRUCTIONS.md) | Instructions GPT |
 | [`mygpt/HANDOFF_TEMPLATE.md`](./mygpt/HANDOFF_TEMPLATE.md) | Template tukar info |

@@ -83,20 +83,26 @@ Cuplikan siap pakai ada di [`INSTRUCTIONS.md`](./INSTRUCTIONS.md) (bagian GitHub
 
 ## 4) Tes kemampuan (prompt uji)
 
+Map operasi lengkap: [`OPERATIONS.md`](./OPERATIONS.md) (`read_file`, `list_directory`, `get_pull_request`, …).
+
 Jalankan satu per satu di chat **Buek Copilot** (bukan ChatGPT biasa):
 
-| # | Prompt uji | Action yang diharapkan |
-|---|------------|------------------------|
-| 1 | Baca `docs/architecture.md` di `main` dan jelaskan alur AI. | `getContents` |
-| 2 | List file di `docs/mygpt/` | `getContents` (directory) atau `getGitTree` |
-| 3 | List open PR di `buek-core` | `listPullRequests` |
-| 4 | Bandingkan PR #55 dengan `docs/architecture.md` | `getPullRequest` + `listPullRequestFiles` + `getContents` |
-| 5 | Apa 5 commit terakhir yang menyentuh `docs/`? | `listCommits` path=docs/ |
-| 6 | Bandingkan `main...cursor/cursor-mygpt-bridge-e866` | `compareCommits` |
-| 7 | Apakah HANDOFF ini sesuai template di repo? *(paste HANDOFF)* | `getContents` `docs/mygpt/HANDOFF_TEMPLATE.md` |
-| 8 | Cari di docs teks `WORKER_AUDIT` | `searchCode` |
+| # | Prompt uji | Friendly op | Action |
+|---|------------|-------------|--------|
+| 1 | Baca `docs/architecture.md` di `main` dan jelaskan alur AI. | `read_file` | `getContents` |
+| 2 | List file di `docs/mygpt/` | `list_directory` | `getContents` |
+| 3 | List open PR di `buek-core` | — | `listPullRequests` |
+| 4 | Review PR #56 (detail + files) | `get_pull_request` | `getPullRequest` + `listPullRequestFiles` |
+| 5 | Apa 5 commit terakhir yang menyentuh `docs/`? | `list_commits` | `listCommits` |
+| 6 | Bandingkan `main...cursor/cursor-mygpt-bridge-e866` | `compare_branches` | `compareCommits` |
+| 7 | Ambil `docs/mygpt/HANDOFF_TEMPLATE.md` lalu cek HANDOFF yang saya paste | `read_file` | `getContents` |
+| 8 | Cari di docs teks `WORKER_AUDIT` | `search_code` | `searchCode` |
 
-Jika #1 gagal: cek PAT permission + Authentication Bearer + repo name.
+**Lulus:** GPT menyebut bahwa isi diambil via Action/API, dan kutipan cocok dengan file.  
+**Gagal:** GPT mengarang atau bilang “sudah baca” tanpa Action — perbaiki Instructions / auth.
+
+Jika #1 gagal: cek PAT permission + Authentication Bearer + repo name.  
+Jangan mengandalkan web browsing ke `raw.githubusercontent.com` sebagai pengganti Action.
 
 ---
 
