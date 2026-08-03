@@ -81,28 +81,30 @@ Cuplikan siap pakai ada di [`INSTRUCTIONS.md`](./INSTRUCTIONS.md) (bagian GitHub
 
 ---
 
-## 4) Tes kemampuan (prompt uji)
+## 4) Tes penerimaan (wajib — 5 skenario)
 
-Map operasi lengkap: [`OPERATIONS.md`](./OPERATIONS.md) (`read_file`, `list_directory`, `get_pull_request`, …).
+Map operasi: [`OPERATIONS.md`](./OPERATIONS.md).  
+Jalankan di **Buek Copilot** (Custom GPT + Action), bukan ChatGPT biasa.
 
-Jalankan satu per satu di chat **Buek Copilot** (bukan ChatGPT biasa):
+| # | Skenario | Prompt | Operation |
+|---|----------|--------|-----------|
+| 1 | Read file | Baca `docs/architecture.md` via Action. | `getContents` |
+| 2 | List directory | Tampilkan isi folder `docs/mygpt`. | `getContents` |
+| 3 | Compare | Bandingkan `main...cursor/buek-copilot-operations-map-e866` (atau branch lain). | `compareCommits` |
+| 4 | PR review | Ringkas PR #57. | `getPullRequest` + `listPullRequestFiles` |
+| 5 | Code search | Cari semua referensi `HANDOFF_TEMPLATE`. | `searchCode` |
 
-| # | Prompt uji | Friendly op | Action |
-|---|------------|-------------|--------|
-| 1 | Baca `docs/architecture.md` di `main` dan jelaskan alur AI. | `read_file` | `getContents` |
-| 2 | List file di `docs/mygpt/` | `list_directory` | `getContents` |
-| 3 | List open PR di `buek-core` | — | `listPullRequests` |
-| 4 | Review PR #56 (detail + files) | `get_pull_request` | `getPullRequest` + `listPullRequestFiles` |
-| 5 | Apa 5 commit terakhir yang menyentuh `docs/`? | `list_commits` | `listCommits` |
-| 6 | Bandingkan `main...cursor/cursor-mygpt-bridge-e866` | `compare_branches` | `compareCommits` |
-| 7 | Ambil `docs/mygpt/HANDOFF_TEMPLATE.md` lalu cek HANDOFF yang saya paste | `read_file` | `getContents` |
-| 8 | Cari di docs teks `WORKER_AUDIT` | `search_code` | `searchCode` |
+**Lulus (semua 5):** jawaban via Action/API; kutipan cocok; tidak mengandalkan web.  
+**Gagal:** mengarang / “sudah baca” tanpa Action → perbaiki Instructions / auth.
 
-**Lulus:** GPT menyebut bahwa isi diambil via Action/API, dan kutipan cocok dengan file.  
-**Gagal:** GPT mengarang atau bilang “sudah baca” tanpa Action — perbaiki Instructions / auth.
+### Tes transparansi fallback
 
-Jika #1 gagal: cek PAT permission + Authentication Bearer + repo name.  
-Jangan mengandalkan web browsing ke `raw.githubusercontent.com` sebagai pengganti Action.
+| # | Prompt / kondisi | Perilaku yang diharapkan |
+|---|------------------|--------------------------|
+| 6 | Matikan sementara Action / pakai token invalid, lalu minta baca `docs/architecture.md` | GPT bilang **pembacaan repo gagal**; **tidak** diam-diam pakai Knowledge; minta izin atau pakai Knowledge dengan disclaimer usang |
+
+Jika #1 gagal: cek PAT + Bearer + repo name.  
+Jangan andalkan web browse `raw.githubusercontent.com` sebagai pengganti Action.
 
 ---
 

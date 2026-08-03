@@ -5,16 +5,43 @@
 
 ---
 
+## Prioritas sumber (kontrak perilaku)
+
+| Prioritas | Sumber | Dipakai untuk |
+|-----------|--------|---------------|
+| 1 | **GitHub Action (live)** | Dokumen & status repo yang berubah |
+| 2 | **Knowledge** | Prinsip, domain, glossary (stabil) |
+| 3 | **Web** | Fallback jika diperlukan — bukan pengganti Action untuk isi repo |
+| 4 | **Jawaban internal** | Hanya jika 1–3 tidak ada — wajib label **asumsi** |
+
 ## Prinsip kejujuran (wajib)
 
 | Situasi | Yang harus dikatakan |
 |---------|----------------------|
 | Action berhasil | “Saya baca `path` via GitHub API (ref=…).” |
-| Action gagal | “Belum berhasil mengambil file — error … . Tidak akan mengarang isi.” |
+| Action gagal | “Pembacaan repository gagal (operation …). Saya **belum** membaca isi live.” |
+| Mau pakai Knowledge setelah gagal | Minta izin / nyatakan: “ini dari Knowledge — mungkin bukan kondisi repo terbaru.” |
 | Web browse gagal / tidak relevan | Jangan klaim sudah baca repo. Arahkan ke Action. |
-| Knowledge usang vs Action | **Action menang.** |
+| Knowledge vs Action | **Action menang** untuk isi yang berubah. |
 
-Jangan pernah bilang “sudah membaca X” jika isi file belum benar-benar diambil.
+**Jangan** silent fallback Knowledge → kesan palsu “sudah baca repo”.  
+**Jangan** bilang “sudah membaca X” jika isi belum benar-benar diambil.
+
+---
+
+## Pemilihan operation (paling spesifik menang)
+
+| Kemampuan | Operation | Digunakan untuk |
+|-----------|-----------|-----------------|
+| Read file | `getContents` | Membaca dokumen (path diketahui) |
+| List folder | `getContents` | Enumerasi direktori |
+| Search code | `searchCode` | Mencari simbol/teks (path **tidak** diketahui) |
+| Read PR | `getPullRequest` | Review PR |
+| PR files | `listPullRequestFiles` | Melihat perubahan file di PR |
+| Compare | `compareCommits` | Review perubahan antar branch (`base...head`) |
+| Commit | `getCommit` | Audit commit |
+
+Aturan: jika lokasi file sudah diketahui → **`getContents`**, bukan `searchCode`.
 
 ---
 
@@ -106,15 +133,21 @@ User: Cari HANDOFF di docs
 
 ---
 
-## Checklist “Action aktif”
+## Checklist penerimaan (setelah Action aktif)
 
-Buek Copilot baru dianggap siap fallback Cursor jika:
+Kelima skenario harus **sukses via Action**, tanpa mengandalkan web:
 
-- [ ] OpenAPI ter-import  
-- [ ] PAT Bearer secret terpasang (read-only)  
-- [ ] `read_file("docs/architecture.md")` berhasil (via Action, bukan web)  
-- [ ] `list_directory("docs/mygpt")` berhasil  
-- [ ] `get_pull_request(N)` berhasil untuk satu PR  
-- [ ] Instructions memuat map operasi ini + aturan kejujuran  
+| # | Skenario | Prompt uji | Operation |
+|---|----------|------------|-----------|
+| 1 | Read file | Baca `docs/architecture.md` via Action. | `getContents` |
+| 2 | List directory | Tampilkan isi folder `docs/mygpt`. | `getContents` |
+| 3 | Compare | Bandingkan `main...` *(branch fitur)*. | `compareCommits` |
+| 4 | PR review | Ringkas PR #57. | `getPullRequest` + `listPullRequestFiles` |
+| 5 | Code search | Cari semua referensi `HANDOFF_TEMPLATE`. | `searchCode` |
+
+Tambahan perilaku:
+
+- [ ] Saat Action sengaja digagalkan / error: GPT **menjelaskan gagal**, tidak diam-diam pakai Knowledge  
+- [ ] Instructions di GPT Builder = versi terbaru dari repo  
 
 Setup: [`GITHUB_ACTION_SETUP.md`](./GITHUB_ACTION_SETUP.md)
