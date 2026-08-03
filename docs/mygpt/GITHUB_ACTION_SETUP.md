@@ -62,8 +62,19 @@ Anda **tidak perlu** upload ulang Knowledge setiap kali `docs/` berubah.
    - Authentication Type: **API Key**
    - API Key → **Bearer**
    - Masukkan PAT sebagai secret (field yang disediakan GPT Builder)
-5. Setujui bahwa Action memanggil `api.github.com`  
-6. **Update** / Save GPT
+5. **Privacy policy** (field di bawah Action) — isi salah satu URL di bawah
+6. Setujui bahwa Action memanggil `api.github.com`  
+7. **Update** / Save GPT
+
+### Privacy Policy URL (untuk field konfigurasi)
+
+| Kapan | URL yang dimasukkan |
+|-------|---------------------|
+| **Direkomendasikan (setelah deploy web)** | `https://core.buekwebsite.com/privacy-buek-copilot.html` |
+| **Sementara / selalu valid (GitHub API)** | `https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement` |
+| **Fallback dari repo (HTML di GitHub)** | `https://github.com/abdularief23/buek-core/blob/main/apps/web/public/privacy-buek-copilot.html` |
+
+OpenAI mewajibkan URL privacy policy publik untuk Action. Karena Action hanya memanggil GitHub API, URL kebijakan GitHub selalu diterima. Setelah `privacy-buek-copilot.html` ter-deploy ke `core.buekwebsite.com`, gunakan URL Buek itu agar kebijakan spesifik Buek Copilot.
 
 ---
 
