@@ -1,29 +1,23 @@
-# Phase 2 (opsional) — Custom GPT Action
-# Tujuan: MyGPT bisa membaca file docs dari GitHub tanpa upload manual.
+# DEPRECATED — diganti oleh openapi-buek-copilot-github.yaml
 #
-# Setup di ChatGPT:
-# 1. Configure → Actions → Import from OpenAPI schema (paste file ini)
-# 2. Authentication → API Key
-#    - Auth Type: Bearer
-#    - API Key: GitHub PAT (classic) dengan scope contents:read saja
-# 3. Privacy: jelas bahwa Action memanggil api.github.com
+# File ini hanya pointer agar link lama tidak membingungkan.
+# Gunakan: docs/mygpt/openapi-buek-copilot-github.yaml
 #
-# Uji: "Ambil isi docs/analisis-masalah-pabrik-PROJECT_CONTEXT.md dari repo abdularief23/buek-core branch main"
+# Lihat setup: docs/mygpt/GITHUB_ACTION_SETUP.md
 
-openapi: 3.1.0
+openapi: 3.0.1
 info:
-  title: Buek Core Docs (GitHub)
-  version: 1.0.0
+  title: DEPRECATED — use openapi-buek-copilot-github.yaml
+  version: 0.0.0
   description: >
-    Read-only access to documentation files in abdularief23/buek-core.
-    Used by Custom GPT to refresh architecture context.
+    This minimal schema is obsolete. Import openapi-buek-copilot-github.yaml instead.
 servers:
   - url: https://api.github.com
 paths:
   /repos/{owner}/{repo}/contents/{path}:
     get:
       operationId: getRepoFile
-      summary: Get a file from the repository
+      summary: DEPRECATED get file — use getContents in openapi-buek-copilot-github.yaml
       parameters:
         - name: owner
           in: path
@@ -40,34 +34,13 @@ paths:
         - name: path
           in: path
           required: true
-          description: Path to file, e.g. docs/architecture.md
           schema:
             type: string
         - name: ref
           in: query
-          required: false
-          description: Branch or commit SHA (default main)
           schema:
             type: string
             default: main
       responses:
         "200":
           description: File metadata and base64 content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  path:
-                    type: string
-                  sha:
-                    type: string
-                  encoding:
-                    type: string
-                  content:
-                    type: string
-                    description: Base64-encoded file content; decode before use
-        "404":
-          description: File not found

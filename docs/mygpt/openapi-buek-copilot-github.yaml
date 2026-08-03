@@ -1,0 +1,342 @@
+# Buek Copilot — GitHub REST Action (read-only)
+#
+# Tujuan: Custom GPT "Buek Copilot" membaca source of truth di GitHub
+# setiap kali pengguna bertanya — tanpa git clone, tanpa SSH, tanpa upload ulang.
+#
+# Setup (Anda sendiri — JANGAN kirim PAT ke Cursor / chat publik):
+# 1. Buat Fine-grained PAT → lihat GITHUB_ACTION_SETUP.md
+# 2. GPT Builder → Actions → Create new action → Import OpenAPI (file ini)
+# 3. Authentication → API Key → Bearer → paste PAT sebagai secret
+# 4. Confirm privacy policy for api.github.com
+#
+# Default repo: abdularief23/buek-core
+# Content file responses are base64 — decode before answering.
+
+openapi: 3.0.1
+info:
+  title: Buek Copilot GitHub Reader
+  version: 2.0.0
+  description: |
+    Read-only GitHub access for Buek Copilot (architect/reviewer).
+    Cursor remains the code executor. This Action only reads:
+    docs, PRs, commits, branches, file trees, and comparisons.
+    Never write, merge, or delete via this Action.
+servers:
+  - url: https://api.github.com
+paths:
+  /repos/{owner}/{repo}/contents/{path}:
+    get:
+      operationId: getContents
+      summary: Get file content or list a directory
+      description: |
+        For a file, returns base64 `content` — decode to UTF-8 markdown/text.
+        For a directory, returns an array of entries (name, path, type, sha).
+        Prefer path under docs/ for architecture questions.
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: path
+          in: path
+          required: true
+          description: "File or directory path, e.g. docs/architecture.md or docs/mygpt"
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Ref"
+      responses:
+        "200":
+          description: File object or directory listing
+        "404":
+          description: Path not found
+
+  /repos/{owner}/{repo}/git/trees/{tree_sha}:
+    get:
+      operationId: getGitTree
+      summary: List repository tree (all files)
+      description: |
+        Use tree_sha = branch name (e.g. main) or a commit SHA.
+        Set recursive=1 to list the full tree. Useful to discover docs/* paths.
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: tree_sha
+          in: path
+          required: true
+          description: Branch name or tree/commit SHA (e.g. main)
+          schema:
+            type: string
+            default: main
+        - name: recursive
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["1"]
+            default: "1"
+      responses:
+        "200":
+          description: Git tree listing
+
+  /repos/{owner}/{repo}/branches:
+    get:
+      operationId: listBranches
+      summary: List branches
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 30
+            maximum: 100
+      responses:
+        "200":
+          description: Branch list
+
+  /repos/{owner}/{repo}/commits:
+    get:
+      operationId: listCommits
+      summary: List recent commits
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: sha
+          in: query
+          description: Branch name or commit SHA
+          schema:
+            type: string
+            default: main
+        - name: path
+          in: query
+          description: Only commits touching this path (e.g. docs/)
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 30
+      responses:
+        "200":
+          description: Commit list
+
+  /repos/{owner}/{repo}/commits/{ref}:
+    get:
+      operationId: getCommit
+      summary: Get one commit with file diffs summary
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: ref
+          in: path
+          required: true
+          description: Commit SHA or branch tip
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Commit detail including files[]
+
+  /repos/{owner}/{repo}/compare/{basehead}:
+    get:
+      operationId: compareCommits
+      summary: Compare two branches or commits
+      description: |
+        basehead format MUST be base...head (three dots), e.g. main...cursor/cursor-mygpt-bridge-e866
+        Returns files changed, commits, ahead/behind counts.
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: basehead
+          in: path
+          required: true
+          description: "base...head e.g. main...cursor/cursor-mygpt-bridge-e866"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comparison result
+
+  /repos/{owner}/{repo}/pulls:
+    get:
+      operationId: listPullRequests
+      summary: List pull requests
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: open
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created, updated, popularity, long-running]
+            default: updated
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 30
+      responses:
+        "200":
+          description: PR list
+
+  /repos/{owner}/{repo}/pulls/{pull_number}:
+    get:
+      operationId: getPullRequest
+      summary: Get pull request details
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - $ref: "#/components/parameters/PullNumber"
+      responses:
+        "200":
+          description: PR detail (title, body, head/base refs, state)
+
+  /repos/{owner}/{repo}/pulls/{pull_number}/files:
+    get:
+      operationId: listPullRequestFiles
+      summary: List files changed in a pull request
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - $ref: "#/components/parameters/PullNumber"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 100
+      responses:
+        "200":
+          description: Files with status, additions, deletions, patch (truncated)
+
+  /repos/{owner}/{repo}/pulls/{pull_number}/comments:
+    get:
+      operationId: listPullRequestReviewComments
+      summary: List review comments on a pull request
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - $ref: "#/components/parameters/PullNumber"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Review comments
+
+  /repos/{owner}/{repo}/issues:
+    get:
+      operationId: listIssues
+      summary: List issues (note - also returns PRs unless filtered)
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: open
+        - name: labels
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Issue list
+
+  /repos/{owner}/{repo}/issues/{issue_number}:
+    get:
+      operationId: getIssue
+      summary: Get a single issue
+      parameters:
+        - $ref: "#/components/parameters/Owner"
+        - $ref: "#/components/parameters/Repo"
+        - name: issue_number
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Issue detail
+
+  /search/code:
+    get:
+      operationId: searchCode
+      summary: Search code in the repository
+      description: |
+        Query should include repo:abdularief23/buek-core
+        Example: repo:abdularief23/buek-core path:docs HANDOFF
+        Note - code search may require the token to be authorized for the repo
+        and can have rate limits / indexing delay.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: GitHub code search query
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 30
+      responses:
+        "200":
+          description: Search results
+        "403":
+          description: Rate limited or search not available for token
+
+components:
+  parameters:
+    Owner:
+      name: owner
+      in: path
+      required: true
+      schema:
+        type: string
+        default: abdularief23
+    Repo:
+      name: repo
+      in: path
+      required: true
+      schema:
+        type: string
+        default: buek-core
+    Ref:
+      name: ref
+      in: query
+      required: false
+      description: Branch, tag, or commit SHA
+      schema:
+        type: string
+        default: main
+    PullNumber:
+      name: pull_number
+      in: path
+      required: true
+      schema:
+        type: integer
