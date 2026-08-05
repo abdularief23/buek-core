@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Buek — Website Bisnis + VPS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #10241c;
+      --ink-soft: #2a4035;
+      --muted: #5c6f64;
+      --paper: #f3f0e8;
+      --foam: #e7f2ea;
+      --leaf: #1f6b45;
+      --leaf-deep: #0d3b28;
+      --sun: #e8a317;
+      --sun-deep: #c4840a;
+      --line: rgba(16, 36, 28, 0.12);
+      --glow: rgba(31, 107, 69, 0.35);
+      --radius: 18px;
+      --font-display: "Fraunces", Georgia, serif;
+      --font-body: "Outfit", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.5;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+
+    .nav {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      backdrop-filter: blur(12px);
+      background: rgba(243, 240, 232, 0.72);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s ease, background 0.3s ease;
+    }
+    .nav.scrolled { border-bottom-color: var(--line); }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand-mark {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.55rem;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, var(--leaf), var(--leaf-deep));
+      color: #f7fff9;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+    }
+    .nav-cta {
+      border: 0;
+      border-radius: 999px;
+      padding: 0.65rem 1.1rem;
+      background: var(--ink);
+      color: #f7fff9;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .nav-cta:hover { transform: translateY(-1px); background: var(--leaf-deep); }
+
+    /* —— Hero: one composition, brand first —— */
+    .hero {
+      min-height: 100vh;
+      min-height: 100svh;
+      position: relative;
+      display: grid;
+      align-items: end;
+      padding: 7rem 1.5rem 3.5rem;
+      overflow: hidden;
+      color: #f4faf6;
+      background:
+        radial-gradient(ellipse 80% 60% at 80% 20%, rgba(232, 163, 23, 0.28), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 15% 80%, rgba(88, 180, 120, 0.25), transparent 50%),
+        linear-gradient(160deg, #071a12 0%, #0d3b28 42%, #163528 100%);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent);
+      animation: gridDrift 28s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes gridDrift {
+      from { transform: translateY(0); }
+      to { transform: translateY(48px); }
+    }
+    .hero-orb {
+      position: absolute;
+      width: min(52vw, 420px);
+      height: min(52vw, 420px);
+      right: -6%;
+      top: 12%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(232,163,23,0.45), rgba(31,107,69,0.15) 55%, transparent 70%);
+      filter: blur(2px);
+      animation: orbPulse 7s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes orbPulse {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.06); opacity: 1; }
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+    }
+    .hero-brand {
+      font-family: var(--font-display);
+      font-size: clamp(3.2rem, 10vw, 5.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      margin: 0 0 1.25rem;
+      animation: riseIn 0.9s ease both;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: clamp(1.55rem, 3.8vw, 2.35rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.85rem;
+      max-width: 16ch;
+      animation: riseIn 0.9s ease 0.08s both;
+    }
+    .hero p {
+      margin: 0 0 1.75rem;
+      max-width: 34ch;
+      color: rgba(244, 250, 246, 0.82);
+      font-size: 1.05rem;
+      animation: riseIn 0.9s ease 0.16s both;
+    }
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      animation: riseIn 0.9s ease 0.24s both;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.9rem 1.35rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--sun), var(--sun-deep));
+      color: var(--ink);
+      box-shadow: 0 10px 30px rgba(232, 163, 23, 0.28);
+    }
+    .btn-ghost {
+      background: rgba(255,255,255,0.08);
+      color: #f4faf6;
+      border: 1px solid rgba(255,255,255,0.22);
+    }
+
+    section {
+      padding: 4.5rem 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-head {
+      max-width: 36rem;
+      margin-bottom: 2rem;
+    }
+    .section-head h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin: 0 0 0.6rem;
+    }
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    /* Package chooser — interaction surface */
+    .packages {
+      display: grid;
+      gap: 1rem;
+    }
+    @media (min-width: 860px) {
+      .packages { grid-template-columns: repeat(3, 1fr); }
+    }
+    .package {
+      position: relative;
+      text-align: left;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1.35rem 1.25rem 1.25rem;
+      background: linear-gradient(180deg, #fffdf8, var(--foam));
+      cursor: pointer;
+      transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.2s ease;
+    }
+    .package:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(16, 36, 28, 0.08);
+    }
+    .package[aria-checked="true"] {
+      border-color: var(--leaf);
+      box-shadow: 0 0 0 3px var(--glow), 0 16px 40px rgba(16, 36, 28, 0.1);
+      background: linear-gradient(180deg, #ffffff, #dff0e6);
+    }
+    .package .tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--leaf);
+      margin-bottom: 0.55rem;
+    }
+    .package h3 {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    .package .price {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.85rem;
+    }
+    .package .price span {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .package ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.4rem;
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+    }
+    .package ul li::before {
+      content: "✓ ";
+      color: var(--leaf);
+      font-weight: 700;
+    }
+    .package.popular::after {
+      content: "Paling dipilih";
+      position: absolute;
+      top: 0.85rem;
+      right: 0.85rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      background: var(--sun);
+      color: var(--ink);
+    }
+
+    /* Domain step */
+    .domain-panel {
+      display: grid;
+      gap: 1.25rem;
+      padding: 1.5rem;
+      border-radius: calc(var(--radius) + 4px);
+      background:
+        linear-gradient(135deg, rgba(31,107,69,0.08), transparent 40%),
+        #fffdf8;
+      border: 1px solid var(--line);
+    }
+    @media (min-width: 800px) {
+      .domain-panel { grid-template-columns: 1.2fr 0.8fr; align-items: start; }
+    }
+    label.field {
+      display: grid;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+    label.field span {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+    label.field input, label.field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    label.field input:focus, label.field select:focus {
+      border-color: var(--leaf);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+    .hint { font-size: 0.85rem; color: var(--muted); margin: -0.4rem 0 1rem; }
+    .preview-url {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.95rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      background: var(--leaf-deep);
+      color: #e8fff1;
+      word-break: break-all;
+    }
+    .preview-url strong { color: var(--sun); font-weight: 600; }
+
+    .summary {
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      background: linear-gradient(180deg, var(--leaf-deep), #071a12);
+      color: #f4faf6;
+    }
+    .summary h3 {
+      font-family: var(--font-display);
+      margin: 0 0 1rem;
+      font-size: 1.35rem;
+    }
+    .summary dl {
+      margin: 0 0 1.25rem;
+      display: grid;
+      gap: 0.65rem;
+    }
+    .summary dt {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(244,250,246,0.55);
+      margin: 0;
+    }
+    .summary dd {
+      margin: 0.15rem 0 0;
+      font-weight: 600;
+    }
+    .summary .btn-primary { width: 100%; }
+
+    /* Penilai teaser */
+    .score-band {
+      margin-top: 3rem;
+      padding: 1.75rem;
+      border-radius: var(--radius);
+      border: 1px dashed rgba(31,107,69,0.35);
+      background: linear-gradient(120deg, rgba(232,163,23,0.12), rgba(31,107,69,0.08));
+      display: grid;
+      gap: 1rem;
+    }
+    @media (min-width: 720px) {
+      .score-band { grid-template-columns: 1fr auto; align-items: center; }
+    }
+    .score-pill {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      color: var(--leaf-deep);
+    }
+    .score-pill small {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .flow {
+      display: grid;
+      gap: 0.75rem;
+      counter-reset: step;
+    }
+    @media (min-width: 800px) {
+      .flow { grid-template-columns: repeat(4, 1fr); }
+    }
+    .flow-step {
+      padding: 1.1rem 1rem;
+      border-top: 2px solid var(--leaf);
+      background: transparent;
+    }
+    .flow-step::before {
+      counter-increment: step;
+      content: "0" counter(step);
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--leaf);
+      margin-bottom: 0.4rem;
+    }
+    .flow-step h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1.05rem;
+    }
+    .flow-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    footer {
+      padding: 2.5rem 1.5rem 3rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--line);
+    }
+    footer strong { color: var(--ink); }
+
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      background: var(--ink);
+      color: #f4faf6;
+      padding: 0.75rem 1.1rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      z-index: 40;
+      transition: transform 0.35s ease;
+      max-width: min(92vw, 420px);
+      text-align: center;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <header class="nav" id="nav">
+    <a class="brand" href="#top">
+      <span class="brand-mark">B</span>
+      <span>Buek</span>
+    </a>
+    <button class="nav-cta" type="button" onclick="document.getElementById('paket').scrollIntoView({behavior:'smooth'})">Pilih paket</button>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-label="Hero">
+      <div class="hero-orb" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="hero-brand">Buek</p>
+        <h1>Website bisnis. Server ikut di dalamnya.</h1>
+        <p>Pilih paket VPS, tentukan alamat website Anda, lalu kami siapkan semuanya — siap dinilai kualitasnya oleh AI.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#paket">Mulai pilih VPS</a>
+          <a class="btn btn-ghost" href="#alur">Lihat alurnya</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="alur" aria-labelledby="alur-title">
+      <div class="section-head">
+        <h2 id="alur-title">Satu alur, dari beli sampai online</h2>
+        <p>Konsep toko: pelanggan tidak membeli “server mentah” — mereka membeli website bisnis yang sudah punya rumah di cloud Jakarta.</p>
+      </div>
+      <div class="flow">
+        <div class="flow-step">
+          <h3>Pilih paket VPS</h3>
+          <p>Starter, Bisnis, atau Pro — infrastruktur Tencent Jakarta via mitra Sumopod.</p>
+        </div>
+        <div class="flow-step">
+          <h3>Isi alamat website</h3>
+          <p>Domain sendiri (contoh: tokosaya.com) atau subdomain Buek sementara.</p>
+        </div>
+        <div class="flow-step">
+          <h3>Bayar &amp; provision</h3>
+          <p>Setelah bayar, VPS + template website bisnis di-deploy otomatis.</p>
+        </div>
+        <div class="flow-step">
+          <h3>Dinilai Penilai</h3>
+          <p>GPT menilai kejelasan, kecepatan, dan kelengkapan halaman bisnis Anda.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="paket" aria-labelledby="paket-title">
+      <div class="section-head">
+        <h2 id="paket-title">Pilih paket VPS</h2>
+        <p>Harga contoh (IDR / bulan). Spesifikasi mengikuti CVM region <strong>ap-jakarta</strong>.</p>
+      </div>
+      <div class="packages" role="radiogroup" aria-label="Paket VPS">
+        <button type="button" class="package" role="radio" aria-checked="false" data-id="starter" data-name="Starter" data-price="149000" data-spec="1 vCPU · 2 GB RAM · 40 GB SSD">
+          <div class="tag">Mulai</div>
+          <h3>Starter</h3>
+          <div class="price">Rp 149.000 <span>/ bulan</span></div>
+          <ul>
+            <li>1 vCPU · 2 GB RAM</li>
+            <li>40 GB SSD · Jakarta</li>
+            <li>1 website bisnis</li>
+            <li>SSL + backup mingguan</li>
+          </ul>
+        </button>
+        <button type="button" class="package popular" role="radio" aria-checked="true" data-id="bisnis" data-name="Bisnis" data-price="299000" data-spec="2 vCPU · 4 GB RAM · 80 GB SSD">
+          <div class="tag">Usaha</div>
+          <h3>Bisnis</h3>
+          <div class="price">Rp 299.000 <span>/ bulan</span></div>
+          <ul>
+            <li>2 vCPU · 4 GB RAM</li>
+            <li>80 GB SSD · Jakarta</li>
+            <li>Website + form kontak</li>
+            <li>SSL + backup harian</li>
+            <li>Skor Penilai prioritas</li>
+          </ul>
+        </button>
+        <button type="button" class="package" role="radio" aria-checked="false" data-id="pro" data-name="Pro" data-price="599000" data-spec="4 vCPU · 8 GB RAM · 160 GB SSD">
+          <div class="tag">Tumbuh</div>
+          <h3>Pro</h3>
+          <div class="price">Rp 599.000 <span>/ bulan</span></div>
+          <ul>
+            <li>4 vCPU · 8 GB RAM</li>
+            <li>160 GB SSD · Jakarta</li>
+            <li>Multi-halaman + blog</li>
+            <li>CDN edge + monitoring</li>
+            <li>Revisi template dibantu Arsitek</li>
+          </ul>
+        </button>
+      </div>
+    </section>
+
+    <section id="domain" aria-labelledby="domain-title">
+      <div class="section-head">
+        <h2 id="domain-title">Alamat website yang Anda mau</h2>
+        <p>Ya — pelanggan bisa menambahkan domain sendiri, atau memakai subdomain Buek dulu.</p>
+      </div>
+      <div class="domain-panel">
+        <div>
+          <label class="field">
+            <span>Jenis alamat</span>
+            <select id="domainMode">
+              <option value="custom">Saya punya / akan beli domain sendiri</option>
+              <option value="sub">Pakai subdomain Buek dulu (gratis)</option>
+            </select>
+          </label>
+          <label class="field" id="customField">
+            <span>Domain yang diinginkan</span>
+            <input id="domainInput" type="text" placeholder="contoh: tokosembako.id" autocomplete="off" />
+          </label>
+          <label class="field" id="subField" hidden>
+            <span>Nama subdomain</span>
+            <input id="subInput" type="text" placeholder="tokosembako" autocomplete="off" />
+          </label>
+          <p class="hint">Kami bantu arahkan DNS setelah pembayaran. Domain custom bisa diproses setelah VPS aktif.</p>
+          <div class="preview-url">Website Anda: <strong id="urlPreview">https://tokosembako.id</strong></div>
+        </div>
+        <aside class="summary" aria-live="polite">
+          <h3>Ringkasan pesanan</h3>
+          <dl>
+            <div>
+              <dt>Paket VPS</dt>
+              <dd id="sumPackage">Bisnis</dd>
+            </div>
+            <div>
+              <dt>Spesifikasi</dt>
+              <dd id="sumSpec">2 vCPU · 4 GB RAM · 80 GB SSD</dd>
+            </div>
+            <div>
+              <dt>Alamat</dt>
+              <dd id="sumDomain">tokosembako.id</dd>
+            </div>
+            <div>
+              <dt>Total / bulan</dt>
+              <dd id="sumPrice">Rp 299.000</dd>
+            </div>
+          </dl>
+          <button class="btn btn-primary" type="button" id="checkoutBtn">Lanjut ke pembayaran</button>
+        </aside>
+      </div>
+
+      <div class="score-band">
+        <div>
+          <div class="score-pill">— <small>/ 100 · Penilai</small></div>
+          <h3 style="margin:0.4rem 0 0.35rem;font-family:var(--font-display);font-size:1.35rem;">Setelah online, website dinilai GPT</h3>
+          <p style="margin:0;color:var(--muted);max-width:36rem;">
+            Agent <strong>Penilai</strong> akan skor kejelasan penawaran, CTA, kecepatan, dan kelengkapan kontak.
+            Skor muncul di dashboard pemilik website — bukan di checkout.
+          </p>
+        </div>
+        <button class="btn btn-ghost" type="button" style="background:var(--ink);color:#fff;border:0;" onclick="showToast('Penilai belum live — prototype UI saja. Panggil Cursor untuk implementasi.')">
+          Pratinjau skor
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Prototype storefront · Brand <strong>Buek</strong> · Infra target: Tencent Cloud Jakarta via Sumopod<br />
+    Agent: <strong>Cursor</strong> (kode) · <strong>Arsitek</strong> (review) · <strong>Vortex</strong> (desain — belum connect) · <strong>Penilai</strong> (skor GPT)
+  </footer>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const packages = document.querySelectorAll(".package");
+    const domainMode = document.getElementById("domainMode");
+    const domainInput = document.getElementById("domainInput");
+    const subInput = document.getElementById("subInput");
+    const customField = document.getElementById("customField");
+    const subField = document.getElementById("subField");
+    const urlPreview = document.getElementById("urlPreview");
+    const sumPackage = document.getElementById("sumPackage");
+    const sumSpec = document.getElementById("sumSpec");
+    const sumDomain = document.getElementById("sumDomain");
+    const sumPrice = document.getElementById("sumPrice");
+    const nav = document.getElementById("nav");
+    const toast = document.getElementById("toast");
+
+    let selected = {
+      id: "bisnis",
+      name: "Bisnis",
+      price: 299000,
+      spec: "2 vCPU · 4 GB RAM · 80 GB SSD"
+    };
+
+    function formatIDR(n) {
+      return "Rp " + n.toLocaleString("id-ID");
+    }
+
+    function cleanDomain(raw) {
+      return raw.trim().toLowerCase()
+        .replace(/^https?:\/\//, "")
+        .replace(/\/.*$/, "")
+        .replace(/[^a-z0-9.-]/g, "");
+    }
+
+    function cleanSub(raw) {
+      return raw.trim().toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40);
+    }
+
+    function currentHost() {
+      if (domainMode.value === "sub") {
+        const s = cleanSub(subInput.value) || "namaanda";
+        return s + ".buekwebsite.com";
+      }
+      return cleanDomain(domainInput.value) || "tokosembako.id";
+    }
+
+    function refreshSummary() {
+      const host = currentHost();
+      urlPreview.textContent = "";
+      urlPreview.append("Website Anda: ");
+      const strong = document.createElement("strong");
+      strong.textContent = "https://" + host;
+      urlPreview.appendChild(strong);
+      sumPackage.textContent = selected.name;
+      sumSpec.textContent = selected.spec;
+      sumDomain.textContent = host;
+      sumPrice.textContent = formatIDR(selected.price);
+    }
+
+    packages.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        packages.forEach((p) => p.setAttribute("aria-checked", "false"));
+        btn.setAttribute("aria-checked", "true");
+        selected = {
+          id: btn.dataset.id,
+          name: btn.dataset.name,
+          price: Number(btn.dataset.price),
+          spec: btn.dataset.spec
+        };
+        refreshSummary();
+      });
+    });
+
+    domainMode.addEventListener("change", () => {
+      const isSub = domainMode.value === "sub";
+      customField.hidden = isSub;
+      subField.hidden = !isSub;
+      refreshSummary();
+    });
+
+    domainInput.addEventListener("input", refreshSummary);
+    subInput.addEventListener("input", refreshSummary);
+
+    document.getElementById("checkoutBtn").addEventListener("click", () => {
+      const host = currentHost();
+      if (domainMode.value === "custom" && !cleanDomain(domainInput.value)) {
+        showToast("Isi domain yang diinginkan dulu, contoh: tokosaya.id");
+        domainInput.focus();
+        return;
+      }
+      if (domainMode.value === "sub" && !cleanSub(subInput.value)) {
+        showToast("Isi nama subdomain dulu, contoh: tokosaya");
+        subInput.focus();
+        return;
+      }
+      showToast("Prototype: " + selected.name + " → " + host + ". Integrasi bayar & provision menyusul.");
+    });
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+
+    window.addEventListener("scroll", () => {
+      nav.classList.toggle("scrolled", window.scrollY > 20);
+    }, { passive: true });
+
+    refreshSummary();
+  </script>
+</body>
+</html>
